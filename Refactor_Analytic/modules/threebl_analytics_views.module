@@ -1,0 +1,84 @@
+<?php
+function threebl_analytics_views_menu()
+{
+    $items = array();
+    $items['ViewsCron'] = array(
+        'title'=>' Analytics',
+        'description'=>'Analytics Views',
+        'page callback'=>'threebl_analytics_views_cron2',
+        'access arguments' => array('dashboard analytics'),
+    );
+    return $items;
+}//end threebl_dashboard_analytics_menu
+
+/**
+ * Get all of the views results that need to be processed and call
+ * fnViewsProcessing(..) which will add the views to the
+ * appropriate table from which they can be displayed in the portal.
+ **/
+function threebl_analytics_views_cron2()
+{
+    watchdog('Analytics cron - Views', 'Starting ...');
+    //Include all required files
+    module_load_include('inc', 'threebl_analytics', 'inc/clsAnalytics');
+    module_load_include('inc', 'threebl_analytics', 'inc/clsClickView');
+
+    //Creating the object for ClickView Class
+    $ObjClickView  = new clsClickView();
+
+    // Object of class for analytic class
+    $objAnalytics = new clsAnalytics();
+
+    // Get records from threebl_tmp_fmr_headline_views table
+    $arrResults = db_query("SELECT results_id, ip_addr, view_date, fmr_result FROM threebl_tmp_fmr_headline_views LIMIT 0, 5000")
+        ->fetchAllAssoc('results_id', PDO::FETCH_ASSOC);
+         // Loop through results
+
+    //if array exist or not.
+    if (is_array($arrResults)) {
+
+        foreach ($arrResults as $key => $value) {
+            // Get fields from query row
+            $strIpAddress = $value['ip_addr'];
+            //$view_datetime = $value['view_datetime'];
+            $strViewDate = $value['view_date'];
+            $strFmrResult = $value['fmr_result'];
+
+            // Put some of the basic info about the views into an associative array
+            $tmpViewArray = array();
+            $tmpViewArray['ip_addr'] = $strIpAddress;
+            //$tmpViewArray['view_datetime'] = $view_datetime;
+            $tmpViewArray['view_date'] = $strViewDate;
+
+            // unserialize the results from the view, contained in $fmr_result
+            $objArrFMR = unserialize($strFmrResult);
+
+            // Now loop through the FMR info and use the FMR type and nid to build
+            // an associative array, keyed by FMR type
+            $arrFmrViews = array();
+
+            //if not empty
+            if (is_array($objArrFMR)) {
+                foreach ($objArrFMR as $objFMR) {
+                    //Getting FMR TYPE with node id
+                    $arrFmrViews[$objFMR->_field_data['nid']['entity']->field_fmr_type_of_content['und'][0]['value']][] = $objFMR->nid;
+                }
+            }
+
+            // Call fnViewsProcessing(..)
+            //echo "<pre>"; print_r($arrFmrViews); print_r($tmpViewArray); echo "</pre>";echo $key. "<br/>";
+            $objAnalytics->fnViewsProcessing($arrFmrViews, $tmpViewArray);
+
+            // Now, delete the record from threebl_tmp_fmr_headline_views
+            db_delete('threebl_tmp_fmr_headline_views')->condition('results_id', $key)->execute(); //commented by sanket
+
+            //Update threebl_tmp_fmr_headline_views flag for added is added in click table
+            //$ObjClickView->fnUpdateHeadLineView($key);
+            //watchdog("results_id", $key);
+
+        }//foreach end.
+
+       // @mail('sankets.cuelogic@gmail.com', '3BL View END',"KEY = ".$key);
+    }
+    watchdog('Analytics cron - Views', 'Ending.');
+}
