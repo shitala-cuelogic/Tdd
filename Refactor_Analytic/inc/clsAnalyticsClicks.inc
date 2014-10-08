@@ -8,37 +8,18 @@ class clsAnalyticsClicks
      *
      * @param int    $intCompanyOgId               : Company OG id
      * @param string $strFMRIds                    : FMR node id's with comma separated
-     * @param int    $intClickChartDateBetweenFlag : boolean flag which indicate functionality for chart data.
-     * @param int    $intCampaignId                : Campaign node id
      *
      * @return mixed
      */
-    public function fnGetAnalyticClickChartInfo($intCompanyOgId, $strFMRIds = "", $intClickChartDateBetweenFlag = 0, $intCampaignId = 0)
+    public function fnGetAnalyticClickChartInfo($intCompanyOgId, $strFMRIds = "")
     {
-        $strClickChartDateBetween = '';
-        if ((int)$intClickChartDateBetweenFlag == 1) {
-            $strClickChartDateBetween = " AND (C.click_date BETWEEN '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "') ";
-        }
-
-        $strCampaignFrom = '';
-        if ((int)$intCampaignId > 0) {
-            $strCampaignFrom = " JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = C.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
-        }
-
-        $strCondition = "";
-        if ($strFMRIds != "") {
-            $strCondition = " AND C.nid IN ($strFMRIds)";
-        }
-
         $strSQL = "SELECT DATE_FORMAT(C.click_date, '%Y-%m-%d') as clickdate, count(C.nid) as totalcount
                   FROM " . $this->strClickTableName . " as C
-                  $strCampaignFrom
                   WHERE C.company_ogid = $intCompanyOgId
-                  $strClickChartDateBetween
-                  $strCondition
+                  AND (DATE_FORMAT(C.click_date BETWEEN, '%Y-%m-%d') '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "')
+                  AND C.nid IN ($strFMRIds)
                   GROUP BY  DATE_FORMAT(C.click_date, '%Y/%m/%d')
                   ORDER by C.click_date asc";
-
         $arrayClickChartData = db_query($strSQL)->fetchAll();
         $arrClickChart = array();
 
@@ -49,32 +30,22 @@ class clsAnalyticsClicks
             }
         }
         return $arrClickChart;
-        ## For test put 2013-01-18 .prev '".$this->strCurrentDate."'
     }
 
     /**
      * Query for Google Map for Click Count for Second Level and Third Level
      *
      * @param int   $intCompanyOgId   :  Company OG id
-     * @param mixed $strMediaTypeORId : value will be either media type or campaign id
+     * @param mixed $strMediaTypeORId : value will be either media type or id
      *
      * @return mixed
      */
     public function fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId)
     {
-        $strCondition = '';
-        $strCndClk = '';
-        if ((int)$strMediaTypeORId == 0 && $strMediaTypeORId != '') {
-            //getting particular media-type condition for clicks.
-            if ($strMediaTypeORId == "all") {
-                $strCndClk .= " AND C.fmr_type IN ('press_release','blog','multimedia','article','newsletter') ";
-            } else {
-                $strCndClk .= " AND C.fmr_type ='" . $strMediaTypeORId . "'";
-            }
-        } elseif ((int)$strMediaTypeORId > 0) {
-            $strCndClk .= " AND C.nid = $strMediaTypeORId ";
-        }
-        $strCondition .= " $strCndClk  GROUP BY UPPER(country) order by ipcount desc ";
+        // To get Media type condition
+        $strMediaCondition = $this->fnMediaTypeCondition($strMediaTypeORId);
+
+        $strCondition = " $strMediaCondition  GROUP BY UPPER(country) order by ipcount desc ";
 
         $strFinalSql = "SELECT nid,click_ip,count(nid) as ipcount,country
 									  FROM " . $this->strClickTableName . " as C
@@ -86,31 +57,47 @@ class clsAnalyticsClicks
     }
 
     /**
+    * To return Media type condition
+    * @param mixed $strMediaTypeORId:  value will be either media type or id
+    * 
+    * * @return string
+    */
+    public function fnMediaTypeCondition($strMediaTypeORId) 
+    {
+        $strMediaCondition = '';
+        if ((int)$strMediaTypeORId == 0 && $strMediaTypeORId != '') {
+            //getting particular media-type condition for clicks.
+            if ($strMediaTypeORId == "all") {
+                $strMediaCondition .= " AND C.fmr_type IN ('press_release','blog','multimedia','article','newsletter') ";
+            } else {
+                $strMediaCondition .= " AND C.fmr_type ='" . $strMediaTypeORId . "'";
+            }
+        } elseif ((int)$strMediaTypeORId > 0) {
+            $strMediaCondition .= " AND C.nid = $strMediaTypeORId ";
+        }
+        return $strMediaCondition;
+    }
+
+    /**
      * Query for Referral website for Second Level and Third Level
      *
      * @param int   $intCompanyOgId    :  Company OG id
-     * @param mixed $strMediaTypeORId  : value will be either media type or campaign id
+     * @param mixed $strMediaTypeORId  : value will be either media type or id
      *
      * @return mixed
      */
     public function fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId)
     {
-        $strCondition = '';
-        $strCndClk = '';
-        if ((int)$strMediaTypeORId == 0 && $strMediaTypeORId != '') {
-            //getting particular media-type condition for clicks.
-            if ($strMediaTypeORId == "all") {
-                $strCndClk .= " AND C.fmr_type IN ('press_release','blog','multimedia','article','newsletter') ";
-            } else {
-                $strCndClk .= " AND C.fmr_type ='" . $strMediaTypeORId . "' ";
-            }
-        } elseif ((int)$strMediaTypeORId > 0) {
+        // To get Media type condition
+        $strMediaCondition = $this->fnMediaTypeCondition($strMediaTypeORId);
+        
+        if ((int)$strMediaTypeORId > 0) {
             $arrExtraLink = array('bestgenericviagra.biz', 'blog.pnarp.com', 'diffbot.com', 'timberland.justmeans.com', 'www.mysmutsearch.com', 'lala123.com', '_bit=528e713d-', '_bit=52af68a5-00111-07550', 'piwik.3blmedia.com', 'stats.3blmedia.com');
             $strExtraLink = implode("|", $arrExtraLink);
-            $strCndClk .= " AND C.nid = $strMediaTypeORId AND click_referrer NOT RLIKE '$strExtraLink' ";
+            $strMediaCondition = " $strMediaCondition AND click_referrer NOT RLIKE '$strExtraLink' ";
         }
 
-        $strCondition .= " $strCndClk  GROUP BY click_referrer Order by click_date desc ";
+        $strCondition = " $strMediaCondition  GROUP BY click_referrer Order by click_date desc ";
 
         $strFinalQuery = "SELECT distinct click_referrer as rlink
 								   FROM " . $this->strClickTableName . " as C
@@ -135,18 +122,6 @@ class clsAnalyticsClicks
 								  Where C.company_ogid = $intCompanyOgId AND C.nid = $intMediaId
 								  GROUP BY nid";
         return $arrClickCount = db_query($strClickCount)->fetchAssoc();
-    }
-
-    /**
-     * Function Update View table for Company id
-     *
-     * @param int  $intCompOgId : Company OG id
-     * @param int  $intSynId    : Company JM id
-     */
-    public function fnUpdateClicksCompany($intCompOgId = 0, $intSynId = 0)
-    {
-        $strUpdateQuery = "Update " . $this->strClickTableName . " SET company_ogid =" . $intCompOgId . " Where company_ogid =" . $intSynId . " And click_date >= DATE_SUB( '2013-07-10' , INTERVAL 180 DAY ) ";
-        db_query($strUpdateQuery)->execute();
     }
 
     /**
