@@ -200,7 +200,6 @@ class clsAnalytics
         }
     } 
 
-    /////////////////////
 
     /**
      * Check session value that is company id && nid
