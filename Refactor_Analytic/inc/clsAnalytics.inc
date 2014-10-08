@@ -121,75 +121,86 @@ class clsAnalytics
         if (count($arrFmrViews) && is_array($arrFmrViews)) {
             foreach ($arrFmrViews as $strFMRType => $FMRids) {
                 if (count($FMRids) && is_array($FMRids)) {
-                    foreach ($FMRids as $FMRid) {
-                        if ((int)$FMRid > 0) {
-                            // for each FMR, we need to get the master ids, from the sync tables, for
-                            // both the FMR and Company
+                    $this->fnAddViewsProcess($FMRids, $strFMRType, $strChannel, $strJustDate);
 
-                            $strMedia = "select ogm.etid, ogm.gid companyOgId
-										from og_membership ogm
-										where ogm.etid = $FMRid";
-
-                            $arrMedia = db_query($strMedia)->fetchAssoc();
-
-
-                            if (!empty($arrMedia['etid'])) {
-                                $intFMRNid = $arrMedia['etid'];
-                            }
-                            if (!empty($arrMedia['companyOgId'])) {
-                                $intCompanyOgId = $arrMedia['companyOgId'];
-                            }
-                            // Set $strMediaType  to the appropriate jm_mediawise_views column name, to be used in
-                            // the update/insert queries, below.
-                            switch ($strFMRType) {
-                                case "pressrelease":
-                                case "press_release":
-                                case "press":
-                                    $strMediaType = 'press_release'; // this is how it is stored in jm_..._views tables
-                                    break;
-                                case "article":
-                                case "3bl_article":
-                                    $strMediaType = 'article';
-                                    break;
-                                case "newsletter":
-                                case "3bl_newsletter":
-                                    $strMediaType = 'newsletter';
-                                    break;
-                                case "multimedia":
-                                    $strMediaType = 'multimedia';
-                                    break;
-                                case "blog":
-                                case "blogs":
-                                    $strMediaType = 'blog';
-                                    break;
-                                default:
-                                    $intFMRNid = 0;
-                                    $strMediaType = "";
-                                    $intCompanyOgId = 0;
-                                    break;
-                            }
-
-                            // This is to insert count in views table as well as in the dummy views table, we took dummy table because it will have data for a month which will automatically gets deleted after that this will keep fast processing of data. We can grab all the historic data from main views table, also count gets incremented as media is viewed.
-                            if ($strMediaType && (int)$intFMRNid > 0 && (int)$intCompanyOgId > 0) {
-                                //Creating the object for ClickView Class
-                                $ObjClickView = new clsClickView();
-
-                                //Create array for view and click tables
-                                $arrAllView = array();
-                                $arrAllView['intCompanyId'] = $intCompanyOgId;
-                                $arrAllView['intMediaId'] = $intFMRNid;
-                                $arrAllView['strChannel'] = $strChannel;
-                                $arrAllView['strFMRType'] = $strMediaType;
-                                $arrAllView['strViewDate'] = $strJustDate;
-                                //Add View Table  Function
-                                $ObjClickView->fnAddAllViews($arrAllView);
-                            }
-                        }
-                    }
                 }
             }
         }
     }
+
+    public function fnAddViewsProcess($FMRids, $strFMRType, $strChannel, $strJustDate) {
+
+        foreach ($FMRids as $FMRid) {
+                    
+            if ((int)$FMRid > 0) {
+                // for each FMR, we need to get the master ids, from the sync tables, for
+                // both the FMR and Company
+
+                $strMedia = "select ogm.etid, ogm.gid companyOgId
+                             from og_membership ogm
+                             where ogm.etid = $FMRid";
+
+                $arrMedia = db_query($strMedia)->fetchAssoc();
+
+
+                if (!empty($arrMedia['etid'])) {
+                    $intFMRNid = $arrMedia['etid'];
+                }
+                if (!empty($arrMedia['companyOgId'])) {
+                    $intCompanyOgId = $arrMedia['companyOgId'];
+                }
+
+
+                // Set $strMediaType  to the appropriate jm_mediawise_views column name, to be used in
+                // the update/insert queries, below.
+                switch ($strFMRType) {
+                    case "pressrelease":
+                    case "press_release":
+                    case "press":
+                        $strMediaType = 'press_release'; // this is how it is stored in jm_..._views tables
+                        break;
+                    case "article":
+                    case "3bl_article":
+                        $strMediaType = 'article';
+                        break;
+                    case "newsletter":
+                    case "3bl_newsletter":
+                        $strMediaType = 'newsletter';
+                        break;
+                    case "multimedia":
+                        $strMediaType = 'multimedia';
+                        break;
+                    case "blog":
+                    case "blogs":
+                        $strMediaType = 'blog';
+                        break;
+                    default:
+                        $intFMRNid = 0;
+                        $strMediaType = "";
+                        $intCompanyOgId = 0;
+                        break;
+                }
+
+                // This is to insert count in views table as well as in the dummy views table, we took dummy table because it will have data for a month which will automatically gets deleted after that this will keep fast processing of data. We can grab all the historic data from main views table, also count   gets incremented as media is viewed.
+                if ($strMediaType && (int)$intFMRNid > 0 && (int)$intCompanyOgId > 0) {
+                    //Creating the object for ClickView Class
+                    $ObjClickView = new clsClickView();
+
+                    //Create array for view and click tables
+                    $arrAllView = array();
+                    $arrAllView['intCompanyId'] = $intCompanyOgId;
+                    $arrAllView['intMediaId'] = $intFMRNid;
+                    $arrAllView['strChannel'] = $strChannel;
+                    $arrAllView['strFMRType'] = $strMediaType;
+                    $arrAllView['strViewDate'] = $strJustDate;
+                    //Add View Table  Function
+                    $ObjClickView->fnAddAllViews($arrAllView);
+                }
+            }
+        }
+    } 
+
+    /////////////////////
 
     /**
      * Check session value that is company id && nid
@@ -308,22 +319,7 @@ class clsAnalytics
 
             //save FMR average views and clicks count.
             if ($strBenchmarkGroup == "media_category") {
-
-                if (is_array($arrBenchmarkFMRIds[$strMediaType]) && count($arrBenchmarkFMRIds[$strMediaType]) >0) {
-
-                    foreach ($arrBenchmarkFMRIds[$strMediaType] as $intFMRId) {
-
-                        //Insert fmr average views and clicks count.
-                        $arrUpdate = node_load($intFMRId);
-
-                        $arrUpdate->field_fmr_average_views['und'][0]['value'] = $intAverageViewCount;
-                        $arrUpdate->field_fmr_average_clicks['und'][0]['value'] = $intAverageClickCount;
-
-                        #Update field_fmr_average_clicks and field_fmr_average_views field to average views and clicks count
-                        node_save($arrUpdate);
-                        unset($arrUpdate); //unset the node value
-                    }
-                }
+                $this->fnSaveBenchMark($arrBenchmarkFMRIds, $strMediaType, $intAverageViewCount, $intAverageClickCount);
             } else {
 
                 // Get Views and Clicks with video
@@ -371,7 +367,24 @@ class clsAnalytics
         }
     }
 
+    public function fnSaveBenchMark($arrBenchmarkFMRIds, $strMediaType, $intAverageViewCount, $intAverageClickCount) {
 
+        if (is_array($arrBenchmarkFMRIds[$strMediaType]) && count($arrBenchmarkFMRIds[$strMediaType]) >0) {
+
+            foreach ($arrBenchmarkFMRIds[$strMediaType] as $intFMRId) {
+
+                //Insert fmr average views and clicks count.
+                $arrUpdate = node_load($intFMRId);
+
+                $arrUpdate->field_fmr_average_views['und'][0]['value'] = $intAverageViewCount;
+                $arrUpdate->field_fmr_average_clicks['und'][0]['value'] = $intAverageClickCount;
+
+                #Update field_fmr_average_clicks and field_fmr_average_views field to average views and clicks count
+                node_save($arrUpdate);
+                unset($arrUpdate); //unset the node value
+            }
+        }
+    }
 
     /**
      * Primary Categories array to replace long title with short title
