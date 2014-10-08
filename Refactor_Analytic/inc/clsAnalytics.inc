@@ -135,12 +135,7 @@ class clsAnalytics
             if ((int)$FMRid > 0) {
                 // for each FMR, we need to get the master ids, from the sync tables, for
                 // both the FMR and Company  
-
-                $strMedia = "select ogm.etid, ogm.gid companyOgId
-                             from og_membership ogm
-                             where ogm.etid = $FMRid";
-
-                $arrMedia = db_query($strMedia)->fetchAssoc();
+                $arrMedia = $this->fnGetCompanyOgIds($FMRid);
 
 
                 if (!empty($arrMedia['etid'])) {
@@ -153,7 +148,44 @@ class clsAnalytics
 
                 // Set $strMediaType  to the appropriate jm_mediawise_views column name, to be used in
                 // the update/insert queries, below.
-                switch ($strFMRType) {
+                
+                list($strMediaType, $intFMRNid, $intCompanyOgId) = $this->fnSetMediaType($strFMRType, $intFMRNid, $intCompanyOgId);
+
+                
+
+                // This is to insert count in views table as well as in the dummy views table, we took dummy table because it will have data for a month which will automatically gets deleted after that this will keep fast processing of data. We can grab all the historic data from main views table, also count   gets incremented as media is viewed.
+                if ($strMediaType && (int)$intFMRNid > 0 && (int)$intCompanyOgId > 0) {
+                    //Creating the object for ClickView Class
+                    $ObjClickView = new clsClickView();
+
+                    //Create array for view and click tables
+                    $arrAllView = array();
+                    $arrAllView['intCompanyId'] = $intCompanyOgId;
+                    $arrAllView['intMediaId'] = $intFMRNid;
+                    $arrAllView['strChannel'] = $strChannel;
+                    $arrAllView['strFMRType'] = $strMediaType;
+                    $arrAllView['strViewDate'] = $strJustDate;
+                    //Add View Table  Function
+                    $ObjClickView->fnAddAllViews($arrAllView);
+                }
+            }
+        }
+    } 
+
+    public function fnGetCompanyOgIds($FMRid) {
+
+        $strMedia = "select ogm.etid, ogm.gid companyOgId
+                     from og_membership ogm
+                     where ogm.etid = $FMRid";
+
+        $arrMedia = db_query($strMedia)->fetchAssoc();
+
+        return $arrMedia; 
+    }
+
+    public function fnSetMediaType($strFMRType, $intFMRNid, $intCompanyOgId) {
+
+        switch ($strFMRType) {
                     case "pressrelease":
                     case "press_release":
                     case "press":
@@ -179,27 +211,10 @@ class clsAnalytics
                         $strMediaType = "";
                         $intCompanyOgId = 0;
                         break;
-                }
-
-                // This is to insert count in views table as well as in the dummy views table, we took dummy table because it will have data for a month which will automatically gets deleted after that this will keep fast processing of data. We can grab all the historic data from main views table, also count   gets incremented as media is viewed.
-                if ($strMediaType && (int)$intFMRNid > 0 && (int)$intCompanyOgId > 0) {
-                    //Creating the object for ClickView Class
-                    $ObjClickView = new clsClickView();
-
-                    //Create array for view and click tables
-                    $arrAllView = array();
-                    $arrAllView['intCompanyId'] = $intCompanyOgId;
-                    $arrAllView['intMediaId'] = $intFMRNid;
-                    $arrAllView['strChannel'] = $strChannel;
-                    $arrAllView['strFMRType'] = $strMediaType;
-                    $arrAllView['strViewDate'] = $strJustDate;
-                    //Add View Table  Function
-                    $ObjClickView->fnAddAllViews($arrAllView);
-                }
-            }
         }
-    } 
 
+        return array($strMediaType, $intFMRNid, $intCompanyOgId);        
+    }
 
     /**
      * Check session value that is company id && nid
