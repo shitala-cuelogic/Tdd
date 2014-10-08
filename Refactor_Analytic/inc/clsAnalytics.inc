@@ -134,7 +134,7 @@ class clsAnalytics
                     
             if ((int)$FMRid > 0) {
                 // for each FMR, we need to get the master ids, from the sync tables, for
-                // both the FMR and Company
+                // both the FMR and Company  
 
                 $strMedia = "select ogm.etid, ogm.gid companyOgId
                              from og_membership ogm
