@@ -58,18 +58,13 @@ class clsAnalyticsData
         $strQry = $strSelect.$strMediaWiseSelect.$strFrom.$strCampaignFrom.$strWhere.$strCondition.$strOrderBy;
         $objFMRNidInfo = db_query($strQry)->fetchAll();
 
-        if ((int)$intCampaignId == 0 && $strMediaType == "") {
-            foreach ($objFMRNidInfo as $arrFMRNidInfo) {
-                $arrFMRInfo[$arrFMRNidInfo->fmr_type][] = $arrFMRNidInfo->nid;
-                $arrFMRIds[] = $arrFMRNidInfo->nid;
-            }
-        } elseif ((int)$intCampaignId > 0 || $strMediaType != "") {
-            
+        if (!empty($objFMRNidInfo)) {
             // To get FMR information
             list($arrFMRInfo, $arrFMRIds) = $this->fnGetFMRInfo($objFMRNidInfo);
+
+            //Implode FMR ids
+            $strFMRIds = implode(', ', $arrFMRIds);
         }
-        //Implode FMR ids
-        $strFMRIds = implode(', ', $arrFMRIds);
         return array($arrFMRInfo, $arrFMRIds, $strFMRIds);
     }
 
@@ -79,34 +74,41 @@ class clsAnalyticsData
     */
     public function fnGetFMRInfo($objFMRNidInfo)
     {
-        foreach ($objFMRNidInfo as $arrFMRNidInfo) {
-            $arrFMRInfo[$arrFMRNidInfo->nid]['nid'] = $arrFMRNidInfo->nid;
-            $arrFMRInfo[$arrFMRNidInfo->nid]['title'] = stripslashes($arrFMRNidInfo->title);
-            $arrFMRInfo[$arrFMRNidInfo->nid]['publishdate'] = $arrFMRNidInfo->field_fmr_date_time_value;
-            $arrFMRInfo[$arrFMRNidInfo->nid]['campaign'] = $arrFMRNidInfo->campaign;
-            $arrFMRInfo[$arrFMRNidInfo->nid]['media'] = $arrFMRNidInfo->fmr_type;
-            $arrFMRInfo[$arrFMRNidInfo->nid]['video'] = $arrFMRNidInfo->video;
-            $arrFMRInfo[$arrFMRNidInfo->nid]['primary_category'] = $arrFMRNidInfo->primarycategory;
-            $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_view'] = $arrFMRNidInfo->benchmark_view;
-            $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_click'] = $arrFMRNidInfo->benchmark_click;
-
-            //getting Benchmark views and clicks
-            $strFMRPublishedDate = date("Y-m-d", strtotime($arrFMRNidInfo->field_fmr_date_time_value));
-            if (strtotime($strFMRPublishedDate) <= strtotime($this->strBenchmarkNAMonth)) {
-                // Set N/A value for Benchmark views and clicks, if FMR published before Apr 2014
-                $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_view'] = "N/A";
-                $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_click'] = "N/A";
-            } else {
-                // Set value for Benchmark views and clicks
-                $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_view'] = ((int) $arrFMRNidInfo->benchmark_view > 0) ? number_format((int) $arrFMRNidInfo->benchmark_view) : "-";
-                $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_click'] = ((int) $arrFMRNidInfo->benchmark_click > 0) ? number_format((int) $arrFMRNidInfo->benchmark_click) : "-";
+        if ($strMediaType == "") {
+            foreach ($objFMRNidInfo as $arrFMRNidInfo) {
+                $arrFMRInfo[$arrFMRNidInfo->fmr_type][] = $arrFMRNidInfo->nid;
+                $arrFMRIds[] = $arrFMRNidInfo->nid;
             }
+        } elseif ($strMediaType != "") {
 
-            $arrFMRInfo[$arrFMRNidInfo->nid]['is_archive'] = $arrFMRNidInfo->is_archive;
-            $arrFMRIds[] = $arrFMRNidInfo->nid;
-         }
+            foreach ($objFMRNidInfo as $arrFMRNidInfo) {
+                $arrFMRInfo[$arrFMRNidInfo->nid]['nid'] = $arrFMRNidInfo->nid;
+                $arrFMRInfo[$arrFMRNidInfo->nid]['title'] = stripslashes($arrFMRNidInfo->title);
+                $arrFMRInfo[$arrFMRNidInfo->nid]['publishdate'] = $arrFMRNidInfo->field_fmr_date_time_value;
+                $arrFMRInfo[$arrFMRNidInfo->nid]['campaign'] = $arrFMRNidInfo->campaign;
+                $arrFMRInfo[$arrFMRNidInfo->nid]['media'] = $arrFMRNidInfo->fmr_type;
+                $arrFMRInfo[$arrFMRNidInfo->nid]['video'] = $arrFMRNidInfo->video;
+                $arrFMRInfo[$arrFMRNidInfo->nid]['primary_category'] = $arrFMRNidInfo->primarycategory;
+                $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_view'] = $arrFMRNidInfo->benchmark_view;
+                $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_click'] = $arrFMRNidInfo->benchmark_click;
 
-         return array($arrFMRInfo, $arrFMRIds);
+                //getting Benchmark views and clicks
+                $strFMRPublishedDate = date("Y-m-d", strtotime($arrFMRNidInfo->field_fmr_date_time_value));
+                if (strtotime($strFMRPublishedDate) <= strtotime($this->strBenchmarkNAMonth)) {
+                    // Set N/A value for Benchmark views and clicks, if FMR published before Apr 2014
+                    $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_view'] = "N/A";
+                    $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_click'] = "N/A";
+                } else {
+                    // Set value for Benchmark views and clicks
+                    $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_view'] = ((int) $arrFMRNidInfo->benchmark_view > 0) ? number_format((int) $arrFMRNidInfo->benchmark_view) : "-";
+                    $arrFMRInfo[$arrFMRNidInfo->nid]['benchmark_click'] = ((int) $arrFMRNidInfo->benchmark_click > 0) ? number_format((int) $arrFMRNidInfo->benchmark_click) : "-";
+                }
+
+                $arrFMRInfo[$arrFMRNidInfo->nid]['is_archive'] = $arrFMRNidInfo->is_archive;
+                $arrFMRIds[] = $arrFMRNidInfo->nid;
+             }
+        }
+        return array($arrFMRInfo, $arrFMRIds);
     }
 
      /**
@@ -215,32 +217,36 @@ class clsAnalyticsData
 
         #Final SQL
         $strQry = $strSelect.$strFrom.$strWhere.$strCondition.$strOrderBy.$strLimitSql;
-
         $objFMRNidInfo = db_query($strQry)->fetchAll();
+        
         $strFMRIds = '';
 
         //Get count of all Records
-        list($arrRecordsCount) = db_query('SELECT FOUND_ROWS()')->fetchAll();
-        $arrRecordsCount = (array) ($arrRecordsCount);
-        $intViewClickCntResult = $arrRecordsCount['FOUND_ROWS()'];
+        $intViewClickCntResult = $this->fnGetRecordsCount();
 
         //Checking if array is not empty
         if (!empty($objFMRNidInfo)) {
 
-            if ($strMediaType == "") {
-                foreach ($objFMRNidInfo as $arrFMRNidInfo) {
-                    $arrFMRInfo[$arrFMRNidInfo->fmr_type][] = $arrFMRNidInfo->nid;
-                    $arrFMRIds[] = $arrFMRNidInfo->nid;
-                }
-            } elseif ($strMediaType != "") {
-                
-                // To get FMR information
-                list($arrFMRInfo, $arrFMRIds) = $this->fnGetFMRInfo($objFMRNidInfo);
-            }
+            // To get FMR information
+            list($arrFMRInfo, $arrFMRIds) = $this->fnGetFMRInfo($objFMRNidInfo);
+
             //Implode FMR ids
             $strFMRIds = implode(', ', $arrFMRIds);
         }
         return array($arrFMRInfo, $arrFMRIds, $strFMRIds, $intViewClickCntResult);
+    }
+
+    /**
+    * Get count of all Records
+    *@return int
+    */
+    public function fnGetRecordsCount()
+    {
+        list($arrRecordsCount) = db_query('SELECT FOUND_ROWS()')->fetchAll();
+        $arrRecordsCount = (array) ($arrRecordsCount);
+        $intViewClickCntResult = $arrRecordsCount['FOUND_ROWS()'];
+
+        return $intViewClickCntResult;
     }
 
     /**
@@ -284,22 +290,37 @@ class clsAnalyticsData
 
         // Group FMR Ids by Media type and Primary category
         if (!empty($objFMRNidInfo)) {
-            foreach ($objFMRNidInfo as $arrFMRData) {
+            
+            // To get Benchmark information
+            list($arrBenchmarkFMRInfo, $arrFMRIds, $arrBenchMarkByMediaType, $arrBenchmarkFMRIds) = $this->fnGetBenchmarkInfo($objFMRNidInfo);
 
-                $strPublishedDate = date("Y-m-d", strtotime($arrFMRData->field_fmr_date_time_value));
-                $strFMRPublishedDate = strtotime($strPublishedDate);
-
-                //Get FMR Ids for the current Benchmarks Month
-                if ((int)$strFMRPublishedDate >= (int)$strBenchmarkMonthDate) {
-                    $arrBenchmarkFMRIds[$arrFMRData->fmr_type."-".$arrFMRData->category_id][] = $arrFMRData->fmrId;
-                }
-                $arrFMRIds[] = $arrFMRData->fmrId;
-                $arrBenchmarkFMRInfo[$arrFMRData->fmr_type."-".$arrFMRData->category_id][] = $arrFMRData->fmrId;
-                $arrBenchMarkByMediaType[$arrFMRData->fmr_type][] = $arrFMRData->fmrId;
-            }
             //Implode FMR ids
             $strFMRIds = implode(', ', $arrFMRIds);
         }
         return array($arrBenchmarkFMRInfo, $arrFMRIds, $strFMRIds, $arrBenchMarkByMediaType, $arrBenchmarkFMRIds);
-    }   
+    }  
+
+    /**
+    * To return Benchmark information
+    * @param object $objFMRNidInfo: Object of FMR result
+    * @return array
+    */
+    public function fnGetBenchmarkInfo($objFMRNidInfo)
+    {
+        foreach ($objFMRNidInfo as $arrFMRData) {
+
+            $strPublishedDate = date("Y-m-d", strtotime($arrFMRData->field_fmr_date_time_value));
+            $strFMRPublishedDate = strtotime($strPublishedDate);
+
+            //Get FMR Ids for the current Benchmarks Month
+            if ((int)$strFMRPublishedDate >= (int)$strBenchmarkMonthDate) {
+                $arrBenchmarkFMRIds[$arrFMRData->fmr_type."-".$arrFMRData->category_id][] = $arrFMRData->fmrId;
+            }
+            $arrFMRIds[] = $arrFMRData->fmrId;
+            $arrBenchmarkFMRInfo[$arrFMRData->fmr_type."-".$arrFMRData->category_id][] = $arrFMRData->fmrId;
+            $arrBenchMarkByMediaType[$arrFMRData->fmr_type][] = $arrFMRData->fmrId;
+        }
+
+         return array($arrBenchmarkFMRInfo, $arrFMRIds, $arrBenchMarkByMediaType, $arrBenchmarkFMRIds);
+    } 
 }
