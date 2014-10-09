@@ -1,35 +1,7 @@
 <?php
 //This is class for Reports functions.
-class ClsReportsData
+class ClsReportsData extend BaseClass
 {
-    public $strCurrentDate;
-    public $strChartPrevDate;
-    public $arrShowMediaType;
-    public $strViewTableName;
-    public $strClickTableName;
-    private $strNewsletterClick;
-
-    public function __construct()
-    {
-        $this->strCurrentDate = date("Y-m-d", (time() - 86400)); //(time()-86400) date("Y-m-d", strtotime("2013-12-16"))//
-
-        $this->strChartPrevDate = date("Y-m-d", strtotime(date("Y-m-d", strtotime($this->strCurrentDate)) . " - 61 days"));
-        $this->arrShowMediaType = array(
-            'press_release' => 'Press Release',
-            'blog' => 'Blog',
-            'multimedia' => 'Multimedia',
-            'article' => 'Article',
-            'newsletter' => 'Newsletter',
-            'all' => 'All'
-        );
-        $this->strViewTableName = 'threebl_analytic_views';
-        $this->strClickTableName = 'threebl_analytic_clicks';
-        $this->strNewsletterClick = 'news_alert_tracking';
-        $this->strBenchmarkNAMonth = '2014-03-31';
-    }
-
-
-
     /**
      * Function gather data of 7 days and create array for the Graph.
      *
@@ -87,26 +59,6 @@ class ClsReportsData
             return array($arrChartSum, $arrDates);
         }
     }
-
-    /**
-     * @param string $strToday    : Current Date
-     * @param int    $intNoOfDays : No of days
-     * @param int    $intInterval : No of days Interval
-     *
-     * @return array
-     */
-    public function fnGetPreviousDates($strToday, $intNoOfDays = 30, $intInterval = 1)
-    {
-        $strStart = date("Y-m-d", strtotime(date("Y-m-d", strtotime($strToday)) . " - $intNoOfDays days"));
-        $arrDts[] = $strToday;
-        while (strtotime($strStart) <= strtotime($strToday)) {
-            $strNow = date("Y-m-d", strtotime(date("Y-m-d", strtotime($strToday)) . " - $intInterval days"));
-            $arrDts[] = $strNow;
-            $strToday = $strNow;
-        }
-        return $arrDts;
-    }
-
 
     /**
      * Function Create PDF and send email to respective company
