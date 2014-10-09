@@ -2,32 +2,6 @@
 //This is class for Reports functions.
 class ClsReports
 {
-    public $strCurrentDate;
-    public $strChartPrevDate;
-    public $arrShowMediaType;
-    public $strViewTableName;
-    public $strClickTableName;
-    private $strNewsletterClick;
-
-    public function __construct()
-    {
-        $this->strCurrentDate = date("Y-m-d", (time() - 86400)); //(time()-86400) date("Y-m-d", strtotime("2013-12-16"))//
-
-        $this->strChartPrevDate = date("Y-m-d", strtotime(date("Y-m-d", strtotime($this->strCurrentDate)) . " - 61 days"));
-        $this->arrShowMediaType = array(
-            'press_release' => 'Press Release',
-            'blog' => 'Blog',
-            'multimedia' => 'Multimedia',
-            'article' => 'Article',
-            'newsletter' => 'Newsletter',
-            'all' => 'All'
-        );
-        $this->strViewTableName = 'threebl_analytic_views';
-        $this->strClickTableName = 'threebl_analytic_clicks';
-        $this->strNewsletterClick = 'news_alert_tracking';
-        $this->strBenchmarkNAMonth = '2014-03-31';
-    }
-
     /**
      * Function return FMRs those have video attached with it.
      *
@@ -517,83 +491,6 @@ class ClsReports
 								          GROUP BY  DATE_FORMAT(click_date, '%Y/%m/%d')
 								          ORDER by click_date asc";
         return $arrayViewChartData = db_query($strViewChartDataSql)->fetchAll();
-    }
-
-    /**
-     * Function gather data of 7 days and create array for the Graph.
-     *
-     * @param array $arrChart  : FMR Views Info
-     * @param array $arrChart1 : FMR Clicks Info
-     *
-     * @return array
-     */
-    public function fnSumWeekViewsClicks($arrChart, $arrChart1 = array())
-    {
-        $intMaxChart = max($arrChart);
-        $intMaxChart1 = (count($arrChart1) > 0) ? max($arrChart) : 0;
-
-        if ($intMaxChart <= 0 && $intMaxChart1 <= 0) {
-            return (count($arrChart1) > 0) ? array("", "", "") : array("", "");
-        }
-
-        # getting previous date from today's date means we need the dates array having 7 days difference.(ex 1-11-2012, 7-11-2012)
-        $strTodayDate = $this->strCurrentDate;
-        $arrDts = $this->fnGetPreviousDates($strTodayDate, 59, 1);
-        $arrDts = array_reverse($arrDts);
-
-        //Process views and clicks and prepare 7 days interval data for graph
-        $arrDates = array();
-        $arrChartSum = $arrChartSum1 = array();
-        $strDate = "";
-        $intCount = $intGraphSum = $intGraphSum1 = 0;
-        foreach ($arrDts as $key => $val) {
-
-            $intGraphSum += (int)$arrChart[$val];
-            $intGraphSum1 += (int)$arrChart1[$val];
-            $intCount++;
-            if ($intCount == 7) {
-                $strDate = date("M d", strtotime($val));
-                $arrDates[] = $strDate;
-                $arrChartSum[$strDate] = (int)$intGraphSum;
-                $arrChartSum1[$strDate] = (int)$intGraphSum1;
-
-                $strDate = "";
-                $intCount = 0;
-                $intGraphSum = 0;
-                $intGraphSum1 = 0;
-            }
-        }
-        //Update Last date range data.
-        if ($intCount > 0) {
-            $strDate = date("M d", strtotime($val));
-            $arrDates[] = $strDate;
-            $arrChartSum[$strDate] = (int)$intGraphSum;
-            $arrChartSum1[$strDate] = (int)$intGraphSum1;
-        }
-        if (count($arrChart1) > 0) {
-            return array($arrChartSum, $arrChartSum1, $arrDates);
-        } else {
-            return array($arrChartSum, $arrDates);
-        }
-    }
-
-    /**
-     * @param string $strToday    : Current Date
-     * @param int    $intNoOfDays : No of days
-     * @param int    $intInterval : No of days Interval
-     *
-     * @return array
-     */
-    public function fnGetPreviousDates($strToday, $intNoOfDays = 30, $intInterval = 1)
-    {
-        $strStart = date("Y-m-d", strtotime(date("Y-m-d", strtotime($strToday)) . " - $intNoOfDays days"));
-        $arrDts[] = $strToday;
-        while (strtotime($strStart) <= strtotime($strToday)) {
-            $strNow = date("Y-m-d", strtotime(date("Y-m-d", strtotime($strToday)) . " - $intInterval days"));
-            $arrDts[] = $strNow;
-            $strToday = $strNow;
-        }
-        return $arrDts;
     }
 
     /**
