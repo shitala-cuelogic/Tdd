@@ -33,22 +33,10 @@ class clsBenchmark
             } else {
 
                 // Get Views and Clicks with video
-                $intTotalFMRCountWithVideo = $arrTotalViewClickCount[$strMediaType]["withvideo"]["fmrcount"];
-                $intTotalViewCountWithVideo = $arrTotalViewClickCount[$strMediaType]["withvideo"]["views"];
-                $intTotalClickCountWithVideo = $arrTotalViewClickCount[$strMediaType]["withvideo"]["clicks"];
-
-                // Calculate average views and clicks with video
-                $intAverageViewCountWithVideo = ($intTotalViewCountWithVideo != 0 && $intTotalFMRCountWithVideo != 0) ? round($intTotalViewCountWithVideo / $intTotalFMRCountWithVideo) : 0;
-                $intAverageClickCountWithVideo = ($intTotalClickCountWithVideo != 0 && $intTotalFMRCountWithVideo != 0) ? round($intTotalClickCountWithVideo / $intTotalFMRCountWithVideo) : 0;
-
-                // Get Views and Clicks without video
-                $intTotalFMRCountWithoutVideo = $arrTotalViewClickCount[$strMediaType]["withoutvideo"]["fmrcount"];
-                $intTotalViewCountWithoutVideo = $arrTotalViewClickCount[$strMediaType]["withoutvideo"]["views"];
-                $intTotalClickCountWithoutVideo = $arrTotalViewClickCount[$strMediaType]["withoutvideo"]["clicks"];
-
-                // Calculate average views and clicks without video
-                $intAverageViewCountWithoutVideo = ($intTotalViewCountWithoutVideo != 0 && $intTotalFMRCountWithoutVideo != 0) ? round($intTotalViewCountWithoutVideo / $intTotalFMRCountWithoutVideo) : 0;
-                $intAverageClickCountWithoutVideo = ($intTotalClickCountWithoutVideo != 0 && $intTotalFMRCountWithoutVideo != 0) ? round($intTotalClickCountWithoutVideo / $intTotalFMRCountWithoutVideo) : 0;
+                list($intTotalFMRCountWithVideo, $intTotalViewCountWithVideo, $intTotalClickCountWithVideo, $intAverageViewCountWithVideo, $intAverageClickCountWithVideo) = $this->fnGetViewsAndClicksWithVideo($arrTotalViewClickCount, $strMediaType);
+                
+                list($intTotalFMRCountWithoutVideo, $intTotalViewCountWithoutVideo, $intTotalClickCountWithoutVideo, $intAverageViewCountWithoutVideo, $intAverageClickCountWithoutVideo) = $this->fnGetViewsAndClicksWithoutVideo($arrTotalViewClickCount, $strMediaType);
+                
 
                 //Insert all details in the table.
                 $arrInsertViewsData = array(
@@ -75,6 +63,33 @@ class clsBenchmark
                     ->execute();
             }
         }
+    }
+
+    public function fnGetViewsAndClicksWithVideo($arrTotalViewClickCount, $strMediaType) {
+
+        $intTotalFMRCountWithVideo = $arrTotalViewClickCount[$strMediaType]["withvideo"]["fmrcount"];
+        $intTotalViewCountWithVideo = $arrTotalViewClickCount[$strMediaType]["withvideo"]["views"];
+        $intTotalClickCountWithVideo = $arrTotalViewClickCount[$strMediaType]["withvideo"]["clicks"];
+
+                // Calculate average views and clicks with video
+        $intAverageViewCountWithVideo = ($intTotalViewCountWithVideo != 0 && $intTotalFMRCountWithVideo != 0) ? round($intTotalViewCountWithVideo / $intTotalFMRCountWithVideo) : 0;
+        $intAverageClickCountWithVideo = ($intTotalClickCountWithVideo != 0 && $intTotalFMRCountWithVideo != 0) ? round($intTotalClickCountWithVideo / $intTotalFMRCountWithVideo) : 0;
+
+        return array($intTotalFMRCountWithVideo, $intTotalViewCountWithVideo, $intTotalClickCountWithVideo, $intAverageViewCountWithVideo, $intAverageClickCountWithVideo);
+    }
+
+    public function fnGetViewsAndClicksWithoutVideo($arrTotalViewClickCount, $strMediaType)() {
+        // Get Views and Clicks without video
+        $intTotalFMRCountWithoutVideo = $arrTotalViewClickCount[$strMediaType]["withoutvideo"]["fmrcount"];
+        $intTotalViewCountWithoutVideo = $arrTotalViewClickCount[$strMediaType]["withoutvideo"]["views"];
+        $intTotalClickCountWithoutVideo = $arrTotalViewClickCount[$strMediaType]["withoutvideo"]["clicks"];
+
+        // Calculate average views and clicks without video
+        $intAverageViewCountWithoutVideo = ($intTotalViewCountWithoutVideo != 0 && $intTotalFMRCountWithoutVideo != 0) ? round($intTotalViewCountWithoutVideo / $intTotalFMRCountWithoutVideo) : 0;
+        $intAverageClickCountWithoutVideo = ($intTotalClickCountWithoutVideo != 0 && $intTotalFMRCountWithoutVideo != 0) ? round($intTotalClickCountWithoutVideo / $intTotalFMRCountWithoutVideo) : 0;
+
+        return array($intTotalFMRCountWithoutVideo, $intTotalViewCountWithoutVideo, $intTotalClickCountWithoutVideo, $intAverageViewCountWithoutVideo, $intAverageClickCountWithoutVideo);
+    
     }
 
     public function fnSaveBenchMark($arrBenchmarkFMRIds, $strMediaType, $intAverageViewCount, $intAverageClickCount) {
