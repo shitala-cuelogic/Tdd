@@ -1,7 +1,7 @@
 <?php
 //This is class for Analytics functions.
 
-class clsAnalyticsData
+class clsCompanyData
 {
     /**
      * Function fetch all campaign related to company
