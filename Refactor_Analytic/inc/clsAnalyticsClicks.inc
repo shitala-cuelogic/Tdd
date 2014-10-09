@@ -125,67 +125,6 @@ class clsAnalyticsClicks
     }
 
     /**
-     * Fetch FMR Click information for Benchmark
-     *
-     * @param string $strFMRIds : Comma separated FMR Ids
-     *
-     * @return mixed
-     */
-    function fnGetBenchmarkClick($strFMRIds)
-    {
-        $strSQL = "SELECT COUNT(C.nid) AS click_count, C.nid
-                   FROM " . $this->strClickTableName . " AS C
-                   JOIN field_data_field_fmr_date_time AS PD ON PD.entity_id = C.nid
-                   WHERE C.nid IN ($strFMRIds)
-                   AND C.click_date >= PD.field_fmr_date_time_value AND C.click_date <= DATE_ADD(PD.field_fmr_date_time_value, INTERVAL 168 HOUR)
-                   GROUP BY C.nid";
-        $objFMRClickInfo = db_query($strSQL)->fetchAll();
-
-        $arrFMRClickInfo = array();
-
-        //Checking is empty
-        if (!empty($objFMRClickInfo)) {
-
-            # Get FMR Click count
-            foreach ($objFMRClickInfo as $objFMRClick) {
-                $arrFMRClickInfo[$objFMRClick->nid] = $objFMRClick->click_count;
-            }
-        }
-        return $arrFMRClickInfo;
-    }
-
-    /**
-     * Get Benchmarks views information
-     *
-     * @return array
-     */
-    public function fnGetBenchmarkClicksByMediaType()
-    {
-        $arrStartEndDate = $this->fnGetDateForBenchmarkByMedia();
-        $intCurrentMonthDate = $arrStartEndDate["Current_month_date"];
-        $intNextMonthDate = $arrStartEndDate["next_month_date"];
-
-        $strBenchmarkClicksByMediaTypeQuery = "SELECT benchmark_clicks, benchmark_clicks_withvideo, benchmark_clicks_withoutvideo, media_type
-                                               FROM threebl_benchmark_clicks_avg_by_mediatype
-                                               WHERE DATE_FORMAT(benchmark_clicks_month, '%Y-%m') >= '$intCurrentMonthDate'
-                                               AND DATE_FORMAT(benchmark_clicks_month, '%Y-%m') <= '$intNextMonthDate'";
-        $arrBenchmarkClicksByMediaType = db_query($strBenchmarkClicksByMediaTypeQuery)->fetchAll();
-
-        $arrBenchmarkClicksFMRInfo = array();
-
-        //Checking is empty
-        if (!empty($arrBenchmarkClicksByMediaType)) {
-            # Get Benchmark view count
-            foreach ($arrBenchmarkClicksByMediaType as $objBenchmarkClicks) {
-                $arrBenchmarkClicksFMRInfo[$objBenchmarkClicks->media_type]["benchmark_clicks"] = $objBenchmarkClicks->benchmark_clicks;
-                $arrBenchmarkClicksFMRInfo[$objBenchmarkClicks->media_type]["benchmark_clicks_withvideo"] = $objBenchmarkClicks->benchmark_clicks_withvideo;
-                $arrBenchmarkClicksFMRInfo[$objBenchmarkClicks->media_type]["benchmark_clicks_withoutvideo"] = $objBenchmarkClicks->benchmark_clicks_withoutvideo;
-            }
-        }
-        return $arrBenchmarkClicksFMRInfo;
-    }
-
-    /**
      * Get Top five clicks count and their FMR information
      * @param int $intCompanyOgId : Company OG Id
      *

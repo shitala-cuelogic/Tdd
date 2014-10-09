@@ -322,5 +322,53 @@ class clsAnalyticsData
         }
 
          return array($arrBenchmarkFMRInfo, $arrFMRIds, $arrBenchMarkByMediaType, $arrBenchmarkFMRIds);
+    }
+
+    public function fnGetCompanyOgIds($FMRid) {
+
+        $strMedia = "select ogm.etid, ogm.gid companyOgId
+                     from og_membership ogm
+                     where ogm.etid = $FMRid";
+
+        $arrMedia = db_query($strMedia)->fetchAssoc();
+
+        return $arrMedia;
+    }
+
+     /**
+     * //Get start and End date of Previous month
+     * @param int $strMonthDuration : Month duration for start and end date
+     *
+     * @return array
+     */
+    public function fnGetStartEndDate($strMonthDuration = 1)
+    {
+        $intCurMonth = date("m");
+
+        $intCurYear = date("Y");
+        // Get days in previous month
+        $intDaysInPrevMonth = date('t', mktime(0, 0, 0, $intCurMonth - 1, 1, $intCurYear));
+
+        //Get previous month for start date
+        $intStartPrevMonth = date('m', mktime(0, 0, 0, $intCurMonth - $strMonthDuration, 1, $intCurYear));
+
+        //Get previous month for end date
+        $intEndPrevMonth = date('m', mktime(0, 0, 0, $intCurMonth - 1, 1, $intCurYear));
+
+        //Get previous month year for start date
+        $intStartPrevMonthYear = date('Y', mktime(0, 0, 0, $intCurMonth - $strMonthDuration, 1, $intCurYear));
+
+        //Get previous month year for end date
+        $intEndPrevMonthYear = date('Y', mktime(0, 0, 0, $intCurMonth - 1, 1, $intCurYear));
+
+        //Get previous month date
+        $intPrevMonthDate = date('d', mktime(0, 0, 0, $intEndPrevMonth, 0 + $intDaysInPrevMonth, $intCurYear));
+
+        // Start date
+        $strGetStartDate = "$intStartPrevMonthYear-$intStartPrevMonth-01";
+        // End date
+        $strGetEndDate = "$intEndPrevMonthYear-$intEndPrevMonth-$intPrevMonthDate";
+
+        return $arrStartEndDate = array("start_date" => $strGetStartDate, "end_date" => $strGetEndDate);
     } 
 }
