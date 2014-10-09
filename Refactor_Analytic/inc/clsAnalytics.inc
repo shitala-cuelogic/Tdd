@@ -45,7 +45,7 @@ class clsAnalytics extends clsBaseClass
      * Primary Categories array to replace long title with short title
      * @return array
      */
-    function fnGetPrimaryCategoryShortName()
+    public function fnGetPrimaryCategoryShortName()
     {
         $arrLongPrimaryCategoryName = array(
             "Environment and Climate Change"            => "Enviro & Climate Change",
