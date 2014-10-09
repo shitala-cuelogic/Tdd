@@ -197,51 +197,7 @@ class ClsReportsData
         return $intInsertId;
     }
 
-    /**
-     * Function to insert 3BL report details
-     *
-     * @param int    $intCompanyId      : Company Id
-     * @param string $strEmailIds       : Email Ids
-     * @param string $strReportType     : Report type
-     * @param string $strReportFileType : Report File type
-     *
-     * @return mixed
-     */
-    public function fnInsert3blReportDetails($intCompanyId, $strEmailIds, $strReportType, $strReportFileType)
-    {
-        //--------------------Details of parameters --------------------//
-        //	$intCompanyId =   Company id                                //
-        //	$strEmailIds = Email  id is available only for email option //
-        //	$strReportType =                                            //
-        //  1. BADF														//
-        //  2. MCSR 													//
-        //  3. CSMT  													//
-        //  4. CSC														//
-        //  5. FMR                                 						//
-        //	$intEmailSendByOption = 									//
-        //   1. pdf														//
-        //   2. Excel													//
-        //   3. Email 		                             				//
-        //--------------------------- End ------------------------------//
 
-        //set the current date
-        $dateCurrentDate = date("Y-m-d");
-
-        #Set the report Source to 3bl
-        $strChannel = "3bl";
-
-        //Insert all details in the table.
-        $intInsertId = db_insert('threebl_company_auto_report_tracking')
-            ->fields(array(
-            'companyid' => $intCompanyId,
-            'email' => $strEmailIds,
-            'channel' => $strChannel,
-            'report_type' => $strReportType,
-            'download_file_type' => $strReportFileType,
-            'send_on' => $dateCurrentDate
-        ))->execute();
-        return $intInsertId;
-    }
 
     /**
      * Function sending email to all Company users those email id sink with report functionality.
@@ -461,49 +417,6 @@ class ClsReportsData
     }
 
 
-    /**
-     * This function Removes special character's added through Msword.
-     *
-     * @param sting $strMsWordText : MS word text
-     * @param string $strSection
-     * @return string
-     */
-    function fnRemoveWordFormatting($strMsWordText, $strSection = "")
-    {
-        $search = array(
-            '/(%E2%80%93|%u2013|%u2026|%u2014|%96|%E2%80%94)/i',
-            '/(%E2%80%9C|%E2%80%9D|%u201C|%u201D|%93|%94)/i',
-            '/(%E2%80%98|%E2%80%99|%u2018|%u2019|%91|%92|%E2%80%9B)/i',
-            '/(%95%09)/',
-            '/(%E2%80%A6)/',
-            '/(%E2%80%9A)/',
-            '/(%E2%80%8B)/',
-            '/(%E2%80%A8)/'
-        );
-
-        $replace = array(
-            '-',
-            '"',
-            "'",
-            "- ",
-            "...",
-            ",",
-            " ",
-            " "
-        );
-
-        $strMsWordText = preg_replace($search, $replace, $strMsWordText);
-        $strMsWordUrlDecodeText = urldecode(preg_replace($search, $replace, urlencode($strMsWordText)));
-
-        if ($strSection == "widget") {
-            $strMsWordFinalText = html_entity_decode(htmlentities($strMsWordUrlDecodeText));
-        } else {
-            $strMsWordFinalText = utf8_decode(html_entity_decode(htmlentities($strMsWordUrlDecodeText)));
-        }
-        
-
-        return $strMsWordFinalText;
-    }
 
 
     /* Added for micro functioning */
