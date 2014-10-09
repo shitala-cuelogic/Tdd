@@ -1,0 +1,60 @@
+<?php
+
+function threebl_analytics_auto_summary_reports_menu(){
+    $items = array();
+    $items['threebl_analytics_auto_summary_reports_cron'] = array(
+        'title'=>' Analytics',
+        'description'=>'Analytics Views',
+        'page callback'=>'threebl_analytics_auto_summary_reports_cron',
+        'access arguments' => array('dashboard analytics'),
+    );
+    $items['test_report_cron'] = array(
+        'title'=>' Analytics',
+        'description'=>'Analytics Views',
+        'page callback'=>'test_report_cron',
+        'access arguments' => array('dashboard analytics'),
+    );
+    return $items;
+}//end threebl_dashboard_analytics_menu
+
+/**
+ * @return bool
+ */
+function threebl_analytics_auto_summary_reports_cron(){
+    //include required files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/sendEmail');
+
+    // Object of Report class
+    $objReports = new clsReports();
+
+    //Get all active companies
+    $arrCompany = array();
+    $arrCompany = $objReports->fnGetActiveCompanies();
+
+    //$arrCompany = array(54=>889); // Added by sanket for testing.
+
+    if(count($arrCompany) > 0 ){
+
+        //GET Company Ids
+        $arrCompanyIds = array();
+        $arrCompanyIds = array_values($arrCompany);
+
+        //Implode all company Ids for SQL used for report emails
+        $strCompanyIds = implode(',',$arrCompanyIds);
+        //get the summery of company for a month
+        $arrAutoWeeklyReportEmail = $objReports->fnGetAutoReportEmail($strCompanyIds);
+
+        //get the summery of company for a month
+        $arrAutoMonthlyReportEmail = $objReports->fnGetAutoReportEmail($strCompanyIds,1);
+
+        //Process Weekly Report Email
+        $objReports->fnSendMonthlyReport($arrCompany, $arrAutoWeeklyReportEmail, $arrAutoMonthlyReportEmail);
+    }
+    return true;
+}
+
+function test_report_cron()
+{
+    threebl_analytics_auto_summary_reports_cron();
+}

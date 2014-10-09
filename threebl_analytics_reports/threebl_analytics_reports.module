@@ -1,0 +1,1055 @@
+<?php
+/**
+ * @return array
+ */
+function threebl_analytics_reports_menu()
+{
+    $items = array();
+    $items['Dashboard/Report/Views'] = array(
+        'title' => ' Analytics',
+        'description' => 'Analytics Views',
+        'page callback' => 'threebl_analytics_reports_view_analytics',
+        'page arguments' => array(3, 4),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Views/MediaType'] = array(
+        'title' => 'Media Type ',
+        'description' => 'Media Type ',
+        'page callback' => 'threebl_analytics_reports_MediaTypeViews',
+        'page arguments' => array(4, 5),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/viewGrp'] = array(
+        'title' => ' Analytics',
+        'description' => 'Analytics Views',
+        'page callback' => 'threebl_analytics_reports_Grp',
+        'page arguments' => array(3, 4, 5, 6, 7),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/clickGrp'] = array(
+        'title' => ' Analytics',
+        'description' => 'Analytics Views',
+        'page callback' => 'threebl_analytics_reports_Grp',
+        'page arguments' => array(3, 4, 5, 6, 7),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/PDF'] = array(
+        'title' => ' Tracking PDF List ',
+        'description' => 'Creating PDF',
+        'page callback' => 'threebl_analytics_reports_pdf',
+        'page arguments' => array(3, 4),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Excel'] = array(
+        'title' => ' Tracking Excel List ',
+        'description' => 'Creating Excel',
+        'page callback' => 'threebl_analytics_reports_excel',
+        'page arguments' => array(3, 4),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Views/MediaId'] = array(
+        'title' => 'Media Id ',
+        'description' => 'Media Id ',
+        'page callback' => 'threebl_analytics_reports_MediaTypeId',
+        'page arguments' => array(4, 5),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Views/CronMediaId'] = array(
+        'title' => 'Company Media Ids',
+        'description' => 'Company Media Ids information',
+        'page callback' => 'threebl_analytics_reports_MediaTypeId',
+        'page arguments' => array(4, 5),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Views/pdfhtml'] = array(
+        'title' => 'Company Media Ids Report',
+        'description' => 'Company media ids report information',
+        'page callback' => 'threebl_analytics_reports_pdf_html',
+        'page arguments' => array(4),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['admin/Fmr/Report'] = array(
+        'title' => 'FMR report',
+        'description' => 'Show clicks and view for FMR',
+        'page callback' => 'threebl_analytics_fmr_report',
+        'page arguments' => array(3),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_CALLBACK
+    );
+
+    $items['admin/Fmr/Monthly/Report'] = array(
+        'title'            => 'FMR monthly report',
+        'description'      => 'Show clicks and view for FMR',
+        'page callback'    => 'threebl_analytics_fmr_monthly_report',
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+        'type'             => MENU_CALLBACK
+    );
+
+    $items['admin/reports/analytics/week-at-a-glance'] = array(
+        'title'            => 'Internal Analytics Report - Week at a glance',
+        'description'      => 'Show clicks and view for FMR',
+        'page callback'    => 'threebl_analytics_fmr_weekly_internal_report',
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+        'type'             => MENU_CALLBACK
+    );
+
+    $items['admin/reports/analytics/week-at-a-glance/excel'] = array(
+        'title'            => 'Internal Analytics Report - Week at a glance',
+        'description'      => 'Show clicks and view for FMR',
+        'page callback'    => 'threebl_analytics_fmr_weekly_internal_report',
+        'access arguments' => array('administer users'),
+        'page arguments'   => array(4),
+        'access callback'  => true,
+        'type'             => MENU_CALLBACK
+    );
+
+    return $items;
+}
+
+/**
+ * Function to generate Html for Analytics reports
+ * @param string $strTyp : Section type eg. header and body
+ */
+function threebl_analytics_reports_pdf_html($strTyp)
+{
+    global $base_url;
+    if ($strTyp == 'header') {
+        $strImg = $base_url . "/" . drupal_get_path('theme', 'threebl') . "/images/3BLReport_Header.jpg";
+        print '<style type="text/css">body{margin: 0; padding: 0; padding-bottom:10px}</style>
+		<img src="' . $strImg . '" width="700" height="40" />';
+    } else {
+        print '<style type="text/css">
+		body{margin: 0; padding: 0; text-align:center; padding-top:10px}
+		.copyright {font-family:Tahoma,Geneva,Arial,Helvetica,sans-serif;color: #000000;font-size: 8px; margin-top:10px}
+		</style>
+		<span class="copyright">&copy; ' . date('Y') . ' COPYRIGHT 3BL MEDIA, LLC.</span>';
+    }
+}
+
+/**
+ * view count of particular company by Media type
+ * @param string $strQry : Query string of Get parameter
+ */
+function threebl_analytics_reports_MediaTypeViews($strQry)
+{
+    global $conf;
+
+    parse_str(base64_decode($strQry), $arrParse);
+    $_GET = $arrParse;
+
+    $strMediaType = isset($_GET['strMediaType']) ? $_GET['strMediaType'] : 'all'; //Media types
+    $intCampaignId = isset($_GET['intCampaignId']) ? (int)$_GET['intCampaignId'] : 0; // Campaign ID    //change
+    $intCompanyOgId = $_GET['client_og']; // company og id
+    $strFileType = isset($_GET['fileTyp']) ? $_GET['fileTyp'] : ''; //change
+    $intCompanyNid = $_GET['client_og_nid']; // 3bl company id
+
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+    //Get Campaign Name from campaign id
+    $strCampaignName = $objReports->fnGetCampaignName($intCampaignId);
+    //Get Company Name
+    $strCompanyName = $objReports->fnGetCompanyName($intCompanyNid);
+
+    // Query for getting the Views Count for particular media type.
+    //Fetch all company FMRs STEP 1
+    list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $objReports->fnGetCompanyFMRs($intCompanyOgId, $strMediaType, $intCampaignId, "archive", $strFileType);
+
+    # Initialize
+    $arrFMRInformation = array();
+    $arrFMRViews = array();
+    $arrFMRClicks = array();
+    $arrViewChartSum = array();
+    $arrClickChartSum = array();
+    $arrDates = array();
+
+    //checking the FMR's array exist or not.
+    if ($strFMRIds != '') {
+
+        //Fetch all company FMRs Views STEP 2
+        // Query  which give result Count(FMRCount) of each media and ViewCount of each media.
+        $arrFMRViews = $objReports->fnGetViews($strFMRIds);
+
+        //Views Date by date-visited
+        $strChartDateBetweenFlag = "1";
+        $arrViewChart = $objReports->fnGetViewChartInfo($intCompanyOgId, $strFMRIds, $strChartDateBetweenFlag, $intCampaignId);
+
+        // Query for getting the Click Count
+        $arrFMRClicks = $objReports->fnGetClicks($strFMRIds);
+
+        //Get non Video FMRs clicks
+        $strClickChartDateBetweenFlag = "1";
+        $arrClickChart = $objReports->fnGetClickChartInfo($intCompanyOgId, $strFMRIds, $strClickChartDateBetweenFlag, $intCampaignId);
+
+        //Process views and clicks and prepare 7 days interval data for graph
+        list($arrViewChartSum, $arrClickChartSum, $arrDates) = $objReports->fnSumWeekViewsClicks($arrViewChart, $arrClickChart);
+    }
+
+    //Combine all views and clicks data
+    if (count($arrFMRIds) > 0) {
+        #Get Information for all FMR types
+        foreach ($arrFMRInfo as $intFMRId => $arrFMRs) {
+            #Collect all FMR related information
+            $arrFMRInfo[$intFMRId]['views'] = (int)$arrFMRViews[$intFMRId];
+            $arrFMRInfo[$intFMRId]['clicks'] = (int)$arrFMRClicks[$intFMRId];
+
+            $arrFMRInformation['views'][] = (int)$arrFMRViews[$intFMRId];
+            $arrFMRInformation['clicks'][] = (int)$arrFMRClicks[$intFMRId];
+        }
+    }
+
+    #Total Views
+    $intTotalViews = (int)array_sum($arrFMRInformation['views']);
+    $intTotalClicks = (int)array_sum($arrFMRInformation['clicks']);
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/justmeans/jmbackend-global.css');
+    if ($strFileType == "excel") {
+        $arrData = array(
+            'strMediaType' => $objReports->arrShowMediaType[$strMediaType],
+            'arrFMRInfo' => $arrFMRInfo,
+            "intCampaignId" => $intCampaignId,
+            'strCompanyName' => $strCompanyName,
+            "strCampaignName" => $strCampaignName,
+            "intTotalViews" => $intTotalViews,
+            "intTotalClicks" => $intTotalClicks,
+            'arrShowMediaType' => $objReports->arrShowMediaType
+
+        ); //change
+        echo theme('view-media-type_report_excel', $arrData);
+    } else {
+        #View Graph HTML
+        $arrViewData = array('arrViewChart' => $arrViewChartSum, "arrDts" => $arrDates);
+        $strViewGraph = theme('view_graph', $arrViewData);
+
+        #CLICK Graph HTML
+        $arrClickData = array('arrClickChart' => $arrClickChartSum, "arrDts" => $arrDates);
+        $strClickGraph = theme('click_graph', $arrClickData);
+
+        $arrData = array(
+            'strMediaType' => $objReports->arrShowMediaType[$strMediaType],
+            "strViewGrp" => $strViewGraph,
+            "strClickGrp" => $strClickGraph,
+            'arrFMRInfo' => $arrFMRInfo,
+            "intCampaignId" => $intCampaignId,
+            'strCompanyName' => $strCompanyName,
+            "strCampaignName" => $strCampaignName,
+            "intTotalViews" => $intTotalViews,
+            "intTotalClicks" => $intTotalClicks,
+            'arrShowMediaType' => $objReports->arrShowMediaType,
+            "imagepath"        => $conf['IMAGES_PATH_3BL'],
+        );
+        echo theme('view-media-type_report', $arrData);
+    }
+}
+
+/**
+ * view count of particular company and 3bl company
+ *
+ * @param string $strQry : Query string of Get parameter
+ */
+function threebl_analytics_reports_view_analytics($strQry)
+{
+    global $conf;
+    parse_str(base64_decode($strQry), $arrParse);
+    $_GET = $arrParse;
+
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+    module_load_include('inc', 'threebl_analytics', 'inc/clsAnalytics');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+    $objAnalytics = new clsAnalytics();
+
+    $intCompanyOgId = $_GET['client_og']; // og id
+    $intCompanyNid = $_GET['client_og_nid'];
+
+    //Get Company name
+    $strCompanyName = $objReports->fnGetCompanyName($intCompanyNid);
+
+    //Fetch all company FMRs STEP 1
+    list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $objReports->fnGetCompanyFMRs($intCompanyOgId, "", "", "non_archive");
+
+    //Get Top five clicks count and their FMR information
+    $arrTopClicksFMRInfo = $objAnalytics->fnGetTopFiveClicksFMRs($intCompanyOgId);
+
+    // Get Benchmarks views information
+    $arrBenchmarkViewsFMRInfo = $objAnalytics->fnGetBenchmarkViewsByMediaType();
+
+    // Get Benchmarks clicks information
+    $arrBenchmarkClicksFMRInfo = $objAnalytics->fnGetBenchmarkClicksByMediaType();
+
+    $arrMediaTypeCount = array();
+
+    //Checking if condition
+    if (count($arrFMRIds) >0) {
+        //Fetch all company FMRs Views STEP 2
+        // Query  which give result Count(FMRCount) of each media and ViewCount of each media.
+        $arrFMRViews = $objReports->fnGetViews($strFMRIds);
+        # GET the Click Related data
+        $arrFMRClicks = $objReports->fnGetClicks($strFMRIds);
+
+        //GET all FMR with Videos
+        $arrFMRWithVideos = $objReports->fnGetFMRWithVideo($intCompanyOgId);
+
+        if (count($arrFMRIds) > 0) {
+            #Get Information for all FMR types
+            foreach ($arrFMRInfo as $strFMRType => $arrFMRs) {
+
+                #Collect All Views for the all FMRs with and without video
+                $arrFMRInformation = array();
+                $arrFMRViewsInformationWith = array();
+
+                foreach ($arrFMRs as $key => $intFMRId) {
+                    $arrFMRInformation['views'][] = $arrFMRViews[$intFMRId];
+                    $arrFMRInformation['clicks'][] = $arrFMRClicks[$intFMRId];
+
+                    #Check that FMR from with video or not.
+                    if (in_array($intFMRId, $arrFMRWithVideos) == true) {
+                        $arrFMRViewsInformationWith['views'][] = $arrFMRViews[$intFMRId];
+                        $arrFMRViewsInformationWith['clicks'][] = $arrFMRClicks[$intFMRId];
+                    }
+                }
+
+                #Total Views
+                $arrMediaTypeCount[$strFMRType]['viewcount'] = (int)array_sum($arrFMRInformation['views']);
+                $arrMediaTypeCount[$strFMRType]['clickcount'] = (int)array_sum($arrFMRInformation['clicks']);
+
+                #Get total FMRs
+                $arrMediaTypeCount[$strFMRType]['fmrcount'] = (int)count($arrFMRs);
+
+                //Assign with video count to total count of media.
+                $arrMediaTypeCount[$strFMRType]["withvideo"]['fmrcount'] = count($arrFMRViewsInformationWith['views']);
+                $arrMediaTypeCount[$strFMRType]["withvideo"]['viewcount'] = (int)array_sum($arrFMRViewsInformationWith['views']);
+                $arrMediaTypeCount[$strFMRType]["withvideo"]['clickcount'] = (int)array_sum($arrFMRViewsInformationWith['clicks']);
+
+                //Assign with out video count to 0
+                #Views
+                $arrMediaTypeCount[$strFMRType]["withoutvideo"]['viewcount'] = (int)($arrMediaTypeCount[$strFMRType]['viewcount'] - $arrMediaTypeCount[$strFMRType]["withvideo"]['viewcount']);
+                #Clicks
+                $arrMediaTypeCount[$strFMRType]["withoutvideo"]['clickcount'] = (int)($arrMediaTypeCount[$strFMRType]['clickcount'] - $arrMediaTypeCount[$strFMRType]["withvideo"]['clickcount']);
+                #FMR Count
+                $arrMediaTypeCount[$strFMRType]["withoutvideo"]['fmrcount'] = (int)($arrMediaTypeCount[$strFMRType]['fmrcount'] - $arrMediaTypeCount[$strFMRType]["withvideo"]['fmrcount']);
+
+            }
+        }
+    }
+
+    // create Google image graph html for reports
+    list($strViewGraph, $arrViewGraph) = threebl_analytics_reports_Grp($intCompanyOgId, 'views', $strFMRIds);
+    list($strClickGraph, $arrClickGraph) = threebl_analytics_reports_Grp($intCompanyOgId, 'clicks', $strFMRIds);
+
+    drupal_add_js(drupal_get_path('module', 'threebl_analytics') . '/js/jsapi.js');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/justmeans/jmbackend-global.css');
+    //Collect Graph HTML
+
+    $arrData = array(
+        'arrMediaTypeCount' => $arrMediaTypeCount,
+        "strViewGrp" => $strViewGraph,
+        "strClickGrp" => $strClickGraph,
+        "strCompanyName" => $strCompanyName,
+        'arrBenchmarkViewsFMRInfo'  => $arrBenchmarkViewsFMRInfo,
+        'arrBenchmarkClicksFMRInfo' => $arrBenchmarkClicksFMRInfo,
+        "arrTopClicksFMRInfo" => $arrTopClicksFMRInfo,
+        "imagepath"           => $conf['IMAGES_PATH_3BL'],
+        "arrViewGraph"  => $arrViewGraph,
+        "arrClickGraph" => $arrClickGraph,
+    );
+    $strHTML = theme('report-analytics', $arrData);
+
+    echo $strHTML;
+    die;
+}
+
+/**
+ * Function create Google image graph html for reports
+ *
+ * @param int    $intCompanyOgId : Company OG id
+ * @param string $strType        : Type views or clicks
+ * @param string $strFMRIds      : FMR Id
+ * @param string $strFileType    : File Type
+ * @param int    $intCampaignId  : Campaign Id
+ * @param string $strMediaType   : Media Type
+ *
+ * @return string
+ */
+function threebl_analytics_reports_Grp($intCompanyOgId, $strType = 'views', $strFMRIds = "", $strFileType = 'PDF', $intCampaignId = 0, $strMediaType = "")
+{
+    $arrChartSum = array();
+    if ($strFMRIds !="") {
+        //Include required class files
+        module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+
+        // Object of Report class
+        $objReports = new ClsReports();
+
+        $arrChart = array();
+
+        if ($strType == 'views') { # View Graph Data Collection
+
+            // Query for View Chart between dates, For last 2 months.
+            $strChartDateBetweenFlag = "1";
+            $arrChart = $objReports->fnGetViewChartInfo($intCompanyOgId, $strFMRIds, $strChartDateBetweenFlag, $intCampaignId);
+
+        } elseif ($strType == 'clicks') { #Click Graph data collection
+
+            // Click chart between dates, default before 2 months with Company
+            $strClickChartDateBetweenFlag = "1";
+            $arrChart = $objReports->fnGetClickChartInfo($intCompanyOgId, $strFMRIds, $strClickChartDateBetweenFlag, $intCampaignId);
+        }
+
+        //Process views and clicks and prepare 7 days interval data for graph
+        list($arrChartSum, $arrDates) = $objReports->fnSumWeekViewsClicks($arrChart);
+    }
+
+    if ($strType == 'clicks') {
+        $arrData = array('arrClickChart' => $arrChartSum, "arrDts" => $arrDates);
+        $strHTML = theme('click_graph', $arrData);
+        return array($strHTML, $arrChartSum);
+    } else {
+        $arrData = array('arrViewChart' => $arrChartSum, "arrDts" => $arrDates);
+        $strHTML = theme('view_graph', $arrData);
+        return array($strHTML, $arrChartSum);
+    }
+}
+
+/**
+ * Getting views and clicks by media id
+ *
+ * @param string $strQry : Query string of Get parameter
+ */
+function threebl_analytics_reports_MediaTypeId($strQry)
+{
+    global $conf;
+    parse_str(base64_decode($strQry), $arrParse);
+    $_GET = $arrParse;
+
+    $strMediaTitle = "";
+    $strPublishDate = "";
+
+    $intMediaId = (int)$_GET['intMediaId']; // FMR Id
+    $strMediaIds = $_GET['strMediaIds']; //FMR Ids
+    $strFileType = $_GET['fileTyp']; //Get requested file type
+    $intCompanyNid = $_GET['client_og_nid']; //Company nid
+    $intCompanyOgId = $_GET['client_og']; //company og id
+    $arrTrackingImg = array();
+    $boolReport = 0;
+
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+    module_load_include('inc', 'threebl_analytics', 'inc/clsAnalytics');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+    $objAnalytics = new clsAnalytics();
+
+    //Get Company Name
+    $strCompanyName = $objReports->fnGetCompanyName($intCompanyNid);
+
+    //Getting FMR Title by media id.
+    if ($intMediaId > 0) {
+        $objNode = node_load($intMediaId);
+        $strMediaTitle = $objNode->title;
+        //getting FMR Publish date
+        $arrFmrPublish = $objNode->field_fmr_date_time;
+        $strPublishDate = $arrFmrPublish['und'][0]['value'];
+
+        //getting Benchmark views and clicks
+        if (strtotime($strPublishDate) <= strtotime($objAnalytics->strBenchmarkNAMonth)) {
+            // Set N/A value for Benchmark views and clicks, if FMR published before Apr 2014
+            $intBenchmarkView = "N/A";
+            $intBenchmarkClick = "N/A";
+        } else {
+            // Set value for Benchmark views and clicks
+            $intBenchmarkView = ((int) $objNode->field_fmr_average_views['und'][0]['value'] > 0) ? number_format((int) $objNode->field_fmr_average_views['und'][0]['value']) : "-";
+            $intBenchmarkClick = ((int) $objNode->field_fmr_average_clicks['und'][0]['value'] > 0) ? number_format((int) $objNode->field_fmr_average_clicks['und'][0]['value']) : "-";
+        }
+
+        // Primary Category
+        $strPrimaryCategoryName = "";
+        $intPrimaryCategoryId = (int) $objNode->field_fmr_primary_category['und'][0]['target_id'];
+        $strPrimaryCategory = $objAnalytics->fnPrimaryCategoryName($intPrimaryCategoryId);
+        if ($strPrimaryCategory != "") {
+            $strPrimaryCategoryName = $strPrimaryCategory;
+        }
+
+        // Is Archive
+        $strIsArchive = "";
+        $strCheckIsArchive = $objNode->field_dist_archive['und'][0]['value'];
+        if ($strCheckIsArchive == 1) {
+            $strIsArchive = " (A)";
+        }
+
+        //getting FMR Media type
+        $arrFmrType = $objNode->field_fmr_type_of_content;
+        $strFmrType = $arrFmrType['und'][0]['value'];
+
+        drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/justmeans/jmbackend-global.css');
+        drupal_add_js(drupal_get_path('module', 'threebl_analytics') . '/js/jsapi.js');
+
+        // Get country name and click count for google map by media id
+        $arrCountryName = $objReports->fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $intMediaId);
+
+        // get referrer website by media id
+        $arrReferLink = $objReports->fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $intMediaId);
+
+        $strMediaId = $intMediaId;
+
+    } elseif ($strMediaIds != '') {
+        $strMediaId = $strMediaIds;
+        $arrFMRIds = explode(',', $strMediaIds);
+        $boolReport = 1;
+
+        foreach ($arrFMRIds as $intMediaID) {
+            //Collect all node information
+            $arrNode[$intMediaID] = node_load($intMediaID);
+
+            // Get country name and click count for google map by media id
+            $arrCountryName[$intMediaID] = $objReports->fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $intMediaID);
+
+            // get referrer website by media id
+            $arrReferLink[$intMediaID] = $objReports->fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $intMediaID);
+        }
+    }
+
+    // Query for View count of Particular FMR
+    $arrViewCount = $objReports->fnGetFMRViewCountByMediaId($intCompanyOgId, $strMediaId, $boolReport);
+
+    // Query for Click count of Particular FMR
+    $arrClickCount = $objReports->fnGetFMRClickCountByMediaId($intCompanyOgId, $strMediaId, $boolReport);
+
+    $arrData = array(
+        'arrClickCount' => $arrClickCount,
+        'arrRefereLink' => $arrReferLink,
+        'arrCountryListName' => $arrCountryName,
+        'arrViewCount' => $arrViewCount,
+        'strMediaTitle' => $strMediaTitle,
+        'strPublishDate' => $strPublishDate,
+        'strFileType' => $strFileType,
+        'arrTrackingImg' => $arrTrackingImg,
+        "strCompanyName" => $strCompanyName,
+        'arrShowMediaType' => $objReports->arrShowMediaType,
+        'intBenchmarkView' => $intBenchmarkView,
+        'intBenchmarkClick' => $intBenchmarkClick,
+        "strPrimaryCategoryName" => $strPrimaryCategoryName,
+        "strIsArchive" => $strIsArchive,
+        "strFmrType" => $strFmrType,
+        "imagepath" => $conf['IMAGES_PATH_3BL'],
+    );
+
+    if ($strFileType == "Excel") {
+        print $strHTML = theme('view-media-id_report_excel', $arrData);
+        die;
+    } else {
+        print $strHTML = theme('view-media-id_report', $arrData);
+        die;
+    }
+}
+
+/**
+ * hook for theme
+ *
+ * @return array
+ */
+function threebl_analytics_reports_theme()
+{
+    $themes = array(
+        'report-analytics' => array(
+            'template' => 'templates/analytics_report',
+            'arguments' => array('name' => 'analytics_report')
+        ),
+        'report-analytics-excel' => array(
+            'template' => 'templates/analytics_report_excel',
+            'arguments' => array('name' => 'analytics_report_excel')
+        ),
+        'view_graph' => array(
+            'template' => 'templates/view_graph',
+            'arguments' => array('name' => 'view_graph')
+        ),
+        'click_graph' => array(
+            'template' => 'templates/click_graph',
+            'arguments' => array('name' => 'click_graph')
+        ),
+        'view-media-type_report' => array(
+            'template' => 'templates/view-media-type_report',
+            'arguments' => array('name' => 'view-media-type_report')
+        ),
+        'view-media-type_report_excel' => array(
+            'template' => 'templates/view-media-type_report_excel',
+            'arguments' => array('name' => 'view-media-type_report_excel')
+        ),
+        'view-media-id_report' => array(
+            'template' => 'templates/view-media-id_report',
+            'arguments' => array('name' => 'view-media-id_report')
+        ),
+        'view-media-id_report_excel' => array(
+            'template' => 'templates/view-media-id_report_excel',
+            'arguments' => array('name' => 'view-media-id_report_excel')
+        ),
+        'admin_fmr_report' => array(
+            'template' => 'templates/admin_fmr_report',
+            'arguments' => array()
+        ),
+
+        'fmr-weekly-report' => array(
+            'template'  => 'templates/fmr-weekly-report',
+            'arguments' => array(),
+        ),
+    );
+    return $themes;
+}
+
+/**
+ * Function to download PDF file
+ *
+ * @param string $strType : Type eg. MCSR, CSMT etc.
+ * @param string $strMediaType : Media Type
+ */
+function threebl_analytics_reports_pdf($strType, $strMediaType)
+{
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+
+    $strTime = time();
+    global $base_url;
+    $strServerName = $_SERVER['HTTP_HOST'];
+
+    #Get the repoty type : such as 1  for MCSR,2 for CSMT
+    $intTypeOFReport = 0;
+
+    #get the company id
+    $intCompanyNid = $_SESSION['client_og_nid']; // node id
+
+    #Set the report download by value to pdf : 0
+    $strReportFileType = "pdf";
+
+    # Email addresses are not available for case pdf
+    $strEmail = "Download by pdf";
+
+    //start : change
+    $strHeader = $base_url . "/Dashboard/Report/Views/pdfhtml/header";
+    $strFooter = $base_url . "/Dashboard/Report/Views/pdfhtml/footer";
+    switch ($strType) {
+        case "MCSR":
+            $strUrl = http_build_query(array('client_og' => $_SESSION['client_og'], 'client_og_nid' => $intCompanyNid));
+            $strSrc1 = $base_url . "/Dashboard/Report/Views/" . base64_encode($strUrl);
+            exec('xvfb-run -a -s "-screen 0 640x480x16" /var/www/bin/wkhtmltopdf --quiet --margin-top 15mm --header-html ' . $strHeader . ' --footer-html "' . $strFooter . '" ' . $strSrc1 . " /var/www/vhosts/" . $strServerName . "/httpdocs/sites/default/files/pdf/Report$strTime.pdf");
+            $intTypeOFReport = 2;
+            break;
+
+        case "CSMT":
+            if ($strMediaType == '' && ($strMediaType != "")) {
+                drupal_goto($base_url);
+                die;
+            }
+            $strUrl = http_build_query(array('client_og_nid' => $intCompanyNid,
+                'client_og' => $_SESSION['client_og'],
+                'strMediaType' => "$strMediaType"));
+            $strSrc1 = $base_url . "/Dashboard/Report/Views/MediaType/" . base64_encode($strUrl);
+            exec('xvfb-run -a -s "-screen 0 640x480x16" /var/www/bin/wkhtmltopdf --quiet --margin-top 15mm --header-html ' . $strHeader . ' --footer-html "' . $strFooter . '" ' . $strSrc1 . " /var/www/vhosts/" . $strServerName . "/httpdocs/sites/default/files/pdf/Report$strTime.pdf");
+            $intTypeOFReport = 3;
+            break;
+        case "CSC":
+            if ((int)$strMediaType == 0) { //Check campaign Id [$steMediaType: is nothing but campaign id]
+                drupal_goto($base_url);
+                die;
+            }
+            $strUrl = http_build_query(array('client_og_nid' => $intCompanyNid,
+                'client_og' => $_SESSION['client_og'],
+                'intCampaignId' => "$strMediaType")); // here is cmap
+            $strSrc1 = $base_url . "/Dashboard/Report/Views/MediaType/" . base64_encode($strUrl);
+
+            exec('xvfb-run -a -s "-screen 0 640x480x16" /var/www/bin/wkhtmltopdf --quiet --margin-top 15mm --header-html ' . $strHeader . ' --footer-html "' . $strFooter . '" ' . $strSrc1 . " /var/www/vhosts/" . $strServerName . "/httpdocs/sites/default/files/pdf/Report$strTime.pdf");
+            $intTypeOFReport = 4;
+            break;
+
+        case "FMR":
+            if ((int)$strMediaType == 0) {
+                drupal_goto($base_url);
+                die;
+            }
+            $strUrl = http_build_query(array('client_og_nid' => $intCompanyNid,
+                'intMediaId' => "$strMediaType",
+                'client_og' => $_SESSION['client_og']));
+            $strSrc1 = $base_url . "/Dashboard/Report/Views/MediaId/" . base64_encode($strUrl);
+
+            exec('xvfb-run -a -s "-screen 0 640x480x16" /var/www/bin/wkhtmltopdf --quiet --margin-top 15mm --header-html ' . $strHeader . ' --footer-html "' . $strFooter . '" ' . $strSrc1 . " /var/www/vhosts/" . $strServerName . "/httpdocs/sites/default/files/pdf/Report$strTime.pdf");
+            $intTypeOFReport = 5;
+            break;
+
+        default:
+            drupal_goto($base_url);
+            die;
+    }
+    //Insert the details of downloaded report.
+    $objReports->fnInsert3blReportDetails($intCompanyNid, $strEmail, $intTypeOFReport, $strReportFileType);
+
+    $file = "/var/www/vhosts/" . $strServerName . "/httpdocs/sites/default/files/pdf/Report$strTime.pdf";
+
+    if (file_exists($file)) {
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header("Content-Type: application/force-download");
+        header('Content-Disposition: attachment; filename=' . urlencode(basename($file)));
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($file));
+        ob_clean();
+        flush();
+        readfile($file);
+        @unlink($file);
+    }
+    exit;
+}
+
+/**
+ * Function to download xls file
+ *
+ * @param string $strType : Type eg. MCSR, CSMT etc.
+ * @param string $strMediaType : Media Type
+ */
+function threebl_analytics_reports_excel($strType, $strMediaType)
+{
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+    global $base_url;
+    #Get the repoty type : such as 1  for MCSR,2 for CSMT
+    $intTypeOFReport = 0;
+
+    #get the company id
+    $intCompanyNid = $_SESSION['client_og_nid']; // node id
+
+    #Set the report download by value to excel : 1
+    $strReportFileType = "excel";
+
+    # Email addresses are not available for case pdf
+    $strEmail = "Download by Excel";
+
+    header("Content-Type: application/vnd.ms-excel;");
+    header("Content-type: application/x-msexcel;");
+    header("Content-disposition: attachment; filename=Report" . time() . ".xls");
+
+    //start : change
+    switch ($strType) {
+        case "MCSR":
+            $strUrl = http_build_query(array('client_og' => $_SESSION['client_og'],
+                'client_og_nid' => $intCompanyNid,
+                "fileTyp" => "excel"));
+            $strSrc1 = $base_url . "/Dashboard/Report/Views/" . base64_encode($strUrl);
+            echo file_get_contents($strSrc1);
+            $intTypeOFReport = 2;
+            break;
+
+        case "CSMT":
+            if ($strMediaType == '' && ($strMediaType != "")) {
+                drupal_goto($base_url);
+                die;
+            }
+            $strUrl = http_build_query(array('client_og_nid' => $intCompanyNid,
+                'strMediaType' => "$strMediaType",
+                'client_og' => $_SESSION['client_og'],
+                "fileTyp" => "excel"));
+            $strSrc1 = $base_url . "/Dashboard/Report/Views/MediaType/" . base64_encode($strUrl);
+            echo file_get_contents($strSrc1);
+            $intTypeOFReport = 3;
+            break;
+
+        case "CSC":
+            if ((int)$strMediaType == 0) { //Check campaign Id [$steMediaType: is nothing but campaign id]
+                drupal_goto($base_url);
+                die;
+            }
+            $strUrl = http_build_query(array('client_og_nid' => $intCompanyNid,
+                'intCampaignId' => "$strMediaType",
+                'client_og' => $_SESSION['client_og'],
+                "fileTyp" => "excel"));
+            $strSrc1 = $base_url . "/Dashboard/Report/Views/MediaType/" . base64_encode($strUrl);
+            echo file_get_contents($strSrc1);
+            $intTypeOFReport = 4;
+            break;
+
+        case "FMR":
+            if ((int)$strMediaType == 0) {
+                drupal_goto($base_url);
+                die;
+            }
+            $strUrl = http_build_query(array('client_og_nid' => $intCompanyNid,
+                'intMediaId' => "$strMediaType",
+                "fileTyp" => "excel",
+                'client_og' => $_SESSION['client_og']));
+            $strSrc1 = $base_url . "/Dashboard/Report/Views/MediaId/" . base64_encode($strUrl);
+            echo file_get_contents($strSrc1);
+            $intTypeOFReport = 5;
+            break;
+
+        default:
+            drupal_goto($base_url);
+            die;
+    }
+    // Call function fnInsert3blReportDetails To insert the details of report
+    $objReports->fnInsert3blReportDetails($intCompanyNid, $strEmail, $intTypeOFReport, $strReportFileType);
+    exit;
+}
+
+/**
+ * Function to generate the analytic FMR report.
+ * @param int $intFmrId : FMR Id
+ *
+ * @return mixed
+ */
+function threebl_analytics_fmr_report($intFmrId)
+{
+    global $base_url;
+
+    # Check whether we receive the FMR id or not. If no FMR id Found then redirect to base url.
+    if ((int)$intFmrId <= 0) {
+        drupal_goto($base_url);
+    }
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+
+    $intCompanyOgId = (int)$_SESSION['client_og']; // company og id
+
+    if (!$intCompanyOgId) {
+        drupal_goto('client-multiple-login');
+    }
+
+    # Get the Analytic Views and clicks.
+    $arrFmrClicks = $objReports->fnGetFMRAnalyticClicks($intFmrId);
+    $arrFmrViews = $objReports->fnGetFMRAnalyticView($intFmrId);
+
+    $arrAnalyticData = array();
+    $arrAnalyticData['3blmedia']['view'] = ($arrFmrViews['3blmedia']['view']) ? $arrFmrViews['3blmedia']['view'] : 0;
+    $arrAnalyticData['3blmedia']['click'] = ($arrFmrClicks['3blmedia']['click']) ? $arrFmrClicks['3blmedia']['click'] : 0;
+    $arrAnalyticData['3bl_widgets']['view'] = ($arrFmrViews['3bl_widgets']['view']) ? $arrFmrViews['3bl_widgets']['view'] : 0;
+    $arrAnalyticData['3bl_widgets']['click'] = ($arrFmrClicks['3bl_widgets']['click']) ? $arrFmrClicks['3bl_widgets']['click'] : 0;
+    $arrAnalyticData['click_cron']['view'] = ($arrFmrViews['click_cron']['view']) ? $arrFmrViews['click_cron']['view'] : 0;
+    $arrAnalyticData['click_cron']['click'] = ($arrFmrClicks['click_cron']['click']) ? $arrFmrClicks['click_cron']['click'] : 0;
+
+    # Combine the clicks and views of 3blmedia and click cron
+    $arrAnalyticData['3blmedia']['view'] = $arrAnalyticData['3blmedia']['view'] + $arrAnalyticData['click_cron']['view'];
+    $arrAnalyticData['3blmedia']['click'] = $arrAnalyticData['3blmedia']['click'] + $arrAnalyticData['click_cron']['click'];
+
+    //Function for Getting 3bl Newsletter Clicks
+    $intClickCount = $objReports->fnGetFMRNewsletterClick($intFmrId);
+
+    $arrAnalyticData['newsletter']['view'] = 0;
+    $arrAnalyticData['newsletter']['click'] = ($intClickCount > 0) ? $intClickCount : 0;
+	
+	# Get the justmeans data.
+    //This block of code is to fetch clicks and view of FMR from the Justmeans newsletters from justmeans database.
+    # Use Justmeans database.
+    db_set_active('justmeans');
+
+    // Justmeans views and clicks
+    $intJMClicks = $objReports->fnGetJMClicks($intFmrId, "Justmeans");
+    $intJMViews = $objReports->fnGetJMViews($intFmrId, "Justmeans");
+    $arrAnalyticData['jm']['view'] = $intJMViews;
+    $arrAnalyticData['jm']['click'] = $intJMClicks;
+
+    // Justmeans newsletter views and clicks
+    $intJMNewsletterClicks = $objReports->fnGetJMClicks($intFmrId, "Jm-Newsletter");
+    $intJMNewsletterViews = $objReports->fnGetJMViews($intFmrId, "Jm-Newsletter");
+    $arrAnalyticData['jm-newsletter']['view'] = $intJMNewsletterViews;
+    $arrAnalyticData['jm-newsletter']['click'] = $intJMNewsletterClicks;
+    #use default databse setting.
+    db_set_active();
+
+    # Get the micro list clicks and view.
+    $arrMicroListDetails = $objReports->fnGetMicroListClickCount($intFmrId);
+
+    // Ger node information
+    $arrInfo = node_load($intFmrId);
+
+    # Make total of 3bl media and 3bl widgets view and clicks
+    $intTotalClicks = $arrAnalyticData['3blmedia']['click'] + $arrAnalyticData['3bl_widgets']['click'] + $arrAnalyticData['newsletter']['click']+ $intJMClicks + $intJMNewsletterClicks;
+    $intTotalViews = $arrAnalyticData['3blmedia']['view'] + $arrAnalyticData['3bl_widgets']['view'] + $arrAnalyticData['newsletter']['view']+ $intJMViews + $intJMNewsletterViews;
+
+    $strPrimaryCategory = '';
+    $strSecondaryCategory = '';
+
+    if (!empty($arrInfo->field_fmr_primary_category['und'])) {
+        foreach ($arrInfo->field_fmr_primary_category['und'] as $arrPCategory) {
+            $arrPrimaryCategory[] = $arrPCategory['target_id'];
+        }
+        $strPrimaryCategory = implode(',', $arrPrimaryCategory);
+    }
+
+    if (!empty($arrInfo->field_fmr_taxonomy['und'])) {
+
+        foreach ($arrInfo->field_fmr_taxonomy['und'] as $arrSCategory) {
+            $arrSecondaryCategory[] = $arrSCategory['target_id'];
+        }
+        $strSecondaryCategory = implode(',', $arrSecondaryCategory);
+    }
+
+    #Get the FMR Category From Taxonomy Table
+    $arrFMRCategory = $objReports->fnGetSecondaryCategory($strPrimaryCategory, $strSecondaryCategory);
+
+    #FMR Title
+    $strFMRTitle = $arrInfo->title;
+    #FMR MediaType
+    $strFMRMediaType = $arrInfo->field_fmr_type_of_content['und']['0']['value'];
+    #FMR published Date
+    $fmrPublishedDate = $arrInfo->field_fmr_date_time['und']['0']['value'];
+    #Company url : node/company nodeId
+    $strCompanyUrl = $arrInfo->client_nid;
+    #To get the Company related information
+    $arrCompInfo = node_load($strCompanyUrl);
+    # Get company Name
+    $strCompanyName = $arrCompInfo->title;
+
+    # Build Array of basic info about the FMR.
+    $arrFinalResult = array();
+    $arrFinalResult['FMRID'] = $intFmrId;
+    $arrFinalResult['title'] = $strFMRTitle;
+    $arrFinalResult['FMRTYPE'] = $strFMRMediaType;
+    $arrFinalResult['published_date'] = date("Y-m-d", strtotime($fmrPublishedDate));
+    $arrFinalResult['totalClicks'] = $intTotalClicks;
+    $arrFinalResult['totalviews'] = $intTotalViews;
+    $arrFinalResult['CompName'] = $strCompanyName;
+    $arrFinalResult['CompUrl'] = $strCompanyUrl;
+    $arrFinalResult['arrFMRCategory'] = $arrFMRCategory;
+
+    # Build the FMR report in HTML format.
+    return $objReports->fnBuildHtmlFMRReport($arrFinalResult, $arrAnalyticData, $arrMicroListDetails);
+}
+
+/**
+ * Function to download report for FMRs distributed in the previous 30 days, the number of views and clicks for each
+ */
+function threebl_analytics_fmr_monthly_report()
+{
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+
+    // to get FMRs information distributed in the previous 30 days
+    list($arrFMRInfo, $strFMRIds) = $objReports->fnGetLastPublishedFMRInfo();
+
+    # Build the FMR report in HTML format and download it in the excel file.
+    $objReports->fnBuildHtmlFMRMonthlyReport($arrFMRInfo, $strFMRIds);
+}
+
+/**
+ * To generate the analytic FMR internal weekly report
+ *
+ * @param string $strActionType: Flag to download report in excel format
+ *
+ * @return mixed
+ */
+function threebl_analytics_fmr_weekly_internal_report($strActionType)
+{
+    global $base_url, $conf;
+
+    # Check whether the Admin session is set or not.
+    if ((int) $_SESSION["ADMIN_BLOCK"] <= 0) {
+        drupal_goto("user/login");
+    }
+
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+
+    //To get the fmr details which associate to micro list.
+    list($arrFMRInfo, $strFMRIds, $strCurrentDate, $intPrevMonthDate) = $objReports->fnGetLastPublishedFMRInfo(7, "weekly");
+
+    if ($strFMRIds != "") {
+
+        # Get the 3BL Views and clicks.
+        $arr3BLFmrClicks = $objReports->fnGetFMRAnalyticClicks($strFMRIds, "weekly");
+        $arr3BLFmrViews = $objReports->fnGetFMRAnalyticView($strFMRIds, "weekly");
+
+        //Function for Getting 3bl Newsletter Clicks
+        $arr3BLNewsletterClickCount = $objReports->fnGetFMRNewsletterClick($strFMRIds, "weekly");
+
+        # Get the justmeans data.
+        //This block of code is to fetch clicks and view of FMR from the Justmeans newsletters from justmeans database.
+        # Use Justmeans database.
+        db_set_active('justmeans');
+
+        // Justmeans views and clicks
+        $arrJMClicks = $objReports->fnGetJMClicks($strFMRIds, "Justmeans", "weekly");
+        $arrJMViews = $objReports->fnGetJMViews($strFMRIds, "Justmeans", "weekly");
+
+        // Justmeans newsletter views and clicks
+        $arrJMNewsletterClicks = $objReports->fnGetJMClicks($strFMRIds, "Jm-Newsletter", "weekly");
+
+        #use default database setting.
+        db_set_active();
+    }
+
+    $arrWeeklyFMRInfo = array("arrFMRInfo"                 => $arrFMRInfo,
+                              "arr3BLFmrClicks"            => $arr3BLFmrClicks,
+                              "arr3BLFmrViews"             => $arr3BLFmrViews,
+                              "arr3BLNewsletterClickCount" => $arr3BLNewsletterClickCount,
+                              "arrJMClicks"                => $arrJMClicks,
+                              "arrJMViews"                 => $arrJMViews,
+                              "arrJMNewsletterClicks"      => $arrJMNewsletterClicks,
+                              "base_url"                   => $base_url,
+                              "strCurrentDate"             => $strCurrentDate,
+                              "intPrevMonthDate"           => $intPrevMonthDate,
+                              "imagepath"                  => $conf['IMAGES_PATH_3BL'],
+                              "download_report_url"        => "/admin/reports/analytics/week-at-a-glance/excel",
+                              "strDownloadExcel"           => $strActionType
+    );
+
+    // check condition to download excel file report or set variables to template
+    if ($strActionType == "excel") {
+        // Download report in excel file
+        header("Content-Type: application/vnd.ms-excel;");
+        header("Content-type: application/x-msexcel;");
+        header("Content-disposition: attachment; filename=Internal_Analytics_Weekly_Report_" . date("d-M", strtotime($intPrevMonthDate)) . "_to_" . date("d-M", strtotime($strCurrentDate)) . ".xls");
+
+        echo $strHTML = theme('fmr-weekly-report', $arrWeeklyFMRInfo);
+        exit;
+    } else {
+        return $strHTML = theme('fmr-weekly-report', $arrWeeklyFMRInfo);
+    }
+}
+

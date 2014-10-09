@@ -1,0 +1,70 @@
+<?php
+
+function threebl_analytics_auto_fmr_reports_menu(){
+    $items = array();
+    $items['threebl_analytics_auto_fmr_reports_cron'] = array(
+        'title'=>' Analytics',
+        'description'=>'Analytics Views',
+        'page callback'=>'threebl_analytics_auto_fmr_reports_cron',
+        'access arguments' => array('dashboard analytics'),
+    );
+    $items['test_fmr_reports_cron'] = array(
+        'title'=>' Analytics',
+        'description'=>'Analytics Views',
+        'page callback'=>'test_fmr_reports',
+        'access arguments' => array('dashboard analytics'),
+    );
+    return $items;
+}//end threebl_dashboard_analytics_menu
+
+/**
+ * @return bool
+ */
+function threebl_analytics_auto_fmr_reports_cron()
+{
+    //include required files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/sendEmail');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+
+    //Get all active companies
+    $arrCompany = array();
+    $arrCompany = $objReports->fnGetActiveCompanies();
+
+    if(count($arrCompany) > 0 ){
+        //GET Company Ids
+        $arrCompanyIds = array();
+        $arrCompanyIds = array_values($arrCompany);
+        $strCompanyIds = implode(',',$arrCompanyIds);
+
+        //Collect All companies Email Ids
+        $arrAutoReportEmail = $objReports->fnGetAutoReportEmail($strCompanyIds);
+        $intCnt = 0;
+
+        foreach($arrCompany as $intCompanySynId => $intCompanyNid){
+			$arrEmails = array();
+
+			//Get email ids of Company for weekly report.
+			$arrEmails = array_unique($arrAutoReportEmail[$intCompanyNid]);
+
+            if(is_array($arrEmails) && count($arrEmails) > 0){
+                //Get the latest fmr of respective company.
+                $arrMediaIds = array();
+
+                $arrMediaIds = $objReports->fnGetCronLatestFMR($intCompanyNid);
+                
+                if (count($arrMediaIds) > 0) {
+                    //Get ids of latest fmr of company.
+                    $strMediaIds = @implode(',', $arrMediaIds);
+                    $objReports->fnReportsByCompany($intCompanyNid, $intCompanySynId, $arrEmails, $strMediaIds);
+                    
+                    $intCnt ++;
+                }
+            }
+        }
+    }
+	watchdog('Analytics Auto Reports: total emails', "Done==>".$intCnt);
+    return true;
+}
