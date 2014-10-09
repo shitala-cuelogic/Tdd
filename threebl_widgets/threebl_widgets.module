@@ -1,0 +1,458 @@
+<?php
+
+//create menus for widget form
+function threebl_widgets_menu()
+{
+    $items = array();
+
+    $items['admin/widget/generate-code'] = array('title'=>'Widget Javascript Code',
+        'description'=>'Widget Javascript Code',
+        'page callback'=>'fnGenerateCode',
+        'access callback' => true,
+        'access arguments' => array('administer users'),
+        'page arguments'=>array(3),
+        'type'=>MENU_CALLBACK
+    );
+
+    $items['admin/widget-preview'] = array(
+        'page callback'    => 'fnManageWidget',
+        'page arguments'   => array(2),
+        'access callback'  => true,
+        'access arguments' => array('Access 3BLM widget'),
+        'type'=>MENU_CALLBACK
+    );
+
+    $items['3bl_widgets_data.jsv'] = array(
+        'title'            => '3BL News',
+        'description'      => 'Return news as per requirements',
+        'page callback'    => 'fnManageWidgetActivities',
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+    );
+
+    $items['company-clicks'] = array(
+        'title'            => '3BL Company Tracking',
+        'description'      => 'Increments the clicks of the company by 1 and redirect to the Company page',
+        'page callback'    => 'fnIncrementClicksViews',
+        'page arguments'   => array(2),
+        'access arguments' => array('administer users'),
+        'access callback'  => true
+    );
+
+    $items['test/update_widget_entity_field'] = array(
+        'title'=>'Edit Widget Language Field',
+        'description'=>'Edit Widget Language Field',
+        'page callback'=>'fnEditWidgetLanguage',
+        'access callback' => true,
+        'type'=>MENU_CALLBACK
+    );
+
+    return $items;
+
+}//menu
+
+/**
+ * Manage Widget Activity Switch
+ * @param $strAction : Page type
+ */
+function fnManageWidget($strAction)
+{
+    global $base_url, $user;
+    //CHECK USER ROLE
+    $intId = (isset($_GET['gid']))?(int)$_GET['gid']:0;
+    //echo $strAction;die;
+    switch ($strAction) {
+
+        case 'frontpage':
+            print fnFrontPagePreview($intId);
+            break;
+
+        case 'widget-list':
+            print fnWidgetPreview($intId);
+            break;
+
+        default:
+            return;
+            break;
+    }
+}
+
+/**
+ * Function for widget front page view
+ * admin/front-page widget
+ * @param $intId :  widget entity id.
+ */
+function fnFrontPagePreview($intId)
+{
+    module_load_include('inc', 'threebl_widgets', 'inc/filter_fmr');
+    $data = array();
+    # Get all information about
+    if ($intId > 0) {
+
+        //Getting company token id
+        $arrEntity = entity_load('affiliates', array($intId));
+        $arrResult = json_decode(json_encode($arrEntity[$intId]), 1);
+
+        $data = fnWidgetNews($arrResult['field_token_id']['und'][0]['value'], 'more', 0, false);
+    }
+    $vars = array('data'=> $data);
+    print theme('frontpage_widgets_preview', $vars);
+}
+
+/**
+ * Create widget preview for admin. So he can check applied css.
+ * @param $intId : widget entity id.
+ * @return mixed
+ */
+function fnWidgetPreview($intId)
+{
+    module_load_include('inc', 'threebl_widgets', 'inc/filter_fmr');
+    $data = array();
+    # Get all information about
+    if ($intId > 0) {
+
+        //Getting company token id
+        $arrEntity = entity_load('affiliates', array($intId));
+        $arrResult = json_decode(json_encode($arrEntity[$intId]), 1);
+
+        $data = fnWidgetNews($arrResult['field_token_id']['und'][0]['value'], 'details', 0, false);
+    }
+    $vars = array('data'=> $data);
+    return theme('widget_list_preview', $vars);
+}
+
+/**
+ * Implements hook_permission().
+ */
+function threebl_widgets_permission()
+{
+    return array(
+        'Access 3BLM News' => array(
+            'title' => t('View News'),
+        ),
+    );
+}
+
+/**
+ * Hook for theme
+ */
+function threebl_widgets_theme()
+{
+    $themes = array (
+        'frontpage_widgets_preview' => array(
+            // your template file called frontpage_widgets_preview.tpl.php
+            'template' => 'templates/frontpage_widget_preview',
+            'arguments' => array(),
+        ),
+        'widget_list_preview' => array(
+            'template' => 'templates/widget_list_preview', // your template file called widget_list_preview.tpl.php
+            'arguments' => array(),
+        ),
+        'widget-code-page' => array(
+            'template' => 'templates/widget-code-page', // your template file called widget_list_preview.tpl.php
+            'arguments' => array(),
+        ),
+        'frontpage_widgets' => array(
+            'template' => 'templates/frontpage_widget', // your template file called frontpage_widgets.tpl.php
+            'arguments' => array(),
+        ),
+        'widget_list' => array(
+            'template' => 'templates/widget_list', // your template file called widget_list.tpl.php
+            'arguments' => array(),
+        ),
+        'widget_details' => array(
+            'template' => 'templates/widget_details', // your template file called widgets_details.tpl.php
+            'arguments' => array(),
+        )
+    );
+    return $themes;
+}
+
+
+/**
+ * Showing widget front and list page code.
+ * @param $intWidgetId
+ * @return string
+ */
+function fnGenerateCode($intWidgetId)
+{
+    global $base_url;
+    $strPath = $base_url;
+    // remove "," from number
+    $intWidgetId = str_replace(",", "", $intWidgetId);
+    if ($intWidgetId < 1) {
+        drupal_goto('admin/widget');
+    }
+    //getting the entity details
+    $arrEntity = entity_load('affiliates', array($intWidgetId));
+    $arrResult = json_decode(json_encode($arrEntity[$intWidgetId]), 1); //object to array
+    $arrCodeData = array(
+                          'strPath' => $strPath,
+                          'intWidgetId'=>base64_encode($arrResult['field_token_id']['und'][0]['value']),
+                          'intWidgetPreviewId'=>$intWidgetId,
+                          'strTitle'=>$arrResult['field_affiliate_title']['und'][0]['value']);
+    return theme('widget-code-page', $arrCodeData);
+
+}//end function
+
+/**
+ * Change destination form using hook_form_alter
+ * @param $form : form element object
+ * @param $form_state : form state object
+ * @param $form_id : form id
+ */
+function threebl_widgets_form_alter(&$form, &$form_state, $form_id)
+{
+    switch ($form_id) {
+        case 'eck__entity__form_add_affiliates_3bl':
+        case 'eck__entity__form_add_affiliates_prconnect':
+        case 'eck__entity__form_add_affiliates_widget':
+            // add custom validation callback
+            $form['#validate'][0] = 'eck__entity__form_add_affiliates_validate';
+            break;
+
+        case 'eck__entity__form_edit_affiliates_3bl':
+        case 'eck__entity__form_edit_affiliates_prconnect':
+        case 'eck__entity__form_edit_affiliates_widget':
+            // add custom validation callback
+            $form['#validate'][0] = 'eck__entity__form_edit_affiliates_validate';
+            break;
+
+        default:
+            break;
+    }
+
+    if ($form_id == 'eck__entity__form_edit_affiliates_3bl' ||
+        $form_id == 'eck__entity__form_add_affiliates_3bl' ||
+        $form_id == 'eck__entity__form_add_affiliates_prconnect' ||
+        $form_id == 'eck__entity__form_edit_affiliates_prconnect') {
+        $form['#action'] .= '&destination=admin/3bl-affiliate-views';
+    }
+    if ($form_id == 'eck__entity__form_edit_affiliates_widget' ||
+        $form_id == 'eck__entity__form_add_affiliates_widget') {
+        $form['#action'] .= '&destination=admin/3bl-widget-views';
+
+        $form['edit-field-companies-to-excl-incl-und-none']['#disabled'] = TRUE;
+        $path = drupal_get_path('module', 'threebl_widgets');
+        $form['#attached']['js'][] = $path . '/js/widget_form.js';
+    }
+
+    //$form_id
+    if ($form_id =='eck__entity__delete_form') {
+        $strDestination = $_GET['destination'];
+        $form['#action'] .= '&destination='.$strDestination;
+    }//Form_id
+}
+
+
+/**
+ * Validation of  add affiliate for duplicate
+ * @param $form
+ * @param $form_state
+ */
+function eck__entity__form_add_affiliates_validate(&$form, &$form_state)
+{
+    //retrieve the value for your field
+    $strValue = $form_state['values']['field_affiliate_title']['und'][0]['value'];
+
+    //Execute a count query to see if there's other similar values.
+    $query = new EntityFieldQuery;
+    $query->entityCondition('entity_type', 'affiliates')
+        ->fieldCondition('field_affiliate_title', 'value', $strValue)
+        ->count();
+    $intCount = $query->execute();
+    if ($intCount > 0) {
+        form_set_error('field_affiliate_title', 'Title already in use.');
+    }
+}
+
+/**
+ * Validation of  edit affiliate for duplicate
+ * @param $form
+ * @param $form_state
+ */
+function eck__entity__form_edit_affiliates_validate(&$form, &$form_state)
+{
+    //retrieve the value for your field
+    $intId = $form_state['values']['entity']->id;
+    $strValue = $form_state['values']['field_affiliate_title']['und'][0]['value'];
+
+    //Execute a count query to see if there's other similar values.
+    $query = new EntityFieldQuery;
+    $query->entityCondition('entity_type', 'affiliates')
+        ->fieldCondition('field_affiliate_title', 'value', $strValue)
+        ->entityCondition('entity_id', $intId, "!=")
+        ->count();
+    $intCount = $query->execute();//echo "hi";exit;
+    if ($intCount > 0) {
+        form_set_error('field_affiliate_title', 'Title already in use.');
+    }
+}
+
+
+/**
+ * Manage Widget Activity Switch
+ */
+function fnManageWidgetActivities()
+{
+
+    //Include all required files
+    module_load_include('inc', 'threebl_widgets', '/inc/filter_fmr');
+    drupal_add_js(drupal_get_path('theme', 'threebl').'/js/video.js');
+    drupal_add_css(drupal_get_path('theme', 'threebl').'/css/video-js.css');
+
+    global $base_url;
+    $strTokenId = (isset($_GET['t']))?base64_decode($_GET['t']):0;
+    $strPage = (isset($_GET['p']))?base64_decode($_GET['p']):'more';
+    $intNewsId = (isset($_GET['md']))?(int)($_GET['md']):'0';
+    $intPageNo = (isset($_GET['pg']))?(int)($_GET['pg']):'1';
+    $intNw = (isset($_GET['nw']))?(int)($_GET['nw']):'0';
+
+
+    //getting widget data
+    $arrData = fnWidgetNews($strTokenId, $strPage, $intNewsId, true, $intPageNo);
+
+    $strPageTitle = "";
+
+    if (!is_array($arrData)) {
+        $strHtml = $arrData;
+    } else {
+        $vars = array("data" => $arrData, "intFmrId"=> $intNewsId);
+        $strHtml = "";
+        switch ($strPage) {
+            case 'more':
+                $strHtml .= theme('frontpage_widgets', $vars);
+                break;
+            case 'details':
+                $strHtml .= ((int)$intNewsId > 0 )?theme('widget_details', $vars):theme('widget_list', $vars);
+                if ((int)$intNewsId > 0) {
+                    $strPageTitle = "document.title ='".addslashes($arrData['arrContentList']['title'])."';";
+                } else {
+                    $strPageTitle = "document.title ='".addslashes($arrData['widget_name'])."';";
+                }
+                break;
+
+            default:
+                $strHtml .= theme('frontpage_widgets', $vars);
+                break;
+        }
+    }
+
+    /**
+     * Insert code into div
+     */
+    //By default show the front page code.
+    $strDivId = "threeblmediawidget";
+
+    $strJs = "";
+    $strSliderJs = $base_url.'/sites/all/themes/threebl/js/';
+    if (!empty($arrData['arrContentList']['video']) && count($arrData['arrContentList']['video'])> 1) {
+        $strJs .= "document.write(\"<link href='".$base_url."/sites/all/themes/threebl/css/video-slider.css' rel='stylesheet' type='text/css'>\");";
+    }
+    //count widgets videos.
+    if ((int)$intNewsId > 0) {
+        if ($arrData['arrContentList']['playVideo'] == "block") {
+            $strJs .= "function playVideo(){
+                document.write(\"<link href='".$base_url."/sites/all/themes/threebl/css/video-js.css' rel='stylesheet' type='text/css'>\");
+				document.write(\"<script type='text/javascript' src='".$strSliderJs."jquery.min-latest-1.11.1.js'></script>\");
+				document.write(\"<script type='text/javascript' src='".$strSliderJs."slides.min.jquery.js'></script>\");
+                document.write(\"<script type='text/javascript'>
+                var jq = $.noConflict();
+                jq(function(){
+                jq('#videoslides').slides({
+				preload: true,
+				preloadImage: '".$base_url."/sites/all/themes/threebl/images/justmeans/loading.gif',
+				play: 0,
+				pause: 2500,
+				hoverPause: true,
+				generatePagination: false});});
+                </script>\");
+                document.write(\"<script type='text/javascript'>_V_.options.flash.swf = '".$base_url."/sites/all/themes/threebl/js/video-js.swf';
+                </script>\");
+                        }playVideo();";
+
+        }
+        //count widgets images.
+        if (count($arrData['arrContentList']['photo']) > 1) {
+            $strJs .= "function playSlider(){
+                document.write(\"<link href='".$base_url."/sites/all/themes/threebl/css/image-slider.css' rel='stylesheet' type='text/css'>\");
+				document.write(\"<script type='text/javascript' src='".$strSliderJs."jquery.min-latest-1.11.1.js'></script>\");
+				document.write(\"<script type='text/javascript' src='".$strSliderJs."slides.min.jquery.js'></script>\");
+                document.write(\"<script type='text/javascript'>
+                var jq = $.noConflict();
+                jq(function(){
+                jq('#slides').slides({
+				preload: true,
+				preloadImage: '".$base_url."/sites/all/themes/threebl/images/justmeans/loading.gif',
+				play: 0,
+				pause: 2500,
+				hoverPause: true,
+				generatePagination: false});});
+                </script>\");
+                } playSlider();";
+        }
+
+    }
+
+    //checking condition if it's details page or list page.
+    if ($intNw == 1 && $strPage == 'details') {
+        $strDivId = "threeblmediadetaillist";
+    }//end-if
+
+    $strJs .= "function widgetData(){".$strPageTitle."
+                        document.getElementById('".$strDivId."').innerHTML = '".$strHtml."';
+                  }
+                  widgetData();";
+    print str_replace(array("\n", "\r"), '', $strJs);
+    exit;
+}
+
+/**
+ * Track increment click and view
+ * @param $strNodeId : FMR node Id
+ * @param $strWidgetId : Widget entity Id
+ * @return bool
+ */
+function fnIncrementClicksViews($strNodeId, $strWidgetId)
+{
+    module_load_include('inc', 'threebl_widgets', '/inc/filter_fmr');
+    global $base_url;
+    $intWidgetId = base64_decode(trim($strWidgetId));
+    $intNodeId   = base64_decode(trim($strNodeId));
+    //Tracking click and view
+    fnAddCompanyAnalyticsViews($intNodeId, $intWidgetId);
+    drupal_goto($base_url."/".getCompanyURL($intNodeId));
+    return true;
+}
+
+/**
+* To update widget language "field_widget_fmr_language" field
+*/
+function fnEditWidgetLanguage()
+{
+    
+    $ObjEntity = entity_load('affiliates', false, array("type"=>"widget"));
+    $arrAffiliateEntity = json_decode(json_encode($ObjEntity), 1); //object to array
+    
+    foreach ($arrAffiliateEntity as $arrWidgetInfo) {
+
+        $entity = new stdClass();
+        $entity->type = 'widget';
+        $entity->id = $arrWidgetInfo["id"];
+
+        $entity->field_widget_fmr_language = array
+        (
+            'und' => array
+            (
+                "0" => array
+                (
+                    'value' => "all"
+                )
+            )
+        );
+
+        entity_get_controller('affiliates')->save($entity);
+        unset($entity);
+    }
+}
+
