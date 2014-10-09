@@ -1,108 +1,8 @@
 <?php
 //This is class for Analytics functions.
 
-class clsAnalytics
+class clsAnalytics extends clsBaseClass
 {
-    public $strCurrentDate;
-    public $strChartPrevDate;
-    public $arrShowMediaType;
-    public $strViewTableName;
-    public $strClickTableName;
-
-    public function __construct()
-    {
-        $this->dataInitialization();
-    }
-
-    private function dataInitialization(){
-
-        $this->strCurrentDate = date("Y-m-d", (time() - 86400));
-        $this->strChartPrevDate = date("Y-m-d", strtotime(date("Y-m-d", strtotime($this->strCurrentDate)) . " - 61 days"));
-
-        $this->arrShowMediaType = array(
-            'press_release' => 'Press Release',
-            'blog' => 'Blog',
-            'multimedia' => 'Multimedia',
-            'article' => 'Article',
-            'newsletter' => 'Newsletter',
-            'all' => 'All'
-        );
-
-        $this->strViewTableName = 'threebl_analytic_views';
-        $this->strClickTableName = 'threebl_analytic_clicks';
-
-        $this->strBenchmarkNAMonth = '2014-03-31';
-    }
-
-
-
-
-    /** To get the total clicks and views
-     *
-     * @param array $arrViewChart   : Array contain data of getting views for company in last 60 days
-     * @param array $arrClickChart  : Array contain data of getting clicks for company in last 60 days
-     *
-     * @return array
-     */
-    public function fnSumWeekViewsClicks($arrViewChart, $arrClickChart)
-    {
-        // getting previous date from today's date means we need the dates array having 7 days diffrence.(ex 1-11-2012, 7-11-2012)
-        $strTodayDate = $this->strCurrentDate;
-        $arrDts = $this->fnGetPreviousDates($strTodayDate, 59, 1);
-        $arrDts = array_reverse($arrDts);
-
-        //Process views and clicks and prepare 7 days interval data for graph
-        $arrDates = array();
-        $arrViewChartSum = $arrClickChartSum = array();
-        $strStart = "";
-        $intDays = $intClickSum = $intViewSum = 0;
-        foreach ($arrDts as $val) {
-            if ($intDays == 0) {
-                $strStart = date("M d", strtotime($val));
-            }
-            @$intViewSum += (int)$arrViewChart[$val];
-            @$intClickSum += (int)$arrClickChart[$val];
-            $intDays++;
-            if ($intDays == 7) {
-                $arrDates[] = $strStart . " - " . date("M d", strtotime($val));
-                $arrViewChartSum[$strStart . " - " . date("M d", strtotime($val))] = (int)$intViewSum;
-                $arrClickChartSum[$strStart . " - " . date("M d", strtotime($val))] = (int)$intClickSum;
-                $strStart = "";
-                $intDays = 0;
-                $intViewSum = 0;
-                $intClickSum = 0;
-            }
-        }
-        //Update Last date range data.
-        if ($intDays > 0) {
-            $arrDates[] = $strStart . " - " . date("M d", strtotime($val));
-            $arrViewChartSum[$strStart . " - " . date("M d", strtotime($val))] = (int)$intViewSum;
-            $arrClickChartSum[$strStart . " - " . date("M d", strtotime($val))] = (int)$intClickSum;
-        }
-        return array($arrViewChartSum, $arrClickChartSum, $arrDates);
-    }
-
-    /**
-     * Function calculate previous date as per the requirement
-     *
-     * @param string $strToday    : Starting data for calculation
-     * @param int    $intNoOfDays : total number of days.
-     * @param int    $intInterval : collection of days in array.
-     *
-     * @return array
-     */
-    public function fnGetPreviousDates($strToday, $intNoOfDays = 30, $intInterval = 1)
-    {
-        $strStart = date("Y-m-d", strtotime(date("Y-m-d", strtotime($strToday)) . " - $intNoOfDays days"));
-        $arrDts[] = $strToday;
-        while (strtotime($strStart) <= strtotime($strToday)) {
-            $strNow = date("Y-m-d", strtotime(date("Y-m-d", strtotime($strToday)) . " - $intInterval days"));
-            $arrDts[] = $strNow;
-            $strToday = $strNow;
-        }
-        return $arrDts;
-    }
-
     /**
      * Process view data for cron functionality and save analytics in to the view table.
      *
@@ -131,10 +31,10 @@ class clsAnalytics
     public function fnAddViewsProcess($FMRids, $strFMRType, $strChannel, $strJustDate) {
 
         foreach ($FMRids as $FMRid) {
-                    
+
             if ((int)$FMRid > 0) {
                 // for each FMR, we need to get the master ids, from the sync tables, for
-                // both the FMR and Company  
+                // both the FMR and Company
                 $arrMedia = $this->fnGetCompanyOgIds($FMRid);
 
 
@@ -148,10 +48,10 @@ class clsAnalytics
 
                 // Set $strMediaType  to the appropriate jm_mediawise_views column name, to be used in
                 // the update/insert queries, below.
-                
+
                 list($strMediaType, $intFMRNid, $intCompanyOgId) = $this->fnSetMediaType($strFMRType, $intFMRNid, $intCompanyOgId);
 
-                
+
 
                 // This is to insert count in views table as well as in the dummy views table, we took dummy table because it will have data for a month which will automatically gets deleted after that this will keep fast processing of data. We can grab all the historic data from main views table, also count   gets incremented as media is viewed.
                 if ($strMediaType && (int)$intFMRNid > 0 && (int)$intCompanyOgId > 0) {
@@ -170,7 +70,7 @@ class clsAnalytics
                 }
             }
         }
-    } 
+    }
 
     public function fnGetCompanyOgIds($FMRid) {
 
@@ -180,7 +80,7 @@ class clsAnalytics
 
         $arrMedia = db_query($strMedia)->fetchAssoc();
 
-        return $arrMedia; 
+        return $arrMedia;
     }
 
     public function fnSetMediaType($strFMRType, $intFMRNid, $intCompanyOgId) {
@@ -213,22 +113,8 @@ class clsAnalytics
                         break;
         }
 
-        return array($strMediaType, $intFMRNid, $intCompanyOgId);        
+        return array($strMediaType, $intFMRNid, $intCompanyOgId);
     }
-
-    /**
-     * Check session value that is company id && nid
-     */
-    public function fnCheckSession()
-    {
-        $intCompanyNid = $_SESSION['client_og_nid']; // nod id
-        $intCompanyOGId = $_SESSION['client_og']; // company og id
-        if (trim($intCompanyNid) == '' || trim($intCompanyOGId) == '') {
-            drupal_goto('client-multiple-login');
-        }
-    }
-
-
 
     /**
      * Function manage current selected tab css.
@@ -260,11 +146,11 @@ class clsAnalytics
         }
         //Analytics/
         $strTabHtml = '<ul class="anlyticsTab">
-			<li' . $strView . '><span><a href="' . $base_url . '/Dashboard/Analytics/Views">Analytics</a></span></li>
-			<li' . $strTrack . '><span><a href="' . $base_url . '/Dashboard/Analytics/Tracking">Tracking</a></span></li>
-			<li' . $strSearch . '><span><a href="' . $base_url . '/Dashboard/Analytics/Searching">Search Engines</a></span></li>
-			<li' . $strReports . '><span><a href="' . $base_url . '/Dashboard/Analytics/Reports">Reports</a></span></li>
-		</ul>';
+            <li' . $strView . '><span><a href="' . $base_url . '/Dashboard/Analytics/Views">Analytics</a></span></li>
+            <li' . $strTrack . '><span><a href="' . $base_url . '/Dashboard/Analytics/Tracking">Tracking</a></span></li>
+            <li' . $strSearch . '><span><a href="' . $base_url . '/Dashboard/Analytics/Searching">Search Engines</a></span></li>
+            <li' . $strReports . '><span><a href="' . $base_url . '/Dashboard/Analytics/Reports">Reports</a></span></li>
+        </ul>';
         return $strTabHtml;
     }
 
