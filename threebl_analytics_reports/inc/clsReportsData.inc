@@ -447,7 +447,7 @@ class ClsReportsData
         if (is_array($arrFMRInfo) && count($arrFMRInfo)) {
 
             //Generating FMRMonthlyReport Message
-            $strHTML = $this->fnGenerateMonthlyReportMessage($arrFMRInfo);
+            $strHTML = $this->fnGenerateMonthlyReportMessage($arrFMRInfo, $arrFMRViews[$intFMRId], $arrFMRClicks[$intFMRId]);
 
         }
 
@@ -657,7 +657,7 @@ class ClsReportsData
 
     }
 
-    public function fnGenerateMonthlyReportMessage($arrFMRInfo)
+    public function fnGenerateMonthlyReportMessage($arrFMRInfo, $intViewsFMRid, $intClicksFMRid)
     {
 
         $strHTML = '<table width="100%" cellpadding="0" cellspacing="0" border="1">
@@ -675,8 +675,8 @@ class ClsReportsData
                                  <td>' . $arrFMRInfoValue["fmrid"] . '</td>
                                  <td>' . $arrFMRInfoValue["title"] . '</td>
                                  <td>' . $arrFMRInfoValue["companyname"] . '</td>
-                                 <td>' . (int) $arrFMRViews[$intFMRId] . '</td>
-                                 <td>' . (int) $arrFMRClicks[$intFMRId] . '</td>
+                                 <td>' . (int) $intViewsFMRid . '</td>
+                                 <td>' . (int) $intClicksFMRid . '</td>
                                  <td>' . date("M d, Y", strtotime($arrFMRInfoValue["publishdate"])) . '</td>
                              </tr>';
             }
@@ -688,7 +688,7 @@ class ClsReportsData
 
     }
 
-    public function fnGenerateCompanyReportMessage($intMonth, $strHeaderHTML, $strFooterHTML, $strHeaderHTML, $strFooterHTML)
+    public function fnGenerateCompanyReportMessage($intMonth, $strHeaderHTML, $strFooterHTML)
     {
         $strMessage = ((int)$intMonth == 1) ? $strHeaderHTML."Attached you will find your up to date Analytics Summary Report from 3BL Media. This report is sent automatically once a month. You can review all of your 3BL Media analytics at any time at http://3blmedia.com/Dashboard/Analytics/Views".$strFooterHTML : $strHeaderHTML.'Attached you should find Flexible Media Release (FMR) Detail Reports for any content distributed between ' . date("F d, Y", mktime(0, 0, 0, date("m"), date("d") - 15, date("Y"))) . ' and ' . date("F d, Y", mktime(0, 0, 0, date("m"), date("d") - 9, date("Y"))) . '.  If you have any questions, please contact your media consultant at 866.508.0993 or reply to this message.<br/>Of course, you can review all of your 3BL Media Analytics and Tracking in your portal at any time at http://3blmedia.com/Dashboard/Analytics/Views<br/><br/>Thank you,<br/>The 3BL Media Team'.$strFooterHTML;
 

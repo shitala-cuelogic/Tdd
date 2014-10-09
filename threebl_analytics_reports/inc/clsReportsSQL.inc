@@ -78,16 +78,11 @@ class ClsReportsSQL
             $strSelect .= ", n.title as title, pubdt.field_fmr_date_time_value ";
             $strCampaignFrom = "  JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = n.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
         } else {
-            if ($strMediaType != '') {
-                if ($strMediaType != "all") {
-                    $strCondition .= " AND t.field_fmr_type_of_content_value = '$strMediaType' ";
-                } else {
-                    $strCondition .= " AND t.field_fmr_type_of_content_value IN ('press_release','blog','multimedia','article','newsletter') ";
-                }
-            } else {
-                $strCondition .= " AND t.field_fmr_type_of_content_value IN ('press_release','blog','multimedia','article','newsletter')  ";
-            }
+
+                $strCondition = $this->fnGetCompanyFMRsForMediaType($strMediaType, $strCondition);
+            
         }
+
         $strFrom = " FROM node AS n
                     JOIN field_data_group_audience AS ga ON (n.nid = ga.entity_id AND ga.bundle = 'fmr' AND ga.entity_type = 'node')
                     JOIN field_data_field_fmr_date_time AS pubdt ON pubdt.entity_id = n.nid
@@ -98,20 +93,7 @@ class ClsReportsSQL
 
         $strOrderBy = ($strMediaType == "") ? " ORDER BY t.field_fmr_type_of_content_value " : " ORDER BY pubdt.field_fmr_date_time_value DESC ";
 
-        if ($strMediaType != "" && $intCampaignId == 0) {
-            $strSelect .= ", n.title as title, pubdt.field_fmr_date_time_value, CN.title as campaign ";
-            $strCampaignFrom .= " LEFT JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = n.nid
-                                  LEFT JOIN node AS CN ON CN.nid = COM.field_fmr_campaign_nid ";
-        }
-
-        //Get Primary Categories Assigned to FMRs
-        if ($strMediaType != "" || (int)$intCampaignId >0) {
-            $strSelect .= ", td.name AS primarycayegory, av.field_fmr_average_views_value as benchmark_view, ac.field_fmr_average_clicks_value as benchmark_click";
-            $strCampaignFrom .= " LEFT JOIN field_data_field_fmr_primary_category AS prim ON n.nid = prim.entity_id
-                                  LEFT JOIN taxonomy_term_data AS td ON td.tid = prim.field_fmr_primary_category_target_id
-                                  LEFT JOIN field_data_field_fmr_average_views AS av ON n.nid = av.entity_id
-                                  LEFT JOIN field_data_field_fmr_average_clicks AS ac ON n.nid = ac.entity_id ";
-        }
+        list($strSelect, $strCampaignFrom) = $this->fnGetCompanyFMRsForMediaTypeAndCampaignId($strMediaType, $intCampaignId, $strSelect, $strCampaignFrom);
 
         // select archive field
         $strArchiveFlag = "JOIN field_data_field_dist_archive AS ar ON n.nid = ar.entity_id";
@@ -1191,4 +1173,44 @@ class ClsReportsSQL
         return array($arrFMRInfo, $strFMRIds, $strCurrentDate, $intPrevMonthDate);
     }
 
+    /* Added for micro functioning */
+
+    public function fnGetCompanyFMRsForMediaType($strMediaType, $strCondition)
+    {
+        if ($strMediaType != '') {
+                if ($strMediaType != "all") {
+                    $strCondition .= " AND t.field_fmr_type_of_content_value = '$strMediaType' ";
+                } else {
+                    $strCondition .= " AND t.field_fmr_type_of_content_value IN ('press_release','blog','multimedia','article','newsletter') ";
+                }
+            } else {
+                $strCondition .= " AND t.field_fmr_type_of_content_value IN ('press_release','blog','multimedia','article','newsletter')  ";
+            }
+
+            return $strCondition;
+
+    }
+
+    public function fnGetCompanyFMRsForMediaTypeAndCampaignId($strMediaType, $intCampaignId, $strSelect, $strCampaignFrom)
+    {
+        if ($strMediaType != "" && $intCampaignId == 0) {
+            $strSelect .= ", n.title as title, pubdt.field_fmr_date_time_value, CN.title as campaign ";
+            $strCampaignFrom .= " LEFT JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = n.nid
+                                  LEFT JOIN node AS CN ON CN.nid = COM.field_fmr_campaign_nid ";
+        }
+
+        //Get Primary Categories Assigned to FMRs
+        if ($strMediaType != "" || (int)$intCampaignId >0) {
+            $strSelect .= ", td.name AS primarycayegory, av.field_fmr_average_views_value as benchmark_view, ac.field_fmr_average_clicks_value as benchmark_click";
+            $strCampaignFrom .= " LEFT JOIN field_data_field_fmr_primary_category AS prim ON n.nid = prim.entity_id
+                                  LEFT JOIN taxonomy_term_data AS td ON td.tid = prim.field_fmr_primary_category_target_id
+                                  LEFT JOIN field_data_field_fmr_average_views AS av ON n.nid = av.entity_id
+                                  LEFT JOIN field_data_field_fmr_average_clicks AS ac ON n.nid = ac.entity_id ";
+        }
+
+        return array($strSelect, $strCampaignFrom);
+
+    }
+    
+    /* Added for micro functioning */
 }
