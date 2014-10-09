@@ -91,23 +91,8 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);
         }
 
         //Collect all settings into the array
-        $arrSettings = array(
-            'widget_height' => $arrResult['field_widget_height']['und'][0]['value'],
-            'widget_width' => $arrResult['field_widget_width']['und'][0]['value'],
-            'widget_no_post' => $arrResult['field_widget_no_of_posts_on_font']['und'][0]['value'],
-            'widget_front_title' => $arrResult['field_widget_front_page_title']['und'][0]['value'],
-            'widget_list_title' => $arrResult['field_widget_list_page_title']['und'][0]['value'],
-            'widget_viewmore_text' => $arrResult['field_widget_view_more_label']['und'][0]['value'],
-            'widget_no_more_posts' => $arrResult['field_widget_no_of_posts_on_list']['und'][0]['value'],
-            'widget_viewmore_link' => $arrResult['field_affiliate_news_url']['und'][0]['value'],
-            'widget_video_width' => $arrResult['field_widget_width_of_video']['und'][0]['value'],
-            'widget_poweredBy' => (isset($arrResult['field_widget_power_by']['und'][0]['value'])) ? 1 : 0,
-            'widget_listpageDesc_limit' => $arrResult['field_list_page_description_limi']['und'][0]['value'],
-            'widget_frontpageTitle_limit' => $arrResult['field_front_page_title_limit']['und'][0]['value'],
-            'widget_frontpage_desc_limit' => $intDescriptionLimit,
-            'widget_frontpage_desc' => $strFrontPageDesc,
-            'widget_fmr_in_tab' => $strFMRInNewTab
-        );
+
+        $arrSettings = $this->fnSetSettingsArray($arrResult, $intDescriptionLimit, $strFrontPageDesc, $strFMRInNewTab);
 
         $arrData['settings'] = $arrSettings;
 
@@ -255,66 +240,24 @@ function fnGetNewsArray($boolAddView, $strPage, $limit = 5, $arrWhere = array(),
 
         // for photos
         if (is_array($node->field_fmr_photo['und']) && count($node->field_fmr_photo['und'])) {
-            foreach ($node->field_fmr_photo['und'] as $k => $photo) {
-                $file = file_load($photo['fid']);
+            
+            $arrContentList['photo'] = $this->fnGetPhotoData($node);
+            $arrContentList['playImage'] = 'block';            
 
-                #Assign 3BL path
-                $strPhotoLink = urldecode(image_style_url('medium', "images/" . basename(file_create_url($file->uri))));
-                $strFilePath = @file_get_contents($strPhotoLink);
-                if ($strFilePath == "") {
-                    continue;
-                }
-
-                //Add available Photo Information
-                $arrContentList['photo'][$k]['photolink'] = $strPhotoLink;
-                $arrPhotoData = explode("/", $strPhotoLink);
-                $arrContentList['photo'][$k]['name'] = $arrPhotoData[5];
-                $arrContentList['photo'][$k]['description'] = $photo['title'];
-                $arrContentList['playImage'] = 'block';
-            }
         }
 
         //for Audio
         if (is_array($node->field_fmr_audio['und']) && count($node->field_fmr_audio['und'])) {
-            foreach ($node->field_fmr_audio['und'] as $k => $audio) {
-                $file = file_load($audio['fid']);
-                $arrContentList['audio'][$k]['audioLink'] = file_create_url($file->uri);
-                $strAudioLink = $arrContentList['audio'][$k]['audioLink'];
-                $arrAudioData = explode("/", $strAudioLink);
-                $arrContentList['audio'][$k]['name'] = $arrAudioData[5];
-                $arrContentList['playAudio'] = 'block';
-            }
+
+			$arrContentList['audio'] = $this->fnGetAudioData($node);
+            $arrContentList['playAudio'] = 'block';
         }
 
         // If media has multiple or singal videos then we have to process all of them
         if (is_array($node->field_video['und']) && count($node->field_video['und'])) {
-            $arrURLs = $arrFiles = array();
-            foreach ($node->field_video['und'] as $k => $video) {
-                //$video = $node->field_video['und'][0];
-                $arrContentList['playVideo'] = 'block';
-                $arrURLs[$video['fid']]['thumbnail'] = file_create_url(file_load(array($video['thumbnail']))->uri);
-                $arrURLs[$video['fid']]['original'] = file_create_url($video['uri']);
-
-                $query = db_query('SELECT output_fid FROM video_output WHERE original_fid=:fid', array(':fid' => $video['fid']))->fetchAll();
-                foreach ($query as $video_output) {
-                    $file = file_load($video_output->output_fid);
-                    $arrFiles[$video['fid']][$file->filemime] = $file;
-                    $arrURLs[$video['fid']][$file->filemime] = file_create_url($file->uri);
-                }
-
-                $arrContentList['video'][$k]['videourl'] = addslashes($arrURLs[$video['fid']]['video/mp4']);
-                $arrContentList['video'][$k]['videotype'] = '.flv';
-                $arrContentList['video'][$k]['videothumb'] = $arrURLs[$video['fid']]['thumbnail'];
-
-                // we are separating thumbnail image with and without file extention
-                $strVideoThumbImage = $arrContentList['video'][$k]['videothumb'];
-                $arrVideoTumbData = explode("/", $strVideoThumbImage);
-                $arrContentList['video'][$k]['videothumbimg'] = $arrVideoTumbData[7];
-                $strVideoUrl = $arrContentList['video'][$k]['videourl'];
-                $arrVideoData = explode("/", $strVideoUrl);
-                $arrContentList['video'][$k]['link'] = $arrVideoData[6];
-            }
-            //foreach end
+			
+			$arrContentList['video'] = $this->fnGetVideoData($node);
+            $arrContentList['playVideo'] = 'block';
 
         }
         #Collect all node ids
@@ -821,6 +764,106 @@ function fnGetWidgetList()
     $arrWidgetList = db_query("SELECT id FROM eck_affiliates WHERE type = 'widget'")->fetchAll();
     return $arrWidgetList;
 }
+
+/* Added for refactoring */
+
+public function fnSetSettingsArray($arrResult, $intDescriptionLimit, $strFrontPageDesc, $strFMRInNewTab)
+{
+	//Collect all settings into the array
+        
+        $arrSettings = array(
+            'widget_height' => $arrResult['field_widget_height']['und'][0]['value'],
+            'widget_width' => $arrResult['field_widget_width']['und'][0]['value'],
+            'widget_no_post' => $arrResult['field_widget_no_of_posts_on_font']['und'][0]['value'],
+            'widget_front_title' => $arrResult['field_widget_front_page_title']['und'][0]['value'],
+            'widget_list_title' => $arrResult['field_widget_list_page_title']['und'][0]['value'],
+            'widget_viewmore_text' => $arrResult['field_widget_view_more_label']['und'][0]['value'],
+            'widget_no_more_posts' => $arrResult['field_widget_no_of_posts_on_list']['und'][0]['value'],
+            'widget_viewmore_link' => $arrResult['field_affiliate_news_url']['und'][0]['value'],
+            'widget_video_width' => $arrResult['field_widget_width_of_video']['und'][0]['value'],
+            'widget_poweredBy' => (isset($arrResult['field_widget_power_by']['und'][0]['value'])) ? 1 : 0,
+            'widget_listpageDesc_limit' => $arrResult['field_list_page_description_limi']['und'][0]['value'],
+            'widget_frontpageTitle_limit' => $arrResult['field_front_page_title_limit']['und'][0]['value'],
+            'widget_frontpage_desc_limit' => $intDescriptionLimit,
+            'widget_frontpage_desc' => $strFrontPageDesc,
+            'widget_fmr_in_tab' => $strFMRInNewTab
+        );
+
+        return $arrSettings;
+
+}
+
+public function fnGetPhotoData($node)
+{
+
+	foreach ($node->field_fmr_photo['und'] as $k => $photo) {
+        $file = file_load($photo['fid']);
+
+        #Assign 3BL path
+        $strPhotoLink = urldecode(image_style_url('medium', "images/" . basename(file_create_url($file->uri))));
+        $strFilePath = @file_get_contents($strPhotoLink);
+        if ($strFilePath == "") {
+            continue;
+        }
+
+        //Add available Photo Information
+        $arrContentList[$k]['photolink'] = $strPhotoLink;
+        $arrPhotoData = explode("/", $strPhotoLink);
+        $arrContentList[$k]['name'] = $arrPhotoData[5];
+        $arrContentList[$k]['description'] = $photo['title'];
+    }    
+    return $arrContentList;
+}
+
+public function fnGetAudioData($node)
+{
+	foreach ($node->field_fmr_audio['und'] as $k => $audio) {
+
+        $file = file_load($audio['fid']);
+        $arrContentList[$k]['audioLink'] = file_create_url($file->uri);
+        $strAudioLink = $arrContentList['audio'][$k]['audioLink'];
+        $arrAudioData = explode("/", $strAudioLink);
+        $arrContentList[$k]['name'] = $arrAudioData[5];
+
+    }
+    return $arrContentList;
+}
+
+public function fnGetVideoData($node)
+{
+	$arrURLs = $arrFiles = array();
+    foreach ($node->field_video['und'] as $k => $video) {
+    	//$video = $node->field_video['und'][0];
+	    
+	    $arrURLs[$video['fid']]['thumbnail'] = file_create_url(file_load(array($video['thumbnail']))->uri);
+	    $arrURLs[$video['fid']]['original'] = file_create_url($video['uri']);
+
+	    $query = db_query('SELECT output_fid FROM video_output WHERE original_fid=:fid', array(':fid' => $video['fid']))->fetchAll();
+	    foreach ($query as $video_output) {
+	        $file = file_load($video_output->output_fid);
+	        $arrFiles[$video['fid']][$file->filemime] = $file;
+	        $arrURLs[$video['fid']][$file->filemime] = file_create_url($file->uri);
+	     }
+
+	    $arrContentList[$k]['videourl'] = addslashes($arrURLs[$video['fid']]['video/mp4']);
+	    $arrContentList[$k]['videotype'] = '.flv';
+	    $arrContentList[$k]['videothumb'] = $arrURLs[$video['fid']]['thumbnail'];
+
+	    // we are separating thumbnail image with and without file extention
+	    $strVideoThumbImage = $arrContentList[$k]['videothumb'];
+	    $arrVideoTumbData = explode("/", $strVideoThumbImage);
+	                
+	    $arrContentList[$k]['videothumbimg'] = $arrVideoTumbData[7];
+	                
+	    $strVideoUrl = $arrContentList[$k]['videourl'];
+	    $arrVideoData = explode("/", $strVideoUrl);
+	                
+	    $arrContentList[$k]['link'] = $arrVideoData[6];
+    }
+            //foreach end
+}
+
+/* Added for refactoring */
 
 
 ?>
