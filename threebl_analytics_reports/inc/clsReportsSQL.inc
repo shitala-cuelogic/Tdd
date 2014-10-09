@@ -350,31 +350,6 @@ class ClsReportsSQL extends clsBaseClass
     }
 
     /**
-     * Get all Vertical List
-     *
-     * @param string $strNid : Node Id
-     *
-     * @return array
-     */
-    public function fnFMRVerticals($strNid)
-    {
-        $arrVerticals = array();
-        if ($strNid != "") {
-            $strSQL = "SELECT vert.entity_id AS fmrId, ver.name AS Verticals
-             FROM field_data_field_dist_vertical AS vert
-             LEFT JOIN taxonomy_term_data AS ver ON ver.tid = vert.field_dist_vertical_target_id
-             WHERE vert.entity_id IN (" . $strNid . ")";
-            $objVerticals = db_query($strSQL)->fetchAll();
-            if (count($objVerticals) > 0) {
-                foreach ($objVerticals as $arrRow) {
-                    $arrVerticals[$arrRow->fmrId][] = $arrRow->Verticals;
-                }
-            }
-        }
-        return $arrVerticals;
-    }
-
-    /**
      * Getting Particular Media Type for Clicks.
      *
      * @param int    $intCompanyOgId : Company OG Id
@@ -410,87 +385,6 @@ class ClsReportsSQL extends clsBaseClass
         return $ClickTypeResult = db_query($strSql)->fetchAll();
     }
 
-    /**
-     * Google Map for Click Count for Second Level and Third Level
-     *
-     * @param int $intCompanyOgId : Company Og Id
-     * @param int $intMediaId     : Media Id
-     *
-     * @return mixed
-     */
-    public function fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $intMediaId)
-    {
-        $strMapDataSql = "SELECT nid,click_ip,count(nid) as ipcount,country
-									  FROM " . $this->strClickTableName . " as C
-									  JOIN field_data_field_fmr_type_of_content t ON C.nid = t.entity_id
-									  WHERE C.company_ogid = $intCompanyOgId
-									  AND C.nid = $intMediaId
-									  GROUP BY UPPER(country) order by ipcount desc ";
-        return $arrayClickMapData = db_query($strMapDataSql)->fetchAll();
-    }
-
-    /**
-     * Get Referrer website for Second Level and Third Level
-     *
-     * @param int $intCompanyOgId : Company Og Id
-     * @param int $intMediaId     : Media Id
-     *
-     * @return mixed
-     */
-    public function fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $intMediaId)
-    {
-        // remove extra website.
-        $arrExtraLink = array('bestgenericviagra.biz', 'blog.pnarp.com', 'diffbot.com', 'timberland.justmeans.com', 'www.mysmutsearch.com', 'lala123.com', '_bit=528e713d-', '_bit=52af68a5-00111-07550', 'piwik.3blmedia.com', 'stats.3blmedia.com');
-
-        $strExtraLink = implode("|", $arrExtraLink);
-        $strCondition = " AND C.nid = $intMediaId
-                          AND click_referrer NOT RLIKE '$strExtraLink'
-                          GROUP BY click_referrer Order by click_date desc ";
-        $strReferSql = "SELECT distinct click_referrer as rlink
-								   FROM " . $this->strClickTableName . " as C
-								   JOIN field_data_field_fmr_type_of_content t ON C.nid = t.entity_id
-								   WHERE C.company_ogid = $intCompanyOgId
-								   AND C.click_referrer <> '' $strCondition";
-        return $arrayClickReferData = db_query($strReferSql)->fetchAll();
-    }
-
-    /**
-     * Getting View-Count By Media-Id
-     *
-     * @param int  $intCompanyOgId : Company OG Id
-     * @param int  $intMediaId     : Media Id
-     * @param bool $boolReport     : Boolean Flag
-     *
-     * @return mixed
-     */
-    public function fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId, $boolReport)
-    {
-        $strSql = "SELECT  SUM(v.totalcount) as totalcount
-              FROM " . $this->strViewTableName . " as v
-              Where  v.company_ogid = $intCompanyOgId AND v.nid  IN ($intMediaId)
-              GROUP BY v.nid";
-        return $arrViewCount = ($boolReport == 0) ? db_query($strSql)->fetchAssoc() : db_query($strSql)->fetchAll();
-    }
-
-    /**
-     * Getting Click-Count By Media-Id
-     *
-     * @param int  $intCompanyOgId : Company OG Id
-     * @param int  $intMediaId     : Media Id
-     * @param bool $boolReport     : Boolean Flag
-     *
-     * @return mixed
-     */
-    public function fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId, $boolReport)
-    {
-        $strSql = "SELECT C.nid, C.click_date, count(C.nid) as totalcount, t.field_fmr_type_of_content_value AS `type`
-              FROM " . $this->strClickTableName . " as C
-              JOIN field_data_field_fmr_type_of_content t ON C.nid = t.entity_id
-              Where C.company_ogid = $intCompanyOgId
-              AND C.nid IN ($intMediaId)
-              GROUP BY nid";
-        return $arrClickCount = ($boolReport == 0) ? db_query($strSql)->fetchAssoc() : db_query($strSql)->fetchAll();
-    }
 
     /**
      * Getting  Email address
