@@ -2,33 +2,11 @@
 //This is class for Reports functions.
 class ClsReportsData
 {
-    public $strCurrentDate;
-    public $strChartPrevDate;
-    public $arrShowMediaType;
-    public $strViewTableName;
-    public $strClickTableName;
-    private $strNewsletterClick;
 
     public function __construct()
     {
-        $this->strCurrentDate = date("Y-m-d", (time() - 86400)); //(time()-86400) date("Y-m-d", strtotime("2013-12-16"))//
 
-        $this->strChartPrevDate = date("Y-m-d", strtotime(date("Y-m-d", strtotime($this->strCurrentDate)) . " - 61 days"));
-        $this->arrShowMediaType = array(
-            'press_release' => 'Press Release',
-            'blog' => 'Blog',
-            'multimedia' => 'Multimedia',
-            'article' => 'Article',
-            'newsletter' => 'Newsletter',
-            'all' => 'All'
-        );
-        $this->strViewTableName = 'threebl_analytic_views';
-        $this->strClickTableName = 'threebl_analytic_clicks';
-        $this->strNewsletterClick = 'news_alert_tracking';
-        $this->strBenchmarkNAMonth = '2014-03-31';
     }
-
-
 
     /**
      * Function gather data of 7 days and create array for the Graph.
@@ -87,26 +65,6 @@ class ClsReportsData
             return array($arrChartSum, $arrDates);
         }
     }
-
-    /**
-     * @param string $strToday    : Current Date
-     * @param int    $intNoOfDays : No of days
-     * @param int    $intInterval : No of days Interval
-     *
-     * @return array
-     */
-    public function fnGetPreviousDates($strToday, $intNoOfDays = 30, $intInterval = 1)
-    {
-        $strStart = date("Y-m-d", strtotime(date("Y-m-d", strtotime($strToday)) . " - $intNoOfDays days"));
-        $arrDts[] = $strToday;
-        while (strtotime($strStart) <= strtotime($strToday)) {
-            $strNow = date("Y-m-d", strtotime(date("Y-m-d", strtotime($strToday)) . " - $intInterval days"));
-            $arrDts[] = $strNow;
-            $strToday = $strNow;
-        }
-        return $arrDts;
-    }
-
 
     /**
      * Function Create PDF and send email to respective company
@@ -444,7 +402,7 @@ class ClsReportsData
 
     
         //Build the html for client and 3bl micro list
-        $strHtml .= $this->function fnGenerateFinalHTML($str3blListHtml, $strClientListHtml, $strTotalViews, $strTotalClicks, $arrFinalResult['totalviews'], $arrFinalResult['totalClicks']);
+        $strHtml .= $this->fnGenerateFinalHTML($str3blListHtml, $strClientListHtml, $strTotalViews, $strTotalClicks, $arrFinalResult['totalviews'], $arrFinalResult['totalClicks']);
 
         return $strHtml;
     }
@@ -573,19 +531,19 @@ class ClsReportsData
         return $strCategoryHTML;
     }
 
-    public function fnGenerateHeaderHTML($intFMRID, $strtitle, $strFMRTYPE, $strCompUrl, $strCompName, $strpublished_date, $strCategoryHTML)
+    public function fnGenerateHeaderHTML($intFMRId, $strTitle, $strFMRType, $strCompUrl, $strCompName, $strPublishedDate, $strCategoryHTML)
     {
-                $strHtml .= '
+                $strHtml = '
         <div id="fmr-header" style="background: none repeat scroll 0 0 #E9EBED;margin: 0 0 0.5em;padding: 1em 20px;">
             <div class="client-name" style="padding: 5px">
-                <a href="http://test2.3blmedia.com/node/' . $intFMRID . '"><b><span style="font-size: 18px;">' . $strtitle . '</span></b></a>
+                <a href="http://test2.3blmedia.com/node/' . $intFMRId . '"><b><span style="font-size: 18px;">' . $strTitle . '</span></b></a>
             </div>
             <div class="client-link" style="padding: 5px">
-                Media Type: <b>' . ucwords($strFMRTYPE) . '</b> | <a
+                Media Type: <b>' . ucwords($strFMRType) . '</b> | <a
                 href="http://test2.3blmedia.com/node/' . $strCompUrl . '" target="blank">' .
                     $strCompName . '</a><br>
 
-                <div style="margin-top: 10px">Date: ' . date('l, F d, Y', strtotime($strpublished_date)) . '
+                <div style="margin-top: 10px">Date: ' . date('l, F d, Y', strtotime($strPublishedDate)) . '
                 </div>
             </div>
         </div>' . $strCategoryHTML;
@@ -595,7 +553,7 @@ class ClsReportsData
 
     public function fnGenerateAnalyticHTML($int3blmediaView, $int3blmediaClick, $intWidgetView, $intWidgetClick, $intNewsletterClick, $intJMView, $intJmClick, $intJMNewsletterView, $intJmNewsletterClick)
     {
-                $strHtml .= '</div>
+                $strHtml = '</div>
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e1e1e1">
             <tr>
                 <td style="background:#000000; border-right:1px solid #eee;padding: 5px; border-bottom:1px solid #e1e1e1;">
@@ -659,7 +617,7 @@ class ClsReportsData
     {
 
                  //Build the html for client and 3bl micro list
-                $strHtml .= '
+                $strHtml = '
             <tr>
                 <td colspan="3"
                     style="background:#ccc;border-right:1px solid #eee;padding: 5px; border-bottom:1px solid #e1e1e1;"> 3bl
@@ -730,14 +688,11 @@ class ClsReportsData
 
     }
 
-    public function fnGenerateCompanyReportMessage($intMonth, $strHeaderHTML, $strFotterHTML, $strHeaderHTML, $strFotterHTML)
+    public function fnGenerateCompanyReportMessage($intMonth, $strHeaderHTML, $strFooterHTML, $strHeaderHTML, $strFooterHTML)
     {
-
-        $strMessage = ((int)$intMonth == 1) ? $strHeaderHTML."Attached you will find your up to date Analytics Summary Report from 3BL Media. This report is sent automatically once a month. You can review all of your 3BL Media analytics at any time at http://3blmedia.com/Dashboard/Analytics/Views".$strFotterHTML : $strHeaderHTML.'Attached you should find Flexible Media Release (FMR) Detail Reports for any content distributed between ' . date("F d, Y", mktime(0, 0, 0, date("m"), date("d") - 15, date("Y"))) . ' and ' . date("F d, Y", mktime(0, 0, 0, date("m"), date("d") - 9, date("Y"))) . '.  If you have any questions, please contact your media consultant at 866.508.0993 or reply to this message.<br/>Of course, you can review all of your 3BL Media Analytics and Tracking in your portal at any time at http://3blmedia.com/Dashboard/Analytics/Views<br/><br/>Thank you,<br/>The 3BL Media Team'.$strFotterHTML;
+        $strMessage = ((int)$intMonth == 1) ? $strHeaderHTML."Attached you will find your up to date Analytics Summary Report from 3BL Media. This report is sent automatically once a month. You can review all of your 3BL Media analytics at any time at http://3blmedia.com/Dashboard/Analytics/Views".$strFooterHTML : $strHeaderHTML.'Attached you should find Flexible Media Release (FMR) Detail Reports for any content distributed between ' . date("F d, Y", mktime(0, 0, 0, date("m"), date("d") - 15, date("Y"))) . ' and ' . date("F d, Y", mktime(0, 0, 0, date("m"), date("d") - 9, date("Y"))) . '.  If you have any questions, please contact your media consultant at 866.508.0993 or reply to this message.<br/>Of course, you can review all of your 3BL Media Analytics and Tracking in your portal at any time at http://3blmedia.com/Dashboard/Analytics/Views<br/><br/>Thank you,<br/>The 3BL Media Team'.$strFooterHTML;
 
         return $strMessage;
-
-
     }
 
     /* Added for micro functioning */
