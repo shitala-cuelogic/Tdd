@@ -860,7 +860,9 @@ public function fnGetVideoData($node)
 	                
 	    $arrContentList[$k]['link'] = $arrVideoData[6];
     }
-            //foreach end
+    //foreach end
+
+    return $arrContentList;
 }
 
 /* Added for refactoring */
