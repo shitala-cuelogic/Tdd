@@ -252,4 +252,29 @@ class clsBenchmark
         }
         return $arrBenchmarkClicksFMRInfo;
     }
+
+
+     /**
+    * To return Benchmark information
+    * @param object $objFMRNidInfo: Object of FMR result
+    * @return array
+    */
+    public function fnGetBenchmarkInfo($objFMRNidInfo)
+    {
+        foreach ($objFMRNidInfo as $arrFMRData) {
+
+            $strPublishedDate = date("Y-m-d", strtotime($arrFMRData->field_fmr_date_time_value));
+            $strFMRPublishedDate = strtotime($strPublishedDate);
+
+            //Get FMR Ids for the current Benchmarks Month
+            if ((int)$strFMRPublishedDate >= (int)$strBenchmarkMonthDate) {
+                $arrBenchmarkFMRIds[$arrFMRData->fmr_type."-".$arrFMRData->category_id][] = $arrFMRData->fmrId;
+            }
+            $arrFMRIds[] = $arrFMRData->fmrId;
+            $arrBenchmarkFMRInfo[$arrFMRData->fmr_type."-".$arrFMRData->category_id][] = $arrFMRData->fmrId;
+            $arrBenchMarkByMediaType[$arrFMRData->fmr_type][] = $arrFMRData->fmrId;
+        }
+
+         return array($arrBenchmarkFMRInfo, $arrFMRIds, $arrBenchMarkByMediaType, $arrBenchmarkFMRIds);
+    }
 }
