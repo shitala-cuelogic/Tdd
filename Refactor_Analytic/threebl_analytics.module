@@ -155,8 +155,7 @@ function threebl_analytics_viewAnalytics()
         $arrViewChart = $objAnalytics->fnGetAnalyticViewChartInfo($intCompanyOgId, $strFMRIds, $strChartDateBetweenFlag); //condition on
 
         // Condition for Click chart between dates, default before 2 months with Company
-        $strClickChartDateBetweenFlag = "1";
-        $arrClickChart = $objAnalytics->fnGetAnalyticClickChartInfo($intCompanyOgId, $strFMRIds, $strClickChartDateBetweenFlag);
+        $arrClickChart = $objAnalytics->fnGetAnalyticClickChartInfo($intCompanyOgId, $strFMRIds);
 
         //Process views and clicks and prepare 7 days interval data for graph
         list($arrViewChartSum, $arrClickChartSum, $arrDates) = $objAnalytics->fnSumWeekViewsClicks($arrViewChart, $arrClickChart);
@@ -258,8 +257,7 @@ function threebl_analytics_MediaType($strMediaType)
         $arrViewChart = $objAnalytics->fnGetAnalyticViewChartInfo($intCompanyOgId, $strFMRIds, $strChartDateBetweenFlag);
 
         // Condition for Click chart between dates, default before 2 months of particular media type
-        $strClickChartDateBetweenFlag = "1";
-        $arrClickChart = $objAnalytics->fnGetAnalyticClickChartInfo($intCompanyOgId, $strFMRIds, $strClickChartDateBetweenFlag);
+        $arrClickChart = $objAnalytics->fnGetAnalyticClickChartInfo($intCompanyOgId, $strFMRIds);
 
         //Process views and clicks and prepare 7 days interval data for graph
         list($arrViewChartSum, $arrClickChartSum, $arrDates) = $objAnalytics->fnSumWeekViewsClicks($arrViewChart, $arrClickChart);
