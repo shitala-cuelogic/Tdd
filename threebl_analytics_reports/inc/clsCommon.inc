@@ -202,33 +202,23 @@ class ClsCommonSQL extends clsBaseClass
      *
      * @param int    $intCompanyOgId          : Company OG Id
      * @param string $strFMRIds               : Comma separated FMR Ids
-     * @param string $strChartDateBetweenFlag : Chart date between flag
      * @param int    $intCampaignId           : Campaign Id
      *
      * @return array
      */
-    public function fnGetViewChartInfo($intCompanyOgId, $strFMRIds = "", $strChartDateBetweenFlag = "0", $intCampaignId = 0)
+    public function fnGetViewChartInfo($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
     {
-        # Check date between date visited and current date
-        if ($strChartDateBetweenFlag == "1") {
-            $strChartDateBetween = " AND (v.datevisited BETWEEN '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "') ";
-        }
-
         $strCampaignFrom = ''; //change
         if ((int)$intCampaignId != 0) {
             $strCampaignFrom = "  JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = v.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
         }
 
-        $strCondition = "";
-        if ($strFMRIds != "") {
-            $strCondition = " AND v.nid IN ($strFMRIds)";
-        }
         $strSQL = "SELECT SUM(v.totalcount) as totalcount, v.datevisited AS datevisit
                   FROM " . $this->strViewTableName . " AS v
                   $strCampaignFrom
                   WHERE v.company_ogid = $intCompanyOgId
-                  $strChartDateBetween
-                  $strCondition
+                  AND (v.datevisited BETWEEN '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "')
+                  AND v.nid IN ($strFMRIds)
                   GROUP BY datevisited
                   ORDER by datevisited ASC";
 
@@ -250,44 +240,33 @@ class ClsCommonSQL extends clsBaseClass
      *
      * @param int    $intCompanyOgId               : Company OG Id
      * @param string $strFMRIds                    : Comma separated FMR Ids
-     * @param string $strClickChartDateBetweenFlag : Chart date between flag
      * @param int    $intCampaignId                : Campaign Id
      *
      * @return array
      */
-    public function fnGetClickChartInfo($intCompanyOgId, $strFMRIds = "", $strClickChartDateBetweenFlag = "0", $intCampaignId = 0)
+    public function fnGetClickChartInfo($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
     {
-        $strClickChartDateBetween = '';
-        if ($strClickChartDateBetweenFlag == "1") {
-            $strClickChartDateBetween = " AND (C.click_date BETWEEN '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "') ";
-        }
-
         $strCampaignFrom = '';
         if ((int)$intCampaignId > 0) {
             $strCampaignFrom = " JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = C.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
-        }
-
-        $strCondition = "";
-        if ($strFMRIds != "") {
-            $strCondition = " AND C.nid IN ($strFMRIds)";
         }
 
         $strSQL = "SELECT DATE_FORMAT(C.click_date, '%Y-%m-%d') as clickdate, count(C.nid) as totalcount
                   FROM " . $this->strClickTableName . " as C
                   $strCampaignFrom
                   WHERE C.company_ogid = $intCompanyOgId
-                  $strClickChartDateBetween
-                  $strCondition
+                  AND (DATE_FORMAT(C.click_date, '%Y-%m-%d') BETWEEN '".$this->strChartPrevDate."' AND '".$this->strCurrentDate."')
+                  AND C.nid IN ($strFMRIds)
                   GROUP BY  DATE_FORMAT(C.click_date, '%Y/%m/%d')
                   ORDER by C.click_date asc";
 
-        $arrayViewChartData = db_query($strSQL)->fetchAll();
+        $arrayClickChartData = db_query($strSQL)->fetchAll();
         $arrClickChart = array();
 
         //Checking empty condition
-        if (!empty($arrayViewChartData)) {
+        if (!empty($arrayClickChartData)) {
 
-            foreach ($arrayViewChartData as $arrVal) {
+            foreach ($arrayClickChartData as $arrVal) {
                 $arrClickChart[$arrVal->clickdate] = $arrVal->totalcount;
             }
         }
@@ -295,47 +274,78 @@ class ClsCommonSQL extends clsBaseClass
     }
 
     /**
-     * Google Map for Click Count for Second Level and Third Level
+     * Query for Google Map for Click Count for Second Level and Third Level
      *
-     * @param int $intCompanyOgId : Company Og Id
-     * @param int $intMediaId     : Media Id
+     * @param int   $intCompanyOgId   :  Company OG id
+     * @param mixed $strMediaTypeORId : value will be either media type or id
      *
      * @return mixed
      */
-    public function fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $intMediaId)
+    public function fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId)
     {
-        $strMapDataSql = "SELECT nid,click_ip,count(nid) as ipcount,country
+        // To get Media type condition
+        $strMediaCondition = $this->fnMediaTypeCondition($strMediaTypeORId);
+
+        $strCondition = " $strMediaCondition  GROUP BY UPPER(country) order by ipcount desc ";
+
+        $strFinalSql = "SELECT nid,click_ip,count(nid) as ipcount,country
                                       FROM " . $this->strClickTableName . " as C
-                                      JOIN field_data_field_fmr_type_of_content t ON C.nid = t.entity_id
+                                      JOIN field_data_field_fmr_type_of_content t ON  C.nid = t.entity_id
                                       WHERE C.company_ogid = $intCompanyOgId
-                                      AND C.nid = $intMediaId
-                                      GROUP BY UPPER(country) order by ipcount desc ";
-        return $arrayClickMapData = db_query($strMapDataSql)->fetchAll();
+                                      $strCondition";
+
+        return $arrayClickMapData = db_query($strFinalSql)->fetchAll();
     }
 
     /**
-     * Get Referrer website for Second Level and Third Level
-     *
-     * @param int $intCompanyOgId : Company Og Id
-     * @param int $intMediaId     : Media Id
-     *
-     * @return mixed
-     */
-    public function fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $intMediaId)
+    * To return Media type condition
+    * @param mixed $strMediaTypeORId:  value will be either media type or id
+    * 
+    * * @return string
+    */
+    public function fnMediaTypeCondition($strMediaTypeORId) 
     {
-        // remove extra website.
-        $arrExtraLink = array('bestgenericviagra.biz', 'blog.pnarp.com', 'diffbot.com', 'timberland.justmeans.com', 'www.mysmutsearch.com', 'lala123.com', '_bit=528e713d-', '_bit=52af68a5-00111-07550', 'piwik.3blmedia.com', 'stats.3blmedia.com');
+        $strMediaCondition = '';
+        if ((int)$strMediaTypeORId == 0 && $strMediaTypeORId != '') {
+            //getting particular media-type condition for clicks.
+            if ($strMediaTypeORId == "all") {
+                $strMediaCondition .= " AND C.fmr_type IN ('press_release','blog','multimedia','article','newsletter') ";
+            } else {
+                $strMediaCondition .= " AND C.fmr_type ='" . $strMediaTypeORId . "'";
+            }
+        } elseif ((int)$strMediaTypeORId > 0) {
+            $strMediaCondition .= " AND C.nid = $strMediaTypeORId ";
+        }
+        return $strMediaCondition;
+    }
 
-        $strExtraLink = implode("|", $arrExtraLink);
-        $strCondition = " AND C.nid = $intMediaId
-                          AND click_referrer NOT RLIKE '$strExtraLink'
-                          GROUP BY click_referrer Order by click_date desc ";
-        $strReferSql = "SELECT distinct click_referrer as rlink
+    /**
+    * Query for Referral website for Second Level and Third Level
+    *
+    * @param int   $intCompanyOgId    :  Company OG id
+    * @param mixed $strMediaTypeORId  : value will be either media type or id
+    *
+    * @return mixed
+    */
+    public function fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId)
+    {
+        // To get Media type condition
+        $strMediaCondition = $this->fnMediaTypeCondition($strMediaTypeORId);
+        
+        if ((int)$strMediaTypeORId > 0) {
+            $arrExtraLink = array('bestgenericviagra.biz', 'blog.pnarp.com', 'diffbot.com', 'timberland.justmeans.com', 'www.mysmutsearch.com', 'lala123.com', '_bit=528e713d-', '_bit=52af68a5-00111-07550', 'piwik.3blmedia.com', 'stats.3blmedia.com');
+            $strExtraLink = implode("|", $arrExtraLink);
+            $strMediaCondition = " $strMediaCondition AND click_referrer NOT RLIKE '$strExtraLink' ";
+        }
+
+        $strCondition = " $strMediaCondition  GROUP BY click_referrer Order by click_date desc ";
+
+        $strFinalQuery = "SELECT distinct click_referrer as rlink
                                    FROM " . $this->strClickTableName . " as C
-                                   JOIN field_data_field_fmr_type_of_content t ON C.nid = t.entity_id
+                                   JOIN field_data_field_fmr_type_of_content t ON  C.nid = t.entity_id
                                    WHERE C.company_ogid = $intCompanyOgId
                                    AND C.click_referrer <> '' $strCondition";
-        return $arrayClickReferData = db_query($strReferSql)->fetchAll();
+        return $arrayClickReferData = db_query($strFinalQuery)->fetchAll();
     }
 
     /**
@@ -347,7 +357,7 @@ class ClsCommonSQL extends clsBaseClass
      *
      * @return mixed
      */
-    public function fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId, $boolReport)
+    public function fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
     {
         $strSql = "SELECT  SUM(v.totalcount) as totalcount
               FROM " . $this->strViewTableName . " as v
@@ -365,32 +375,31 @@ class ClsCommonSQL extends clsBaseClass
      *
      * @return mixed
      */
-    public function fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId, $boolReport)
+    public function fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
     {
-        $strSql = "SELECT C.nid, C.click_date, count(C.nid) as totalcount, t.field_fmr_type_of_content_value AS `type`
-              FROM " . $this->strClickTableName . " as C
-              JOIN field_data_field_fmr_type_of_content t ON C.nid = t.entity_id
-              Where C.company_ogid = $intCompanyOgId
-              AND C.nid IN ($intMediaId)
-              GROUP BY nid";
+        $strSql = "SELECT C.nid, C.click_date, count(C.nid) as totalcount, C.fmr_type AS type
+                   FROM " . $this->strClickTableName . " as C
+                   Where C.company_ogid = $intCompanyOgId
+                   AND C.nid IN ($intMediaId)
+                   GROUP BY nid";
         return $arrClickCount = ($boolReport == 0) ? db_query($strSql)->fetchAssoc() : db_query($strSql)->fetchAll();
     }
 
     **
      * Function gather data of 7 days and create array for the Graph.
      *
-     * @param array $arrChart  : FMR Views Info
-     * @param array $arrChart1 : FMR Clicks Info
+     * @param array $arrViewChart  : FMR Views Info
+     * @param array $arrClickChart : FMR Clicks Info
      *
      * @return array
      */
-    public function fnSumWeekViewsClicks($arrChart, $arrChart1 = array())
+    public function fnSumWeekViewsClicks($arrViewChart, $arrClickChart = array())
     {
-        $intMaxChart = max($arrChart);
-        $intMaxChart1 = (count($arrChart1) > 0) ? max($arrChart) : 0;
+        $intMaxChart = max($arrViewChart);
+        $intMaxChart1 = (count($arrClickChart) > 0) ? max($arrViewChart) : 0;
 
         if ($intMaxChart <= 0 && $intMaxChart1 <= 0) {
-            return (count($arrChart1) > 0) ? array("", "", "") : array("", "");
+            return (count($arrClickChart) > 0) ? array("", "", "") : array("", "");
         }
 
         # getting previous date from today's date means we need the dates array having 7 days difference.(ex 1-11-2012, 7-11-2012)
@@ -402,35 +411,35 @@ class ClsCommonSQL extends clsBaseClass
         $arrDates = array();
         $arrChartSum = $arrChartSum1 = array();
         $strDate = "";
-        $intCount = $intGraphSum = $intGraphSum1 = 0;
+        $intCount = $intClickSum = $intViewSum = 0;
         foreach ($arrDts as $key => $val) {
 
-            $intGraphSum += (int)$arrChart[$val];
-            $intGraphSum1 += (int)$arrChart1[$val];
+            $intClickSum += (int)$arrViewChart[$val];
+            $intViewSum += (int)$arrClickChart[$val];
             $intCount++;
             if ($intCount == 7) {
                 $strDate = date("M d", strtotime($val));
                 $arrDates[] = $strDate;
-                $arrChartSum[$strDate] = (int)$intGraphSum;
-                $arrChartSum1[$strDate] = (int)$intGraphSum1;
+                $arrChartSum[$strDate] = (int)$intClickSum;
+                $arrChartSum1[$strDate] = (int)$intViewSum;
 
                 $strDate = "";
                 $intCount = 0;
-                $intGraphSum = 0;
-                $intGraphSum1 = 0;
+                $intClickSum = 0;
+                $intViewSum = 0;
             }
         }
         //Update Last date range data.
         if ($intCount > 0) {
             $strDate = date("M d", strtotime($val));
             $arrDates[] = $strDate;
-            $arrChartSum[$strDate] = (int)$intGraphSum;
-            $arrChartSum1[$strDate] = (int)$intGraphSum1;
+            $arrViewChartSum[$strDate] = (int)$intClickSum;
+            $arrClickChartSum[$strDate] = (int)$intViewSum;
         }
-        if (count($arrChart1) > 0) {
-            return array($arrChartSum, $arrChartSum1, $arrDates);
+        if (count($arrClickChart) > 0) {
+            return array($arrViewChartSum, $arrClickChartSum, $arrDates);
         } else {
-            return array($arrChartSum, $arrDates);
+            return array($arrViewChartSum, $arrDates);
         }
     }
 

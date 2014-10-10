@@ -203,15 +203,13 @@ function threebl_analytics_reports_MediaTypeViews($strQry)
         $arrFMRViews = $objReports->fnGetViews($strFMRIds);
 
         //Views Date by date-visited
-        $strChartDateBetweenFlag = "1";
-        $arrViewChart = $objReports->fnGetViewChartInfo($intCompanyOgId, $strFMRIds, $strChartDateBetweenFlag, $intCampaignId);
+        $arrViewChart = $objReports->fnGetViewChartInfo($intCompanyOgId, $strFMRIds, $intCampaignId);
 
         // Query for getting the Click Count
         $arrFMRClicks = $objReports->fnGetClicks($strFMRIds);
 
         //Get non Video FMRs clicks
-        $strClickChartDateBetweenFlag = "1";
-        $arrClickChart = $objReports->fnGetClickChartInfo($intCompanyOgId, $strFMRIds, $strClickChartDateBetweenFlag, $intCampaignId);
+        $arrClickChart = $objReports->fnGetClickChartInfo($intCompanyOgId, $strFMRIds, $intCampaignId);
 
         //Process views and clicks and prepare 7 days interval data for graph
         list($arrViewChartSum, $arrClickChartSum, $arrDates) = $objReports->fnSumWeekViewsClicks($arrViewChart, $arrClickChart);
