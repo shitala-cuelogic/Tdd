@@ -151,8 +151,7 @@ function threebl_analytics_viewAnalytics()
         }
 
         // Query for View Chart between dates, For last 2 months.
-        $strChartDateBetweenFlag = "1";
-        $arrViewChart = $objAnalytics->fnGetAnalyticViewChartInfo($intCompanyOgId, $strFMRIds, $strChartDateBetweenFlag); //condition on
+        $arrViewChart = $objAnalytics->fnGetAnalyticViewChartInfo($intCompanyOgId, $strFMRIds); //condition on
 
         // Condition for Click chart between dates, default before 2 months with Company
         $arrClickChart = $objAnalytics->fnGetAnalyticClickChartInfo($intCompanyOgId, $strFMRIds);

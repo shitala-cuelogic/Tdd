@@ -277,4 +277,36 @@ class clsBenchmark
 
          return array($arrBenchmarkFMRInfo, $arrFMRIds, $arrBenchMarkByMediaType, $arrBenchmarkFMRIds);
     }
+
+    /**
+     * Function return FMRs those have video attached with it for  Benchmark.
+     *
+     * @return array
+     */
+    public function fnGetBenchmarkFMRWithVideo()
+    {
+        //Get start and End date of Previous month
+        $arrStartEndDate = $this->fnGetStartEndDate(2);
+        $strGetStartDate = $arrStartEndDate["start_date"];
+        $strGetEndDate = $arrStartEndDate["end_date"];
+
+        //Collect all FMRs With Videos
+        $strFMRWithVideos = "SELECT DISTINCT(fmrv.entity_id) AS fmrIds
+                             FROM field_data_field_video AS fmrv
+                             JOIN field_data_field_fmr_date_time AS pubdt ON pubdt.entity_id = fmrv.entity_id
+                             WHERE fmrv.bundle = 'fmr'
+                             AND (DATE_FORMAT(pubdt.field_fmr_date_time_value,'%Y-%m-%d') >='".$strGetStartDate."'
+                             AND DATE_FORMAT(pubdt.field_fmr_date_time_value,'%Y-%m-%d') <= '".$strGetEndDate."')";
+
+        $arrFMRRecords = db_query($strFMRWithVideos)->fetchAll();
+        $arrFMRIds = array();
+
+        //Checking blank code
+        if (!empty($arrFMRRecords)) {
+            foreach ($arrFMRRecords as $arrRow) {
+                $arrFMRIds[] = $arrRow->fmrIds;
+            }
+        }
+        return $arrFMRIds;
+    }
 }

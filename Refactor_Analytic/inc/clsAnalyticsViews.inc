@@ -4,54 +4,6 @@
 class clsAnalyticsViews
 {
     /**
-     * Query for getting View Chart for First Level and Second Level
-     *
-     * @param int    $intCompanyOgId          : Company OG id
-     * @param string $strFMRIds               : FMR node id's with comma separated
-     *
-     * @return mixed
-     */
-    public function fnGetAnalyticViewChartInfo($intCompanyOgId, $strFMRIds = "")
-    {
-        $strSQL = "SELECT SUM(v.totalcount) as totalcount, v.datevisited AS datevisit
-                  FROM " . $this->strViewTableName . " AS v
-                  $strCampaignFrom
-                  WHERE v.company_ogid = $intCompanyOgId
-                  AND (v.datevisited BETWEEN '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "')
-                  AND v.nid IN ($strFMRIds)
-                  GROUP BY datevisited
-                  ORDER by datevisited ASC";
-
-        $arrViewChartData = db_query($strSQL)->fetchAll();
-        $arrViewChart = array();
-        //Checking empty array condition
-        if (!empty($arrViewChartData)) {
-            foreach ($arrViewChartData as $arrVal) {
-                $arrViewChart[$arrVal->datevisit] = $arrVal->totalcount;
-            }
-        }
-        return $arrViewChart;
-    }
-
-    /**
-     *  Getting View-Count By Media-Id
-     *
-     * @param int  $intCompanyOgId :  Company OG id
-     * @param int  $intMediaId     : FMR node id
-     *
-     * @return mixed
-     */
-    public function fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId)
-    {
-        $strSQL = "SELECT  SUM(v.totalcount) as totalcount
-                  FROM " . $this->strViewTableName . " as v
-                  JOIN field_data_field_fmr_type_of_content t ON  v.nid = t.entity_id
-                  Where v.company_ogid = $intCompanyOgId AND v.nid = $intMediaId
-                  GROUP BY  v.nid";
-        return $arrViewCount = db_query($strSQL)->fetchAssoc();
-    }
-
-    /**
      * Process view data for cron functionality and save analytics in to the view table.
      *
      * @param array        $arrFmrViews : Array of FMRs node ids
