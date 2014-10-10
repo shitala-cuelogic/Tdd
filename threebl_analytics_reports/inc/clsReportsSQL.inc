@@ -2,104 +2,6 @@
 //This is class for Reports functions.
 class ClsReportsSQL extends clsBaseClass
 {
-
-    /**
-     * Query for getting View Chart for First Level and Second Level
-     *
-     * @param int    $intCompanyOgId          : Company OG Id
-     * @param string $strFMRIds               : Comma separated FMR Ids
-     * @param string $strChartDateBetweenFlag : Chart date between flag
-     * @param int    $intCampaignId           : Campaign Id
-     *
-     * @return array
-     */
-    public function fnGetViewChartInfo($intCompanyOgId, $strFMRIds = "", $strChartDateBetweenFlag = "0", $intCampaignId = 0)
-    {
-        # Check date between date visited and current date
-        if ($strChartDateBetweenFlag == "1") {
-            $strChartDateBetween = " AND (v.datevisited BETWEEN '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "') ";
-        }
-
-        $strCampaignFrom = ''; //change
-        if ((int)$intCampaignId != 0) {
-            $strCampaignFrom = "  JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = v.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
-        }
-
-        $strCondition = "";
-        if ($strFMRIds != "") {
-            $strCondition = " AND v.nid IN ($strFMRIds)";
-        }
-        $strSQL = "SELECT SUM(v.totalcount) as totalcount, v.datevisited AS datevisit
-                  FROM " . $this->strViewTableName . " AS v
-                  $strCampaignFrom
-                  WHERE v.company_ogid = $intCompanyOgId
-                  $strChartDateBetween
-                  $strCondition
-                  GROUP BY datevisited
-                  ORDER by datevisited ASC";
-
-        $arrViewChartData = db_query($strSQL)->fetchAll();
-        $arrViewChart = array();
-
-        //Checking empty condition
-        if (!empty($arrViewChartData)) {
-
-            foreach ($arrViewChartData as $arrVal) {
-                $arrViewChart[$arrVal->datevisit] = $arrVal->totalcount;
-            }
-        }
-        return $arrViewChart;
-    }
-
-    /**
-     * Query for getting Click Chart for First Level and Second Level
-     *
-     * @param int    $intCompanyOgId               : Company OG Id
-     * @param string $strFMRIds                    : Comma separated FMR Ids
-     * @param string $strClickChartDateBetweenFlag : Chart date between flag
-     * @param int    $intCampaignId                : Campaign Id
-     *
-     * @return array
-     */
-    public function fnGetClickChartInfo($intCompanyOgId, $strFMRIds = "", $strClickChartDateBetweenFlag = "0", $intCampaignId = 0)
-    {
-        $strClickChartDateBetween = '';
-        if ($strClickChartDateBetweenFlag == "1") {
-            $strClickChartDateBetween = " AND (C.click_date BETWEEN '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "') ";
-        }
-
-        $strCampaignFrom = '';
-        if ((int)$intCampaignId > 0) {
-            $strCampaignFrom = " JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = C.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
-        }
-
-        $strCondition = "";
-        if ($strFMRIds != "") {
-            $strCondition = " AND C.nid IN ($strFMRIds)";
-        }
-
-        $strSQL = "SELECT DATE_FORMAT(C.click_date, '%Y-%m-%d') as clickdate, count(C.nid) as totalcount
-                  FROM " . $this->strClickTableName . " as C
-                  $strCampaignFrom
-                  WHERE C.company_ogid = $intCompanyOgId
-                  $strClickChartDateBetween
-                  $strCondition
-                  GROUP BY  DATE_FORMAT(C.click_date, '%Y/%m/%d')
-                  ORDER by C.click_date asc";
-
-        $arrayViewChartData = db_query($strSQL)->fetchAll();
-        $arrClickChart = array();
-
-        //Checking empty condition
-        if (!empty($arrayViewChartData)) {
-
-            foreach ($arrayViewChartData as $arrVal) {
-                $arrClickChart[$arrVal->clickdate] = $arrVal->totalcount;
-            }
-        }
-        return $arrClickChart;
-    }
-
     /**
      * Getting  Email address
      *
@@ -261,23 +163,6 @@ class ClsReportsSQL extends clsBaseClass
             //Individual Justmeans FMR views
             return $objJMViews[0]->views;
         }
-    }
-
-    /**
-     * Function for Getting Campaign Name
-     *
-     * @param int $intCampaignId : Campaign Id
-     *
-     * @return string
-     */
-    function fnGetCampaignName($intCampaignId = 0)
-    {
-        //Get Campaign Name from campaign id
-        $strCampaignName = '';
-        if ((int)$intCampaignId > 0) {
-            $strCampaignName = db_query("SELECT title FROM node WHERE nid = '" . $intCampaignId . "'")->fetchField();
-        }
-        return $strCampaignName;
     }
 
     /**
@@ -565,4 +450,58 @@ class ClsReportsSQL extends clsBaseClass
         return array($arrFMRInfo, $strFMRIds, $strCurrentDate, $intPrevMonthDate);
     }
 
+    /**
+     * Get all Vertical List
+     *
+     * @param string $strNid : Node Id
+     *
+     * @return array
+     */
+    public function fnFMRVerticals($strNid)
+    {
+        $arrVerticals = array();
+        if ($strNid != "") {
+            $strSQL = "SELECT vert.entity_id AS fmrId, ver.name AS Verticals
+             FROM field_data_field_dist_vertical AS vert
+             LEFT JOIN taxonomy_term_data AS ver ON ver.tid = vert.field_dist_vertical_target_id
+             WHERE vert.entity_id IN (" . $strNid . ")";
+            $objVerticals = db_query($strSQL)->fetchAll();
+            if (count($objVerticals) > 0) {
+                foreach ($objVerticals as $arrRow) {
+                    $arrVerticals[$arrRow->fmrId][] = $arrRow->Verticals;
+                }
+            }
+        }
+        return $arrVerticals;
+    }
+
+    /**
+     * Function insertCompanyDetails
+     *
+     * @param int    $intMonth                  : Flag to check report type
+     * @param int    $intCompanyNid             : Company Node Id
+     * @param string $strRecipient              : Recipient email
+     * @param string $strDownloadReportFileType : Download Report File Type
+     *
+     * @return mixed
+     */
+    public function fnInsertCompanyDetails($intMonth, $intCompanyNid, $strRecipient, $strDownloadReportFileType = 'email')
+    {
+        //set the current date
+        $dateCurrentDate = date("Y-m-d");
+        $arrUpdate = array(
+            'companyid' => $intCompanyNid,
+            'email' => $strRecipient,
+            'channel' => 'cron',
+            'report_type' => ($intMonth ? 7 : 6),
+            'download_file_type' => $strDownloadReportFileType,
+            'send_on' => $dateCurrentDate
+        );
+
+        //Insert all details in the table.
+        $intInsertId = db_insert('threebl_company_auto_report_tracking')
+            ->fields($arrUpdate)
+            ->execute();
+        return $intInsertId;
+    }
 }
