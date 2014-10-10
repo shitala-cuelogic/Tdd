@@ -1,0 +1,83 @@
+<?php
+function threebl_remaning_fmr_affiliate_menu()
+{
+    $items = array();
+    $items['Dashboard/Tracking/RemaningAffiliate'] = array(
+        'title'=>' Tracking Remaning Affiliate ',
+        'description'=>'Tracking Remaning Affiliate',
+        'page callback'=>'threebl_remaning_fmr_affiliate_cron',
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+        'type'             => MENU_LOCAL_TASK
+    );
+    return $items;
+}//end threebl_analytics_reportste_menu
+
+/**
+ * Remove remaning fmr affiliate nid
+ */
+function threebl_remaning_fmr_affiliate_cron()
+{
+    //Include all required files
+    module_load_include('inc', 'threebl_affiliate', 'inc/clsTracking');
+
+    //Include required class files
+    module_load_include('inc', 'threebl_script', 'inc/clsScript');
+
+    //Object of class
+    $objClsScript = new clsScript();
+
+    //Check session
+    $objClsTracking = new clsTracking($_SESSION['client_og_nid']);
+
+    $strSQL = "SELECT n.nid, pubdt.field_fmr_date_time_value, at.nid as at_id,n.title
+               FROM node AS n
+               JOIN field_data_field_fmr_date_time AS pubdt ON pubdt.entity_id = n.nid
+               LEFT JOIN affiliate_tracking as at ON at.nid = n.nid
+               WHERE n.type =  'fmr'
+               AND (pubdt.field_fmr_date_time_value >=  DATE_SUB(CURDATE() ,INTERVAL 15 DAY )
+               AND pubdt.field_fmr_date_time_value < DATE_SUB(CURDATE() ,INTERVAL 1 DAY ) )
+               AND at.nid IS NULL
+               AND n.status = 1
+               GROUP BY n.nid
+               ORDER BY field_fmr_date_time_value ASC";
+
+
+    $arrMedia = db_query($strSQL)->fetchAll();
+
+    $strHtml = '<table width="90%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e1e1e1">
+                <tr><th width="10%" style="background:#ccc; border-right:1px solid #eee; padding:5px">FMR Nid</th><th style="background:#ccc; border-right:1px solid #eee; padding: 5px">Title</th><th width="20%" style="background:#ccc; padding: 5px">Publish Date</th></tr>';
+
+    if (!empty($arrMedia)) {
+
+        foreach ($arrMedia as $arrVal) {
+            $intCnt = $objClsScript->fnPrconnectDemoCron($arrVal->nid, $objClsTracking);
+            $strHtml.='<tr>';
+            $strHtml.='<td style="padding:5px; text-align:center; border-bottom:1px solid #e1e1e1;">'.$arrVal->nid.'</td><td style="padding:5px; text-align:left; border-bottom:1px solid #e1e1e1;">'.trim($arrVal->title).'</td><td style=" padding:5px; text-align:center; border-bottom:1px solid #e1e1e1;">'.$arrVal->field_fmr_date_time_value.'</td>';
+            $strHtml.='</tr>';
+        }//foreach
+
+        $strHtml.= '</table>';
+
+        echo $strHtml;
+
+        $strMessage = html_entity_decode($strHtml);
+        $strSender = "info@3blmedia.com";
+        $strSenderName = "3blmedia Team";
+        $strSubject = "3BL Media Remaning FMRs from Affiliate Tracking";
+        $strRecipientAddress = 'prasanaa.cuelogic@gmail.com,tech@3blmedia.com';
+
+        module_load_include('inc', 'threebl_analytics_reports', 'inc/sendEmail');
+
+        //echo $strMessage;die;
+        $intEmail ='';
+        $intEmail = fnSendEmail($strSenderName, $strSender, $strRecipientAddress, $strSubject, $strMessage);
+
+        if ($intEmail) {
+            echo "Done";
+        }
+    } else {
+        echo "No any FMR exist";
+    }
+
+}//end function

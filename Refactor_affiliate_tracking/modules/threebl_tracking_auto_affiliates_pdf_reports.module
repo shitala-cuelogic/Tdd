@@ -1,0 +1,77 @@
+<?php
+/*
+    Cron function to send weekly Tracking Report in PDF format
+*/
+function threebl_tracking_auto_affiliates_pdf_reports_menu(){
+    $items = array();
+    $items['Affiliate/Tracking/PDF'] = array(
+        'title'=>' Analytics',
+        'description'=>'Analytics Views',
+        'page callback'=>'threebl_tracking_auto_affiliates_pdf_reports_cron',
+        'access arguments' => array('administer users'),
+    );
+   
+    return $items;
+}//end threebl_dashboard_analytics_menu
+
+/**
+ * @return bool
+ */
+function threebl_tracking_auto_affiliates_pdf_reports_cron()
+{
+    //include required files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/sendEmail');
+    module_load_include('inc', 'threebl_affiliate', 'inc/clsTracking');
+
+    // Object of Report class
+    $objReports = new ClsReports();
+    $objClsTracking = new clsTracking();
+
+    //Get all active companies
+    $arrCompany = array();
+    $arrCompany = $objReports->fnGetActiveCompanies();
+
+    $strRecipientsHTML = "";
+
+    if(count($arrCompany) > 0 ){
+        //GET Company Ids
+        $arrCompanyIds = array();
+        $arrCompanyIds = array_values($arrCompany);
+        $strCompanyIds = implode(',',$arrCompanyIds);
+
+        //Collect All companies Email Ids
+        $arrAutoReportEmail = $objReports->fnGetAutoReportEmail($strCompanyIds);
+        $intCnt = 0;
+
+        // Get Compnay Name
+        $arrCompanyName = $objClsTracking->fnGetAffiliateCompanyName($strCompanyIds);
+
+        foreach($arrCompany as $intCompanySynId => $intCompanyNid){
+
+			$arrEmails = array();
+
+            //Get email ids of Company for weekly report.
+			$arrEmails = array_unique($arrAutoReportEmail[$intCompanyNid]);
+
+            if(is_array($arrEmails) && count($arrEmails) > 0){
+
+                //Get the latest fmr of respective company.
+                $arrFMRInfo = $objClsTracking->fnGetAffiliatesLatestFMR($intCompanySynId);
+                if (count($arrFMRInfo) >0) {
+
+                    $strCompanyName = stripslashes($arrCompanyName[$intCompanyNid]);
+
+                    $strRecipientsHTML .= $objClsTracking->fnAffiliateReportsByCompany($intCompanyNid, $strCompanyName, $arrEmails, $arrFMRInfo);
+                    $intCnt ++;
+                }
+            }
+        }
+    }
+
+    // Send Recipients information to Media Consultant
+    $objClsTracking->fnSendRecipientInfoToMCs($strRecipientsHTML);
+
+	watchdog('Tracking Auto Reports: total emails', "Done==>".$intCnt);
+    return true;
+}

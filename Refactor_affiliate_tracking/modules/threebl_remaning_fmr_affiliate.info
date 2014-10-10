@@ -1,0 +1,6 @@
+; $Id$
+name = threebl_remaning_fmr_affiliate
+description = This is a cron to getting remaning fmr affiliate nid.
+package = 3BL
+core = 7.x
+ 

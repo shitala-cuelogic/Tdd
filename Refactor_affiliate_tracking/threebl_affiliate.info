@@ -1,0 +1,7 @@
+; $Id$
+ 
+name = threebl_affiliate
+description = This file contains all the functionality of threebl affiliate.
+package = Reinholds modules
+core = 7.x
+ 

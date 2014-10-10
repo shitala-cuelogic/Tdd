@@ -1,0 +1,6 @@
+; $Id$
+name = threebl_remove_affiliate
+description = This is a cron to remove unwanted or expired prconnect affiliates.
+package = 3BL
+core = 7.x
+ 

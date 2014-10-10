@@ -1,0 +1,6 @@
+; $Id$
+name = 3BL Media eFMR PRConnect Tracking
+description = This is a cron for eFMR tracking for PRCOnnect type affiliates only
+package = 3BL
+core = 7.x
+ 
