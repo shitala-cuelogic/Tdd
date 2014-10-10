@@ -15,22 +15,56 @@ class ClsReportsSQL extends clsBaseClass
         $arrAutoReportEmail = array();
         if ($strCompanyNid != "") {
             if ($intMonth == 0) {
-                $strSql = "SELECT field_email_for_automated_report_email AS email, entity_id AS nid, delta
-                   FROM field_data_field_email_for_automated_report
-                   WHERE entity_id IN (" . $strCompanyNid . ") ORDER BY nid";
+
+                $objAutoReportEmail = $this->getMonthlyAutoReportEmail($strCompanyNid);
+
             } else {
-                $strSql = "SELECT field_email_for_automated_month_email AS email, entity_id AS nid, delta
-                   FROM field_data_field_email_for_automated_month
-                   WHERE entity_id IN (" . $strCompanyNid . ") ORDER BY nid";
+
+                $objAutoReportEmail = $this->getWeeklyAutoReportEmail($strCompanyNid);
             }
-            $objAutoReportEmail = db_query($strSql)->fetchAll();
+
             if (is_array($objAutoReportEmail) && count($objAutoReportEmail) > 0) {
+
                 foreach ($objAutoReportEmail as $arrRow) {
+
                     $arrAutoReportEmail[$arrRow->nid][$arrRow->delta] = $arrRow->email;
+
                 }
             }
         }
         return $arrAutoReportEmail;
+    }
+
+    /**
+     * Find emails for monthly report functionality
+     *
+     * @param $strCompanyNid : List of company ids
+     *
+     * @return mixed
+     */
+    function getMonthlyAutoReportEmail($strCompanyNid){
+
+        $strSql = "SELECT field_email_for_automated_report_email AS email, entity_id AS nid, delta
+                   FROM field_data_field_email_for_automated_report
+                   WHERE entity_id IN (" . $strCompanyNid . ") ORDER BY nid";
+
+        return db_query($strSql)->fetchAll();
+    }
+
+    /**
+     * Find emails for weekly report functionality
+     *
+     * @param $strCompanyNid : List of company ids
+     *
+     * @return mixed
+     */
+    function getWeeklyAutoReportEmail($strCompanyNid){
+
+        $strSql = "SELECT field_email_for_automated_month_email AS email, entity_id AS nid, delta
+                   FROM field_data_field_email_for_automated_month
+                   WHERE entity_id IN (".$strCompanyNid.") ORDER BY nid";
+
+        return db_query($strSql)->fetchAll();
     }
 
     /**
@@ -87,82 +121,6 @@ class ClsReportsSQL extends clsBaseClass
             }
         }
         return $arrCompany;
-    }
-
-    /**
-     * Function to get the Justmeans newsletter total clicks for selected FMR
-     *
-     * @param int    $intNodeId     : Node Id
-     * @param string $strChannelType: Channel Type (Jm-Newsletter, Justmeans)
-     * @param string $strReportType : Report type (Weekly or Individual).
-     *
-     * @return mixed
-     */
-    public function fnGetJMClicks($intNodeId, $strChannelType, $strReportType = "")
-    {
-        // Group By Condition
-        $strGroupBy = "";
-        if ($strReportType == "weekly") {
-            $strGroupBy = "GROUP BY N.nid_3bl";
-        }
-        $strPrimarySQL = "SELECT count(jc.mediaid) as click, N.nid_3bl
-                          FROM  nid_to_nid as N
-                          JOIN jm_analytic_clicks as jc on N.nid_jm = jc.mediaid
-                          WHERE N.nid_3bl IN (" . $intNodeId . ")
-                          AND jc.channel = '$strChannelType' $strGroupBy";
-        $objJMClicks = db_query($strPrimarySQL)->fetchAll();
-
-        $arrJMClicksInfo = array();
-        //Weekly Justmeans FMRs clicks
-        if ($strReportType == "weekly") {
-            if (!empty($objJMClicks)) {
-                foreach ($objJMClicks as $arrJMClicks) {
-                    $arrJMClicksInfo[$arrJMClicks->nid_3bl]["JMClicks"] = $arrJMClicks->click;
-                }
-            }
-            return $arrJMClicksInfo;
-        } else {
-            //Individual Justmeans FMR clicks
-            return $objJMClicks[0]->click;
-        }
-    }
-
-    /**
-     * Function to get the Justmeans newsletter total views for selected FMR
-     *
-     * @param int    $intNodeId     : Node Id
-     * @param string $strChannelType: Channel Type (Jm-Newsletter, Justmeans)
-     * @param string $strReportType : Report type (Weekly or Individual).
-     *
-     * @return mixed
-     */
-    public function fnGetJMViews($intNodeId, $strChannelType, $strReportType = "")
-    {
-        // Group By Condition
-        $strGroupBy = "";
-        if ($strReportType == "weekly") {
-            $strGroupBy = "GROUP BY N.nid_3bl";
-        }
-        $strPrimarySQL = "SELECT sum(jv.totalcount) as views, N.nid_3bl
-                          FROM  nid_to_nid as N
-                          JOIN jm_analytic_views as jv on N.nid_jm = jv.mediaid
-                          WHERE N.nid_3bl IN(" . $intNodeId . ")
-                          AND jv.channel = '$strChannelType' $strGroupBy";
-        $objJMViews = db_query($strPrimarySQL)->fetchAll();
-
-        $arrJMViewsInfo = array();
-        //Weekly Justmeans FMRs views
-        if ($strReportType == "weekly") {
-            if (!empty($objJMViews)) {
-                foreach ($objJMViews as $arrJMViews) {
-                    $arrJMViewsInfo[$arrJMViews->nid_3bl]["JMViews"] = $arrJMViews->views;
-                }
-            }
-            return $arrJMViewsInfo;
-        } else {
-            //Individual Justmeans FMR views
-            return $objJMViews[0]->views;
-        }
     }
 
     /**
