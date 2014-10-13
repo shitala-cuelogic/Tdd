@@ -208,34 +208,8 @@ class clsTrackingData {
     {
 
         // To get the affiliates of type 'widget' for the FMR
-        $strVerticalCondition = " SELECT t.tid
-                FROM `taxonomy_term_data` AS t
-                LEFT JOIN taxonomy_term_hierarchy AS th ON (th.tid = t.tid OR t.tid = th.parent)
-                WHERE t.vid = 4 AND
-                ( th.parent IN
-                    ( SELECT st.tid
-                    FROM node n1
-                    LEFT JOIN field_data_field_fmr_primary_category AS p ON n1.nid = p.entity_id
-                    LEFT JOIN field_data_field_dist_vertical AS v ON n1.nid = v.entity_id
-                    LEFT JOIN field_data_field_fmr_taxonomy AS v1 ON n1.nid = v1.entity_id
-                    LEFT JOIN taxonomy_term_data AS t ON (v1.field_fmr_taxonomy_target_id = t.tid OR v.field_dist_vertical_target_id = t.tid OR p.field_fmr_primary_category_target_id = t.tid )
-                    JOIN taxonomy_term_data AS st ON (st.vid = 4 AND t.name = st.name )
-                    WHERE t.tid != '' AND n1.nid = ".$intFMRId." )
-                    OR
-                    th.tid IN
-                    ( SELECT st.tid
-                    FROM node n1
-                    LEFT JOIN field_data_field_fmr_primary_category AS p ON n1.nid = p.entity_id
-                    LEFT JOIN field_data_field_dist_vertical AS v ON n1.nid = v.entity_id
-                    LEFT JOIN field_data_field_fmr_taxonomy AS v1 ON n1.nid = v1.entity_id
-                    LEFT JOIN taxonomy_term_data AS t ON (v1.field_fmr_taxonomy_target_id = t.tid OR v.field_dist_vertical_target_id = t.tid OR p.field_fmr_primary_category_target_id = t.tid )
-                    JOIN taxonomy_term_data AS st ON (st.vid = 4 AND t.name = st.name )
-                    WHERE t.tid != '' AND n1.nid = ".$intFMRId." )
-                )
-                GROUP BY t.tid ";
-
-        $objVerticalIds = db_query($strVerticalCondition)->fetchAll();
-
+        $objVerticalIds = $this->fnGetaffiliatesOfTypeWidget($intFMRId);
+        
         //Get all tids
         $arrTid = array();
 
@@ -292,7 +266,38 @@ class clsTrackingData {
         return $objWidgets =  db_query($strQryWidget)->fetchAll();
     }
 
+    public function fnGetaffiliatesOfTypeWidget($intFMRId) {
 
+      $strVerticalCondition = " SELECT t.tid
+                FROM `taxonomy_term_data` AS t
+                LEFT JOIN taxonomy_term_hierarchy AS th ON (th.tid = t.tid OR t.tid = th.parent)
+                WHERE t.vid = 4 AND
+                ( th.parent IN
+                    ( SELECT st.tid
+                    FROM node n1
+                    LEFT JOIN field_data_field_fmr_primary_category AS p ON n1.nid = p.entity_id
+                    LEFT JOIN field_data_field_dist_vertical AS v ON n1.nid = v.entity_id
+                    LEFT JOIN field_data_field_fmr_taxonomy AS v1 ON n1.nid = v1.entity_id
+                    LEFT JOIN taxonomy_term_data AS t ON (v1.field_fmr_taxonomy_target_id = t.tid OR v.field_dist_vertical_target_id = t.tid OR p.field_fmr_primary_category_target_id = t.tid )
+                    JOIN taxonomy_term_data AS st ON (st.vid = 4 AND t.name = st.name )
+                    WHERE t.tid != '' AND n1.nid = ".$intFMRId." )
+                    OR
+                    th.tid IN
+                    ( SELECT st.tid
+                    FROM node n1
+                    LEFT JOIN field_data_field_fmr_primary_category AS p ON n1.nid = p.entity_id
+                    LEFT JOIN field_data_field_dist_vertical AS v ON n1.nid = v.entity_id
+                    LEFT JOIN field_data_field_fmr_taxonomy AS v1 ON n1.nid = v1.entity_id
+                    LEFT JOIN taxonomy_term_data AS t ON (v1.field_fmr_taxonomy_target_id = t.tid OR v.field_dist_vertical_target_id = t.tid OR p.field_fmr_primary_category_target_id = t.tid )
+                    JOIN taxonomy_term_data AS st ON (st.vid = 4 AND t.name = st.name )
+                    WHERE t.tid != '' AND n1.nid = ".$intFMRId." )
+                )
+                GROUP BY t.tid ";
+
+       
+
+      return  $objVerticalIds = db_query($strVerticalCondition)->fetchAll();
+    }
 
 
     /**
@@ -305,34 +310,7 @@ class clsTrackingData {
     public function fnWidgetPDFTracking($intFMRId, $boolExcel = 0, $intFmrLanguageType = 0)
     {
         // To get the affiliates of type 'widget' for the FMR
-        $strVerticalCondition = " SELECT t.tid
-                FROM `taxonomy_term_data` AS t
-                LEFT JOIN taxonomy_term_hierarchy AS th ON (th.tid = t.tid OR t.tid = th.parent)
-                WHERE t.vid = 4 AND
-                ( th.parent IN
-                    ( SELECT st.tid
-                    FROM node n1
-                    LEFT JOIN field_data_field_fmr_primary_category AS p ON n1.nid = p.entity_id
-                    LEFT JOIN field_data_field_dist_vertical AS v ON n1.nid = v.entity_id
-                    LEFT JOIN field_data_field_fmr_taxonomy AS v1 ON n1.nid = v1.entity_id
-                    LEFT JOIN taxonomy_term_data AS t ON (v1.field_fmr_taxonomy_target_id = t.tid OR v.field_dist_vertical_target_id = t.tid OR p.field_fmr_primary_category_target_id = t.tid )
-                    JOIN taxonomy_term_data AS st ON (st.vid = 4 AND t.name = st.name )
-                    WHERE t.tid != '' AND n1.nid = " . $intFMRId . " )
-                    OR
-                    th.tid IN
-                    ( SELECT st.tid
-                    FROM node n1
-                    LEFT JOIN field_data_field_fmr_primary_category AS p ON n1.nid = p.entity_id
-                    LEFT JOIN field_data_field_dist_vertical AS v ON n1.nid = v.entity_id
-                    LEFT JOIN field_data_field_fmr_taxonomy AS v1 ON n1.nid = v1.entity_id
-                    LEFT JOIN taxonomy_term_data AS t ON (v1.field_fmr_taxonomy_target_id = t.tid OR v.field_dist_vertical_target_id = t.tid OR p.field_fmr_primary_category_target_id = t.tid )
-                    JOIN taxonomy_term_data AS st ON (st.vid = 4 AND t.name = st.name )
-                    WHERE t.tid != '' AND n1.nid = " . $intFMRId . " )
-                )
-                GROUP BY t.tid ";
-
-        $objVerticalIds = db_query($strVerticalCondition)->fetchAll();
-
+        $objVerticalIds = $this->fnGetaffiliatesOfTypeWidget($intFMRId);
         //Get all tids
         $arrTid = array();
 
@@ -461,52 +439,6 @@ class clsTrackingData {
                 return false;
             }
         }
-    }
-
-    /**
-     * Function for insert affiliate
-     * @param $objEntity
-     * @return mixed
-     */
-    public function fnInsertAffiliate(&$objEntity)
-    {
-        entity_get_controller('affiliates')->save($objEntity);
-        return $objEntity->id;
-    }
-
-    /**
-     * Function for delete affiliate
-     * @param array $arrIds : array of affiliates Ids
-     */
-    public function fnDeleteAffiliate($arrIds = array())
-    {
-        if (count($arrIds) > 0) {
-            $arrEntity = entity_load('affiliates', $arrIds);
-            $arrAffEntity = json_decode(json_encode($arrEntity), 1); //object to array
-            entity_get_controller('affiliates')->delete($arrAffEntity);
-        }
-    }
-
-    /**
-     * Insert value in affiliate_tracking table
-     * @param array $arrData : Array of tracking data
-     * @return DatabaseStatementInterface|int|null
-     */
-    public function fnInsertAffTracking($arrData = array())
-    {
-        return $aff_id  = db_insert('affiliate_tracking')->fields($arrData)->execute();
-    }
-
-    /**
-     * Checking Tracking news url exits or not
-     * @param string $strUrl : Tracking url
-     * @return mixed
-     */
-    public function fnDuplicateTrackingUrl($strUrl)
-    {
-        $strQuery = "SELECT count(*)as cnt FROM affiliate_tracking
-        WHERE tracking_url = '".$strUrl."'";
-        return db_query($strQuery)->fetchField();
     }
 
     /**
@@ -712,13 +644,7 @@ class clsTrackingData {
         return $arrGetCompanyName;
     }
 
-    public function fnUpdateTrackingFlag($intId) {
-
-      db_update('field_data_field_prconnect_tracking')
-                ->fields(array('field_prconnect_tracking_value'=>'1'))
-                ->condition('entity_id', $intId, '=')
-                ->execute();
-    }
+    
 
 }
 

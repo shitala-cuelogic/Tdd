@@ -191,81 +191,10 @@ class clsTracking extends affiliatesController implements affiliatesControllerIn
                 }
                 $arrContent[$key]['affiliate_news_url'] = (string) $strLnk;
 
+                
                 //Create an entity object to insert the affiliate into the db
-                $entity = new stdClass();
-                $entity->type = 'prconnect';
-                $entity->id = 0;
-                $entity->field_affiliate_title = array
-                (
-                    'und' => array
-                    (
-                        "0" => array
-                        (
-                            'value' =>$arrContent[$key]['title']
-                        )
-                    )
-                );
-                $entity->field_affiliate_news_url = array
-                (
-                    'und' => array
-                    (
-                        "0" => array
-                        (
-                            'value' =>$arrContent[$key]['affiliate_news_url']
-                        )
-                    )
-                );
-                $entity->field_affiliate_source = array
-                (
-                    'und' => array
-                    (
-                        "0" => array
-                        (
-                            'value' =>$arrContent[$key]['affiliate_home_url']
-                        )
-                    )
-                );
-                $entity->field_affiliate_status = array
-                (
-                    'und' => array
-                    (
-                        "0" => array
-                        (
-                            'tid' => $this->AffiliateInactive // inactive status (108420)
-                        )
-                    )
-                );
-                $entity->field_tracking_status = array
-                (
-                    'und' => array
-                    (
-                        "0" => array
-                        (
-                            'tid' => $this->TrackingInclude       //Include Status (108421)
-                        )
-                    )
-                );
-
-                $entity->field_affiliate_description = array
-                (
-                    'und' => array
-                    (
-                        "0" => array
-                        (
-                            'value' => ""
-                        )
-                    )
-                );
-                $entity->field_affiliate_monthly_traffic = array
-                (
-                    'und' => array
-                    (
-                        "0" => array
-                        (
-                            'value' => "0"
-                        )
-                    )
-                );
+                $entity = $this->fnCreateEntityObjectToInsertAffiliate($arrContent);
+                
 
                 $aff_id = $this->fnInsertAffiliate($entity);
 
@@ -294,28 +223,8 @@ class clsTracking extends affiliatesController implements affiliatesControllerIn
         }//Differ-array
 
         #Insert PRConnect Tracking for the FMR.
-        foreach ($arrContent as $arrValue) {
-            $intAffID = array_search($arrValue['title'], $arrAffiliate);
-            $arrEntityAff = entity_load('affiliates', array($intAffID));
-            $arrResult = json_decode(json_encode($arrEntityAff[$intAffID]), 1); //object to array
-            $strStatus = $arrResult['field_affiliate_status']['und'][0]['tid'];
-
-            if ((int)$strStatus == $this->AffiliateActive) {
-                //To check if the tracking url already exists
-                $intCount =$this->fnDuplicateTrackingUrl(trim($arrValue['affiliate_news_url']));
-
-                if ((int)$intCount == 0) {
-                    //Tracking data array
-                    $arrTrackingDate = array('nid'=>$intId,
-                        'aff_id'=>$intAffID,
-                        'tracking_url'=>$arrValue['affiliate_news_url'],
-                        'added_date'=> $this->strDate
-                    );
-                    $this->fnInsertAffTracking($arrTrackingDate); // Add value in  affiliate_tracking
-                }
-            }
-        }
-
+        $this->fnInsertPRConnectTrackingForFMR($arrContent, $arrAffiliate, $intId);
+        
         //Checking Count of FMR if Yes Then Update Flag.
         if (count($arrComp) > 0) {
 
@@ -327,8 +236,87 @@ class clsTracking extends affiliatesController implements affiliatesControllerIn
         return true;
     }
 
+    public function fnCreateEntityObjectToInsertAffiliate($arrContent) {
+
+        $entity = new stdClass();
+        $entity->type = 'prconnect';
+        $entity->id = 0;
+        $entity->field_affiliate_title = array
+        (
+            'und' => array
+            (
+                "0" => array
+                (
+                    'value' =>$arrContent[$key]['title']
+                )
+            )
+        );
+        $entity->field_affiliate_news_url = array
+        (
+            'und' => array
+            (
+                "0" => array
+                (
+                    'value' =>$arrContent[$key]['affiliate_news_url']
+                )
+            )
+        );
+        $entity->field_affiliate_source = array
+        (
+            'und' => array
+            (
+                "0" => array
+                (
+                    'value' =>$arrContent[$key]['affiliate_home_url']
+                )
+            )
+        );
+        $entity->field_affiliate_status = array
+        (
+            'und' => array
+            (
+                "0" => array
+                (
+                    'tid' => $this->AffiliateInactive // inactive status (108420)
+                )
+            )
+        );
+        $entity->field_tracking_status = array
+        (
+            'und' => array
+            (
+                "0" => array
+                (
+                    'tid' => $this->TrackingInclude       //Include Status (108421)
+                )
+            )
+        );
+
+        $entity->field_affiliate_description = array
+        (
+            'und' => array
+            (
+                "0" => array
+                (
+                    'value' => ""
+                )
+            )
+        );
+        $entity->field_affiliate_monthly_traffic = array
+        (
+            'und' => array
+            (
+                "0" => array
+                (
+                    'value' => "0"
+                )
+            )
+        );
+
+        return $entity;
+    }
     
-    
+   
     /**
      * Getting  old affiliate  logo
      * @param string $strLogo : name of Logo
