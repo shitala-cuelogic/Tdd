@@ -544,7 +544,41 @@ class clsTracking extends affiliatesController implements affiliatesControllerIn
         }
     }
 
-    
+    public function fnGetFMRNewsLetterClickCount($objFMRClickInfo) {
+
+        $arrFMRClickData = array();
+        if (!empty($objFMRClickInfo)) {
+            foreach ($objFMRClickInfo as $arrFMRClickInfo) {
+                $arrFMRClickData['clickcount'] = $arrFMRClickInfo->clickcount;
+            }
+        }
+
+        return $arrFMRClickData;
+    }
+
+    public function fnGetFMRNewsLetterViewCount($objFMRViewInfo) {
+
+        $arrFMRViewData = array();
+        if (!empty($objFMRViewInfo)) {
+            foreach ($objFMRViewInfo as $arrFMRViewInfo) {
+                $arrFMRViewData['viewcount'] = $arrFMRViewInfo->viewcount;
+            }
+        }
+        return $arrFMRViewData;
+    }    
+
+
+    public function fnGetAffiliateCompanyNameIfExists($objCompany,$arrGetCompanyName) {
+        
+        if (is_array($objCompany) && count($objCompany) > 0) {
+                foreach ($objCompany as $objCompanyName) {
+                    $arrGetCompanyName[$objCompanyName->nid] = $objCompanyName->title;
+                }
+        }
+
+        return $arrGetCompanyName;
+    }
+
 
     /**
      * Class destructor

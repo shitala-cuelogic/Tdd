@@ -92,16 +92,12 @@ class clsTrackingData {
                 // To get the affiliates of type 'prconnect' for the FMR
                 $strQryPRCconnect = $strSelect.$strFrom.$strCondition.$strAFFWhere.$strFromPRCconnect.$strGroupBy;
 
+              
                 //Limits are only required for the front end display results.
                 if ($boolExcel == false) {
                     $strQry3bl .= " LIMIT 0,5";
                     $strQryPRCconnect .= " LIMIT 0,10";
-                    if ($_GET['print'] == 1) {
-                        echo "<br/>3BL: ";
-                        echo $strQry3bl .= " LIMIT 0,5";
-                        echo "<br/><br/>Prconnect: ";
-                        echo $strQryPRCconnect .= " LIMIT 0,10";
-                    }
+                    
                 }
 
                 //Combine all query result (widget,3bl,prconnect)
@@ -177,11 +173,7 @@ class clsTrackingData {
                 //Limits are only required for the front end display results.
                 if ($boolExcel == false) {
                     $strQryPRCconnect .= " LIMIT 0,10";
-                    if ($_GET['print'] == 1) {
-                        echo "<br/>3BL: ";
-                        echo "<br/><br/>Prconnect: ";
-                        echo $strQryPRCconnect .= " LIMIT 0,10";
-                    }
+                    
                 }
 
                 //query result for prconnect
@@ -257,11 +249,7 @@ class clsTrackingData {
         if ($boolExcel == false) {
             $strQryWidget .= " LIMIT 0,8";
         }
-        if($_GET['print'] == 1){
-            echo $strVerticalCondition;
-            echo "<br/>>>>";
-            echo $strQryWidget; die;
-        }
+        
         #Return Widget records information
         return $objWidgets =  db_query($strQryWidget)->fetchAll();
     }
@@ -365,12 +353,7 @@ class clsTrackingData {
         if ($boolExcel == false) {
             $strQryWidget .= " LIMIT 0,8";
         }
-        if ($_GET['print'] == 1) {
-            echo $strVerticalCondition;
-            echo "<br/>>>>";
-            echo $strQryWidget;
-            die;
-        }
+        
         #Return Widget records information
         return $objWidgets = db_query($strQryWidget)->fetchAll();
     }
@@ -504,12 +487,14 @@ class clsTrackingData {
                    FROM jm_analytic_clicks AS C WHERE C.mediaid = '$intJMNodeId' AND C.channel = 'Jm-Newsletter'";
         $objFMRClickInfo = db_query($strSQL)->fetchAll();
 
-        $arrFMRClickData = array();
-        if (!empty($objFMRClickInfo)) {
-            foreach ($objFMRClickInfo as $arrFMRClickInfo) {
-                $arrFMRClickData['clickcount'] = $arrFMRClickInfo->clickcount;
-            }
-        }
+         //Include all required files
+        module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/clsTracking');
+
+        //Object of class
+        $objTracking = new clsTracking();
+
+        $arrFMRClickData = $objTracking->fnGetFMRNewsLetterClickCount($objFMRClickInfo);
+
         return $arrFMRClickData;
     }
 
@@ -526,12 +511,14 @@ class clsTrackingData {
                    FROM jm_analytic_views AS v WHERE v.mediaid = '$intJMNodeId' AND v.channel = 'Jm-Newsletter'";
         $objFMRViewInfo = db_query($strSQL)->fetchAll();
 
-        $arrFMRViewData = array();
-        if (!empty($objFMRViewInfo)) {
-            foreach ($objFMRViewInfo as $arrFMRViewInfo) {
-                $arrFMRViewData['viewcount'] = $arrFMRViewInfo->viewcount;
-            }
-        }
+        //Include all required files
+        module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/clsTracking');
+
+        //Object of class
+        $objTracking = new clsTracking();
+
+        $arrFMRViewData = $objTracking->fnGetFMRNewsLetterViewCount($objFMRViewInfo);
+       
         return $arrFMRViewData;
     }
 
@@ -635,11 +622,14 @@ class clsTrackingData {
 
             $objCompany = db_query("SELECT title, nid FROM node WHERE nid IN ($strCompanyNid)")->fetchAll();
 
-            if (is_array($objCompany) && count($objCompany) > 0) {
-                foreach ($objCompany as $objCompanyName) {
-                    $arrGetCompanyName[$objCompanyName->nid] = $objCompanyName->title;
-                }
-            }
+            //Include all required files
+            module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/clsTracking');
+
+            //Object of class
+            $objTracking = new clsTracking();
+
+            $arrGetCompanyName = $objTracking->fnGetAffiliateCompanyNameIfExists($objCompany,$arrGetCompanyName);
+
         }
         return $arrGetCompanyName;
     }
