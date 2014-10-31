@@ -6,6 +6,7 @@ class ClsWidgets
     {
 
     }
+
 	/**
 	 * Function for widget details
 	 *
@@ -15,137 +16,62 @@ class ClsWidgets
 	 * @param bool       $boolAddView : Flag which indicate views added into the database or not.
 	 * @param int        $intPageNo   : page number for pagination
 	 *
-	 * @return array|string
+	 * @return array
 	 */
 	function fnWidgetNews($strTokenId, $strPage, $intNewsId = 0, $boolAddView = true, $intPageNo = 1)
 	{
-	// Report simple running errors
-	error_reporting(E_ERROR | E_WARNING | E_PARSE);
-
 	    global $base_url;
 	    $arrData = array();
 	    $arrData['path'] = $base_url;
 
 	    //Include all required files
 	    module_load_include('inc', 'threebl_affiliate', 'inc/clsTracking');
+	    module_load_include('inc', 'threebl_affiliate', 'inc/clsWidgetSql');
 
 	    //Creating the Object of Class
 	    $objClsTracking = new clsTracking();
+	    $objClsWidgets  = new ClsWidgets();
 
 	    //Get all information about
 	    if ($strTokenId != '') {
-	        $strWidgetIdSql = "select entity_id
-	                           from field_data_field_token_id where field_token_id_value = '" . $strTokenId . "' ";
-	        $intWidgetId = db_query($strWidgetIdSql)->fetchField();
+
+	    	// To get widget id
+	    	$intWidgetId = $objClsWidgets->fnGetWidgetId($strTokenId);
 
 	        $arrEntity = @entity_load('affiliates', array($intWidgetId));
 	        $arrResult = @json_decode(json_encode($arrEntity[$intWidgetId]), 1);
 
 	        //Check widget status
-	        if ($boolAddView == true && $arrResult['field_affiliate_status']['und'][0]['tid'] != $objClsTracking->AffiliateActive) {
-	            return "This widget is inactivated from admin.";
-	            die;
-	        }
-
-	        $arrData['widget_name'] = $arrResult['field_affiliate_title']['und'][0]['value'];
-	        $arrData['token'] = $strTokenId;
-	        $arrData['widget_id'] = base64_encode($intWidgetId);
-
+	        $this->fnCheckWidgetStatus($boolAddView, $arrResult['field_affiliate_status']['und'][0]['tid'], $objClsTracking->AffiliateActive);
+	        
+	        // TO get Widget information
+	        list($arrData, $intDescriptionLimit, $strFrontPageDesc, $boolAllClients, $boolAllVerticalCategory, $strCompanyExcludeInclude, $strWidgetFMRLanguage) = $this->fnGetWidgetInfo($arrResult, $strTokenId, $intWidgetId);
+	        
 	        $limit = ('details' === $strPage) ? $arrResult['field_widget_no_of_posts_on_list']['und'][0]['value'] : $arrResult['field_widget_no_of_posts_on_font']['und'][0]['value'];
-
-	        # Open FMR link in iew tab flag
-	        $arrResult['field_open_fmr_link_in_new_tab']['und'][0]['value'];
 
 	        $strFMRInNewTab = "";
 	        if ($arrResult['field_open_fmr_link_in_new_tab']['und'][0]['value'] == 1) {
 	            $strFMRInNewTab = 'target="_blank"';
 	        }
 
-	        #Get the Limit for the front page description
-	        $intDescriptionLimit = $arrResult['field_front_page_fmr_description']['und'][0]['value'];
-
-	        #Get the Description of the widget
-	        $strFrontPageDesc = $arrResult['field_affiliate_description']['und'][0]['value'];
-
-	        $arrData['widget_viewmore_link'] = $arrResult['field_widget_view_more_label']['und'][0]['value'];
-
-	        // All Clients flag
-	        $boolAllClients = $arrResult['field_all_clients']['und'][0]['value'];
-
-	        // All Vertical Category
-	        $boolAllVerticalCategory = $arrResult['field_all_vertcal_category']['und'][0]['value'];
-
-	        // Get flag to check whether selected clients want to exclude or include
-	        $strCompanyExcludeInclude = $arrResult['field_clients_to_exclude_include']['und'][0]['value'];
-
-	        // Get Widget FMR language flag
-	        $strWidgetFMRLanguage = $arrResult['field_widget_fmr_language']['und'][0]['value'];
-
 	        if ($boolAllClients == 0) {
 	            // Get selected client Og ids in array
-	            $arrClientOgId = array();
-	            $strClientOgIds = "";
 	            $arrWidgetClientOgIds = $arrResult['group_audience']['und'];
-	            if (is_array($arrWidgetClientOgIds) && count($arrWidgetClientOgIds) > 0) {
-	                foreach ($arrWidgetClientOgIds as $arrGetClientOgId) {
-	                    $arrClientOgId[] = $arrGetClientOgId["gid"];
-	                }
-	                // make a comma separated string of client ids
-	                if (is_array($arrClientOgId) && count($arrClientOgId) > 0) {
-	                    $strClientOgIds = implode(",", $arrClientOgId);
-	                }
-	            }
+
+	            // Get client Og ids
+	            $strClientOgIds = $this->fnGetClientOgIds($arrWidgetClientOgIds);
 	        }
 
 	        //Collect all settings into the array
-
 	        $arrSettings = $this->fnSetSettingsArray($arrResult, $intDescriptionLimit, $strFrontPageDesc, $strFMRInNewTab);
-
 	        $arrData['settings'] = $arrSettings;
 
 	        //CSS management
-	        if ($strPage == 'more') {
-	            //Front Page Css Function.
-	            $strCssFrontPage = fnGetWidgetCss($arrResult, 'FrontPage');
-	            $arrData['widget_css'] = html_entity_decode($strCssFrontPage); // Front Page Css.
-
-	        } elseif ((int)$intNewsId > 0 && $strPage == 'details') {
-	            // Details Page Css Function.
-	            // Checking old hidden field exits or not
-	            $strCssDetailPage = fnGetWidgetCss($arrResult, 'DetailPage');
-	            $arrData['widget_css'] = html_entity_decode($strCssDetailPage); //Detail Page Css Variable.
-
-	        } elseif ($strPage == 'details') {
-	            // Checking old hidden field exits or not
-	            // List page Css Function.
-	            $strCssListPage = fnGetWidgetCss($arrResult, 'ListPage');
-	            $arrData['widget_css'] = html_entity_decode($strCssListPage); // List Page Css Variable.
-	        }
-
-	        // array of primary category and secondary  category
-	        $arrMediaType = array();
-	        $arrVertical = array();
-	        $arrPrimaryCategories = array();
-	        $arrSecondaryCategories = array();
-
-	        //checking is media type exits or not
-	        if (is_array($arrResult['field_widget_media_type']['und'])) {
-	            foreach ($arrResult['field_widget_media_type']['und'] as $key => $value) {
-	                $arrMediaType[] = $value['value'];
-	            }
-	        }
-
-	        //checking vertical values array is exist
-	        if ($boolAllVerticalCategory == 0) {
-	            if (is_array($arrResult['field_vertical_fmr_taxonomy']['und'])) {
-	                foreach ($arrResult['field_vertical_fmr_taxonomy']['und'] as $key => $value) {
-	                    $arrVertical[] = $value['tid'];
-	                    $arrPrimaryCategories[] = $value['tid'];
-	                    $arrSecondaryCategories[] = $value['tid'];
-	                }
-	            }
-	        }
-
+	        $arrData['widget_css'] = $this->fnGetWidgetPageCSS($strPage, $arrResult);
+	        
+	        // To Get Media Information
+	        list($arrMediaType, $arrVertical, $arrPrimaryCategories, $arrSecondaryCategories) = $this->fnGetMediaInfo($arrResult, $boolAllVerticalCategory);
+	        
 	        //combine media and vertical type array.
 	        $arrMediaFilter = array('media_type' => $arrMediaType,
 	            'secondaryCategories' => $arrSecondaryCategories,
@@ -160,32 +86,12 @@ class ClsWidgets
 
 	        $arrData['intPageNo'] = $intPageNo;
 	        $arrData['intLimit'] = $limit;
-	        $arrData['boolFrontPageThumb'] = @$arrResult['field_front_page_thumbnail']['und'][0]['value'];
-	        $arrData['intFrontPageThumbWidth'] = @$arrResult['field_front_page_thumbnail_width']['und'][0]['value'];
-
+	        
 	        //Get FMRs array for the widget page.
 	        list($arrData['arrContentList'], $arrData['arrCompany'], $arrData['arrCompanyName'], $arrData['intCnt'], $arrData['arrFMRContentList']) = $this->fnGetNewsArray($boolAddView, $strPage, $limit, $arrMediaFilter, $intNewsId, $intWidgetId, $intPageNo);
 	    }
-	    // Report All running errors
-	    error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 	    return $arrData;
 	}
-
-	/**
-	 * Function for getting news array
-	 *
-	 * @param bool      $boolAddView : Flag which indicate views added into the database or not.
-	 * @param string    $strPage     : widget requested page.
-	 * @param int       $limit       : number of news on the requested page
-	 * @param array     $arrWhere    : multiple where conditions as per the page request.
-	 * @param int       $intNewsId   : FMR nid (if the requested page is detail page)
-	 * @param int       $intWidgetId : widget eck id
-	 * @param int       $intPageNo   : page number [pagination]
-	 *
-	 * @return array
-	 */
-
-
 
 	/**
 	 * Get widget css details
@@ -197,8 +103,6 @@ class ClsWidgets
 	 */
 	function fnGetWidgetCss($arrResult, $strPageType)
 	{
-	// Report simple running errors
-	error_reporting(E_ERROR | E_WARNING | E_PARSE);
 	    global $base_url;
 
 	    // General Page Css
@@ -546,124 +450,8 @@ class ClsWidgets
 	        default:
 	            break;
 	    }
-	    //end -switch case
-	    
-	    // Report simple running errors
-	    error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 	    return $strCssValue;
 	}
-
-	/**
-	 * Function to get all widget affiliates
-	 *
-	 * @return mixed
-	 */
-	function fnGetWidgetList()
-	{
-	    $arrWidgetList = db_query("SELECT id FROM eck_affiliates WHERE type = 'widget'")->fetchAll();
-	    return $arrWidgetList;
-	}
-
-	/* Added for refactoring */
-
-    public function fnFilterByPrimarySecondaryCategories($arrWhere)
-    {
-
-        $sqlFrom = '';
-        $sqlWhere = '';
-        if ($arrWhere['allverticalcategory'] == 0) {
-            $strPrimaryWhere = '';
-            if ($arrWhere['primaryFlag'] != 1) {
-                $sqlFrom .= " JOIN field_data_field_fmr_primary_category prmCat on prmCat.entity_id = n1.nid ";
-                $strPrimaryIds = (@is_array($arrWhere['primaryCategories'])) ? implode(',', $arrWhere['primaryCategories']) : '';
-            }
-
-            #SECONDARY CATEGORIES
-            $strSecondaryWhere = '';
-            if ($arrWhere['secondaryFlag'] != 1) {
-                $sqlFrom .= " LEFT JOIN field_data_field_fmr_taxonomy secCat on secCat.entity_id = n1.nid ";
-                $strSecondaryIds = (@is_array($arrWhere['secondaryCategories'])) ? implode(',', $arrWhere['secondaryCategories']) : '';
-            }
-
-            if ($strSecondaryIds != '' && $strPrimaryIds != '') {
-                $strPrimaryWhere .= " prmCat.field_fmr_primary_category_target_id IN (" . $strPrimaryIds . "," . $strSecondaryIds . ") ";
-                $strSecondaryWhere .= " secCat.field_fmr_taxonomy_target_id IN (" . $strPrimaryIds . "," . $strSecondaryIds . ") ";
-            } elseif ($strPrimaryIds != '') {
-                $strPrimaryWhere .= " prmCat.field_fmr_primary_category_target_id IN (" . $strPrimaryIds . ") ";
-            } elseif ($strSecondaryIds != '') {
-                $strSecondaryWhere .= " secCat.field_fmr_taxonomy_target_id IN (" . $strSecondaryIds . ") ";
-            }
-
-            if ($strPrimaryWhere != "" || $strSecondaryWhere != "") {
-                $sqlWhere .= " AND ( ";
-                if ($strPrimaryWhere != "" && $strSecondaryWhere != "") {
-                    $sqlWhere .= " (" . $strPrimaryWhere . ") OR (" . $strSecondaryWhere . ") ";
-                } else {
-                    $sqlWhere .= ($strPrimaryWhere != "") ? $strPrimaryWhere : $strSecondaryWhere;
-                }
-                $sqlWhere .= " )";
-            }
-        }
-
-        return array($sqlFrom, $sqlWhere);
-
-    }
-
-    public function fnFetchFmr($arrWhere)
-    {
-        $sqlFrom = '';
-        if ($arrWhere['client_ogid'] != "" && $arrWhere["boolallclients"] == 0) {
-
-            // Get flag to check whether selected clients want to exclude or include
-            $strCompanyExcludeInclude = $arrWhere['company_exclude_include'];
-
-            if ($strCompanyExcludeInclude == "include" || $strCompanyExcludeInclude == "") {
-
-                $strCompanyCondition = " AND group_audience_gid IN (" . $arrWhere['client_ogid'] . ")";
-
-            } else if ($strCompanyExcludeInclude == "exclude") {
-                $strCompanyCondition = " AND group_audience_gid NOT IN (" . $arrWhere['client_ogid'] . ")";
-            }
-
-            $sqlFrom .= " JOIN field_data_group_audience comp ON comp.entity_id = n1.nid $strCompanyCondition";
-        }
-
-        return $sqlFrom;
-    }
-
-    public function fnFetchMediaType($arrWhere, $arrMediaType)
-    {
-        $sqlWhere = '';
-        if (isset($arrWhere['media_type']) && is_array($arrWhere['media_type'])) {
-            $strMedia = (is_array($arrWhere['media_type'])) ? "'" . implode("','", $arrWhere['media_type']) . "'" : '';
-            $sqlWhere .= " AND t.field_fmr_type_of_content_value IN (" . $strMedia . ") ";
-        } else {
-            $sqlWhere .= " AND t.field_fmr_type_of_content_value IN (" . $arrMediaType . ")";
-        }
-
-        return $sqlWhere;
-    }
-
-    public function fnFilterFmrByLanguage($arrWhere)
-    {
-        $sqlFrom = '';
-        $sqlWhere = '';
-        if ($arrWhere['widget_fMR_language'] == "english_only") {
-
-            $sqlFrom .= " JOIN  field_data_field_fmr_non_english ne ON ne.entity_id = n1.nid";
-            $sqlWhere .= " AND (ne.field_fmr_non_english_value <> 1 OR ne.field_fmr_non_english_value IS NULL)";
-
-        } else if ($arrWhere['widget_fMR_language'] == "non_english") {
-
-            $sqlFrom .= " JOIN  field_data_field_fmr_non_english ne ON ne.entity_id = n1.nid";
-            $sqlWhere .= " AND ne.field_fmr_non_english_value = 1";
-        }
-
-        return array($sqlFrom, $sqlWhere);
-    }
-
-
-//--------------------------------------------------------------------------------------------------------
 
     function fnGetNewsArray($boolAddView, $strPage, $limit = 5, $arrWhere = array(), $intNewsId = 0, $intWidgetId = 0, $intPageNo = 1)
     {
@@ -678,9 +466,7 @@ class ClsWidgets
 
             #Collect all node ids
             $arrNodeIds[] = $intNewsId;
-        }
-
-        else {
+        } else {
 
             list ($arrContentList, $intTotalRecords, $arrFMRContentList) = $this->fetchWidgetListPageInformation($arrWhere, $limit, $intPageNo);
             //For store only views not clicks
@@ -784,99 +570,34 @@ class ClsWidgets
         return $arrContentList;
     }
 
-    function fetchWidgetListPageInformation($arrWhere, $intLimit, $intPageNo){
-
-        //Include all required files
-        module_load_include('inc', 'threebl_analytics_reports', 'inc/clsReports');
-
-        //Object of class
-        $objReports = new ClsReports();
-
-        $intStart = abs($intLimit * ($intPageNo - 1));
-        $arrMediaType = "'press_release','blog','newsletter','article','multimedia'";
-        $sqlSelect = " SELECT sql_calc_found_rows distinct n1.nid,
-	                               n1.title, t.field_fmr_type_of_content_value,
-	                               d.field_fmr_date_time_value as date,
-	                               SUBSTR(bdy.field_fmr_body_value, 1, 1000) as description";
-        $sqlFrom = " FROM node n1
-	                             JOIN field_data_field_fmr_type_of_content t ON t.entity_id = n1.nid
-	                             JOIN field_data_field_fmr_date_time d ON d.entity_id = n1.nid
-								 JOIN field_data_field_fmr_body bdy ON bdy.entity_id = n1.nid ";
-        $sqlWhere = " WHERE n1.type = 'fmr' AND n1.status = 1 AND n1.nid NOT IN (44620, 44603)";
-        $sqlOrderBy = " ORDER BY d.field_fmr_date_time_value DESC ";
-        $sqlLimit = " LIMIT " . $intStart . ", " . $intLimit;
-
-        ## ADD FILTER AS PER SELECTION
-        #VERTICAL
-        #PRIMARY CATEGORIES
-
-        list($sqlCatFrom, $sqlCatWhere) = $this->fnFilterByPrimarySecondaryCategories($arrWhere);
-
-        $sqlFrom .= $sqlCatFrom;
-        $sqlWhere .= $sqlCatWhere;
-
-        // Condition to fetch FMR of selected clients
-        $sqlFrom .= $this->fnFetchFmr($arrWhere);
-
-        # MEDIA TYPE
-        $sqlWhere .= $this->fnFetchMediaType($arrWhere, $arrMediaType);
-
-        //Filter FMRs by Language option (all, english only and non-english)
-
-        list($sqlFilterFmrLangFrom, $sqlFilterFmrLangWhere) = $this->fnFilterFmrByLanguage($arrWhere);
-
-        $sqlFrom .= $sqlFilterFmrLangFrom;
-        $sqlWhere .= $sqlFilterFmrLangWhere;
-
-        #Build final SQL query
-        $sqlQuery = $sqlSelect . " " . $sqlFrom . " " . $sqlWhere . " " . $sqlOrderBy . " " . $sqlLimit;
-        $arrContentList = db_query($sqlQuery)->fetchAll();
-        //TOTAL RECORDS
-        list($arrTotalRecords) = db_query('SELECT FOUND_ROWS() AS intTotalRecords')->fetchAll();
-        $intTotalRecords = $arrTotalRecords->intTotalRecords;
-
-        ## GET ALL NODE IDS
-        if (is_array($arrContentList) && count($arrContentList) > 0) {
-            foreach ($arrContentList as $row) {
-                $arrNodeIds[] = $row->nid;
-
-                $arrFMRContentList[$row->nid]['title'] = $objReports->fnRemoveWordFormatting($row->title, "widget");
-                $arrFMRContentList[$row->nid]['description'] = $objReports->fnRemoveWordFormatting($row->description, "widget");
-            }
-        }
-
-        return array($arrContentList, $intTotalRecords, $arrFMRContentList);
-    }
-
 	public function fnSetSettingsArray($arrResult, $intDescriptionLimit, $strFrontPageDesc, $strFMRInNewTab)
 	{
 		//Collect all settings into the array
 	        
-	        $arrSettings = array(
-	            'widget_height' => $arrResult['field_widget_height']['und'][0]['value'],
-	            'widget_width' => $arrResult['field_widget_width']['und'][0]['value'],
-	            'widget_no_post' => $arrResult['field_widget_no_of_posts_on_font']['und'][0]['value'],
-	            'widget_front_title' => $arrResult['field_widget_front_page_title']['und'][0]['value'],
-	            'widget_list_title' => $arrResult['field_widget_list_page_title']['und'][0]['value'],
-	            'widget_viewmore_text' => $arrResult['field_widget_view_more_label']['und'][0]['value'],
-	            'widget_no_more_posts' => $arrResult['field_widget_no_of_posts_on_list']['und'][0]['value'],
-	            'widget_viewmore_link' => $arrResult['field_affiliate_news_url']['und'][0]['value'],
-	            'widget_video_width' => $arrResult['field_widget_width_of_video']['und'][0]['value'],
-	            'widget_poweredBy' => (isset($arrResult['field_widget_power_by']['und'][0]['value'])) ? 1 : 0,
-	            'widget_listpageDesc_limit' => $arrResult['field_list_page_description_limi']['und'][0]['value'],
-	            'widget_frontpageTitle_limit' => $arrResult['field_front_page_title_limit']['und'][0]['value'],
-	            'widget_frontpage_desc_limit' => $intDescriptionLimit,
-	            'widget_frontpage_desc' => $strFrontPageDesc,
-	            'widget_fmr_in_tab' => $strFMRInNewTab
-	        );
+        $arrSettings = array(
+            'widget_height' => $arrResult['field_widget_height']['und'][0]['value'],
+            'widget_width' => $arrResult['field_widget_width']['und'][0]['value'],
+            'widget_no_post' => $arrResult['field_widget_no_of_posts_on_font']['und'][0]['value'],
+            'widget_front_title' => $arrResult['field_widget_front_page_title']['und'][0]['value'],
+            'widget_list_title' => $arrResult['field_widget_list_page_title']['und'][0]['value'],
+            'widget_viewmore_text' => $arrResult['field_widget_view_more_label']['und'][0]['value'],
+            'widget_no_more_posts' => $arrResult['field_widget_no_of_posts_on_list']['und'][0]['value'],
+            'widget_viewmore_link' => $arrResult['field_affiliate_news_url']['und'][0]['value'],
+            'widget_video_width' => $arrResult['field_widget_width_of_video']['und'][0]['value'],
+            'widget_poweredBy' => (isset($arrResult['field_widget_power_by']['und'][0]['value'])) ? 1 : 0,
+            'widget_listpageDesc_limit' => $arrResult['field_list_page_description_limi']['und'][0]['value'],
+            'widget_frontpageTitle_limit' => $arrResult['field_front_page_title_limit']['und'][0]['value'],
+            'widget_frontpage_desc_limit' => $intDescriptionLimit,
+            'widget_frontpage_desc' => $strFrontPageDesc,
+            'widget_fmr_in_tab' => $strFMRInNewTab
+        );
 
-	        return $arrSettings;
+        return $arrSettings;
 
 	}
 
 	public function fnGetPhotoData($node)
 	{
-
 		foreach ($node->field_fmr_photo['und'] as $k => $photo) {
 	        $file = file_load($photo['fid']);
 
@@ -945,10 +666,174 @@ class ClsWidgets
 
 	    return $arrContentList;
 	}
-	/* Added for refactoring */
 
+    /**
+	 * To Check widget status
+	 *
+	 * @param int $boolAddView    : Flag which indicate views added into the database or not.
+	 * @param int $strStatusId  : Status Id
+	 * @param int $intAffiliateActive : Get affiliate active status Id
+	 *
+	 */
+    public function fnCheckWidgetStatus($boolAddView, $strStatusId, $intAffiliateActive)
+    {
+    	if ($boolAddView == true && $strStatusId != $strAffiliateActive) {
+            return "This widget is inactivated from admin.";
+            die;
+        }
+    }
+
+    /**
+	 * To get Widget Information
+	 *
+	 * @param int $arrResult   : Widget data
+	 * @param int $strTokenId  : Widget Token Id
+	 * @param int $intWidgetId : Widget Id
+	 *
+	 * @return array
+	 *
+	 */
+    public function fnGetWidgetInfo($arrResult, $strTokenId, $intWidgetId)
+    {
+    	$arrData['widget_name'] = $arrResult['field_affiliate_title']['und'][0]['value'];
+    	$arrData['token'] = $strTokenId;
+    	$arrData['widget_id'] = base64_encode($intWidgetId);
+    	$arrData['widget_viewmore_link'] = $arrResult['field_widget_view_more_label']['und'][0]['value'];
+
+    	#Get the Limit for the front page description
+        $intDescriptionLimit = $arrResult['field_front_page_fmr_description']['und'][0]['value'];
+
+        #Get the Description of the widget
+        $strFrontPageDesc = $arrResult['field_affiliate_description']['und'][0]['value'];
+
+        // All Clients flag
+        $boolAllClients = $arrResult['field_all_clients']['und'][0]['value'];
+
+        // All Vertical Category
+        $boolAllVerticalCategory = $arrResult['field_all_vertcal_category']['und'][0]['value'];
+
+        // Get flag to check whether selected clients want to exclude or include
+        $strCompanyExcludeInclude = $arrResult['field_clients_to_exclude_include']['und'][0]['value'];
+
+        // Get Widget FMR language flag
+        $strWidgetFMRLanguage = $arrResult['field_widget_fmr_language']['und'][0]['value'];
+
+        $arrData['boolFrontPageThumb'] = @$arrResult['field_front_page_thumbnail']['und'][0]['value'];
+	    $arrData['intFrontPageThumbWidth'] = @$arrResult['field_front_page_thumbnail_width']['und'][0]['value'];
+
+    	return array($arrData, $intDescriptionLimit, $strFrontPageDesc, $boolAllClients, $boolAllVerticalCategory, $strCompanyExcludeInclude, $strWidgetFMRLanguage);
+    }
+
+    /**
+	 * To get Client Og Ids
+	 *
+	 * @param arr $arrWidgetClientOgIds: client Og ids in array
+	 *
+	 * @return string
+	 *
+	 */
+    public function fnGetClientOgIds($arrWidgetClientOgIds)
+    {
+		$arrClientOgId = array();
+	    $strClientOgIds = "";
+		if (is_array($arrWidgetClientOgIds) && count($arrWidgetClientOgIds) > 0) {
+            foreach ($arrWidgetClientOgIds as $arrGetClientOgId) {
+                $arrClientOgId[] = $arrGetClientOgId["gid"];
+            }
+            // make a comma separated string of client ids
+            if (is_array($arrClientOgId) && count($arrClientOgId) > 0) {
+                $strClientOgIds = implode(",", $arrClientOgId);
+            }
+        }
+        return $strClientOgIds;
+    }
+
+    /**
+	 * To get Widget page wise css
+	 *
+	 * @param string $strPage: Widget page type
+	 * @param arr $arrResult:  Widget data
+	 *
+	 * @return array
+	 *
+	 */
+    public function fnGetWidgetPageCSS($strPage, $arrResult)
+    {
+    	if ($strPage == 'more') {
+            //Front Page Css Function.
+            $strCssFrontPage = fnGetWidgetCss($arrResult, 'FrontPage');
+            $arrData['widget_css'] = html_entity_decode($strCssFrontPage); // Front Page Css.
+
+        } elseif ((int)$intNewsId > 0 && $strPage == 'details') {
+            // Details Page Css Function.
+            // Checking old hidden field exits or not
+            $strCssDetailPage = fnGetWidgetCss($arrResult, 'DetailPage');
+            $arrData['widget_css'] = html_entity_decode($strCssDetailPage); //Detail Page Css Variable.
+
+        } elseif ($strPage == 'details') {
+            // Checking old hidden field exits or not
+            // List page Css Function.
+            $strCssListPage = fnGetWidgetCss($arrResult, 'ListPage');
+            $arrData['widget_css'] = html_entity_decode($strCssListPage); // List Page Css Variable.
+        }
+        return $arrData;
+    }
+
+     /**
+	 * To get Widget media type info
+	 *
+	 * @param string $boolAllVerticalCategory: Flag to check Vertical Category
+	 * @param arr $arrResult:  Widget data
+	 *
+	 * @return array
+	 *
+	 */
+    public function fnGetMediaInfo($arrResult, $boolAllVerticalCategory)
+    {
+    	$arrMediaType = array();
+        $arrVertical = array();
+        $arrPrimaryCategories = array();
+        $arrSecondaryCategories = array();
+
+        //checking is media type exits or not
+        if (is_array($arrResult['field_widget_media_type']['und'])) {
+            foreach ($arrResult['field_widget_media_type']['und'] as $key => $value) {
+                $arrMediaType[] = $value['value'];
+            }
+        }
+
+        //checking vertical values array is exist
+        if ($boolAllVerticalCategory == 0) {
+            if (is_array($arrResult['field_vertical_fmr_taxonomy']['und'])) {
+                foreach ($arrResult['field_vertical_fmr_taxonomy']['und'] as $key => $value) {
+                    $arrVertical[] = $value['tid'];
+                    $arrPrimaryCategories[] = $value['tid'];
+                    $arrSecondaryCategories[] = $value['tid'];
+                }
+            }
+        }
+
+        return array($arrMediaType, $arrVertical, $arrPrimaryCategories, $arrSecondaryCategories);
+    }
+
+    /**
+	 * To get FMR Information
+	 *
+	 * @param arr $arrContentList: Widget Content List
+	 *
+	 * @return array
+	 *
+	 */
+    public function fnGetFMRInformation($arrContentList)
+    {
+    	if (is_array($arrContentList) && count($arrContentList) > 0) {
+            foreach ($arrContentList as $row) {
+
+                $arrFMRContentList[$row->nid]['title'] = $objReports->fnRemoveWordFormatting($row->title, "widget");
+                $arrFMRContentList[$row->nid]['description'] = $objReports->fnRemoveWordFormatting($row->description, "widget");
+            }
+        }
+        return $arrFMRContentList;
+    } 
 }
-
-
-
 ?>
