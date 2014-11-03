@@ -1,0 +1,25 @@
+<?php 
+
+function threebl_micro_list_schema(){
+    // threebl_synchronize_custom_email table schema
+    /*$schema['threebl_synchronize_custom_email'] = array(
+        'description' => 'Table to store the details synchronize custom email',
+        'fields' => array(
+            'listid'             => array(
+                'description'       => 'Id for list',
+                'type'              => 'int',
+                'not null'          => TRUE,
+            ),
+            'userid'             => array(
+                'description'       => 'User Id which get share to it',
+                'type'              => 'int',
+                'not null'          => TRUE,
+            ),
+        ),
+    );
+    return $schema;*/
+}
+
+function threebl_micro_list_uninstall(){
+    //drupal_uninstall_schema("threebl_custom_email_list");
+}
