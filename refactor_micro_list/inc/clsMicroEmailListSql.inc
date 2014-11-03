@@ -1,10 +1,6 @@
 <?php
 
-module_load_include('inc', 'threebl_micro_list', 'inc/micro_listControllerInterface');
-
-module_load_include('inc', 'threebl_micro_list', 'inc/clsMicroEmailList');
-
-class clsMicroEmailListSql extends micro_listController implements micro_listControllerInterface
+class clsMicroEmailListSql 
 {
 
 
