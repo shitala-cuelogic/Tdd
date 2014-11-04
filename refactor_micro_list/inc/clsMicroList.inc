@@ -56,7 +56,6 @@ class customEmailList extends micro_listController implements micro_listControll
     }
 
     
-
     /**
      * Add User using email address
      *
@@ -91,9 +90,13 @@ class customEmailList extends micro_listController implements micro_listControll
             'field_real_name' => array(LANGUAGE_NONE => array(array('value' => trim($strFirstName . ' ' . $strLastName)))),
             'field_daily_news_alert' => array(LANGUAGE_NONE => array(array('value' => 0)))
         );
-        //save the new user record
-        $arrUser = user_save(null, $arrNewsLetterUser);
 
+        module_load_include('inc', 'refactor_micro_list', 'inc/clsMicroEmailListSql');
+        $objMicroEmailListSql = new clsMicroEmailListSql();
+
+        //save the new user record
+        $arrUser = $objMicroEmailListSql->fnGetNewsUserRecord($arrNewsLetterUser);    
+        
         return $arrUser->uid;
     }
 
@@ -210,6 +213,7 @@ class customEmailList extends micro_listController implements micro_listControll
             return $intMessage;
         }
     }
+    
     function fnGetXlsInfo($intListId, $arrUserXls) {
 
         #for all the excel value start
@@ -251,7 +255,7 @@ class customEmailList extends micro_listController implements micro_listControll
         }
         return $intMessage;
     }
-
+    
     function fnXlsProcess($strFileTmpLoc) {
 
         $arrUserXls = array();
@@ -417,7 +421,6 @@ class customEmailList extends micro_listController implements micro_listControll
             drupal_goto('Dashboard/ClientMicroList');
         }
     }
-
     
 
     /**
@@ -640,9 +643,6 @@ class customEmailList extends micro_listController implements micro_listControll
         return true;
     }
 
-
-
-    
     
     /**
      * Function to validate the post data in add and edit list.
@@ -713,8 +713,6 @@ class customEmailList extends micro_listController implements micro_listControll
             return $strMessage;
         }
     }
-
-    
 
 
     /**
@@ -964,7 +962,6 @@ class customEmailList extends micro_listController implements micro_listControll
         }
     }
 
-    
 
     /**
      * Function to check email already exits and add Subscriber users
@@ -1006,8 +1003,7 @@ class customEmailList extends micro_listController implements micro_listControll
 
         return $intMessage;
     }
-
-    
+   
     
     /**
      * Function to check date is in valid format or not

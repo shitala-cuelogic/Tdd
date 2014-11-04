@@ -3,8 +3,6 @@
 class clsMicroEmailListSql 
 {
 
-
-
     /**
      * function for getting the email list from database
      *
@@ -833,40 +831,53 @@ class clsMicroEmailListSql
         $strSql = $strSql . $strOrderBy . $strLimit;
         $arrResult = db_query($strSql)->fetchAll();
 
+
         //Get count of all Records
         list($arrRecordsCount) = db_query('SELECT FOUND_ROWS()')->fetchAll();
         $arrRecordsCount = (array) ($arrRecordsCount);
         $intRecordsCount = $arrRecordsCount['FOUND_ROWS()'];
 
-        $arrFMRIds = array();
+        
         // Get Multiple micro list assigned to particular FMR
         if ($intRecordsCount >0) {
-            //Group FMR ids in array
-            foreach ($arrResult as $arrFMRInfo) {
-                $intFMRId = $arrFMRInfo->fmrId;
-                $arrFMRIds[] = $intFMRId;
-            }
-
+            $arrFMRIds = $this->fnGetGroupFMRIds($arrResult);
             //check condition for FMR ids
             if (is_array($arrFMRIds) && count($arrFMRIds) >0) {
-                // Implode FMR Ids to get Micro list name
-                $strFMRIds = implode(",", $arrFMRIds);
-
-                $strMicroListSql = "SELECT e.title, m.entity_id
-                                    FROM eck_micro_list e
-                                    $strListJoin
-                                    WHERE m.entity_id IN ($strFMRIds)";
-
-                $arrMicroListResult = db_query($strMicroListSql)->fetchAll();
-
-                $arrMicroList = array();
-                // Move FMR id wise Micro List Name in array
-                foreach ($arrMicroListResult as $arrMicroListData) {
-                    $arrMicroList[$arrMicroListData->entity_id][] = stripslashes($arrMicroListData->title);
-                }
+                $arrMicroList = $this->fnGetMicroListName($arrFMRIds, $strListJoin);
             }
         }
         return array($arrResult, $intRecordsCount, $arrMicroList);
+    }
+
+    public function fnGetGroupFMRIds($arrResult) {
+        $arrFMRIds = array();
+        //Group FMR ids in array
+        foreach ($arrResult as $arrFMRInfo) {
+            $intFMRId = $arrFMRInfo->fmrId;
+            $arrFMRIds[] = $intFMRId;
+        }
+        return $arrFMRIds;
+    }
+
+    public function fnGetMicroListName($arrFMRIds, $strListJoin) {
+
+        // Implode FMR Ids to get Micro list name
+        $strFMRIds = implode(",", $arrFMRIds);
+
+        $strMicroListSql = "SELECT e.title, m.entity_id
+                            FROM eck_micro_list e
+                            $strListJoin
+                            WHERE m.entity_id IN ($strFMRIds)";
+
+        $arrMicroListResult = db_query($strMicroListSql)->fetchAll();
+
+        $arrMicroList = array();
+        // Move FMR id wise Micro List Name in array
+        foreach ($arrMicroListResult as $arrMicroListData) {
+            $arrMicroList[$arrMicroListData->entity_id][] = stripslashes($arrMicroListData->title);
+        }
+
+        return $arrMicroList;
     }
 
     /**
@@ -927,7 +938,8 @@ class clsMicroEmailListSql
             return $objFMRViewClickCnt;
         }
     }
-     /**
+    
+    /**
      * Insert the value in list.s
      *
      * @param Object $objEntity : Entity object
@@ -940,7 +952,11 @@ class clsMicroEmailListSql
         return $objEntity->id;
     }
 
-
+    public function fnGetNewsUserRecord($arrNewsLetterUser) {
+        //save the new user record
+        $arrUser = user_save(null, $arrNewsLetterUser);
+        return $arrUser;
+    }
 }
 
 ?>
