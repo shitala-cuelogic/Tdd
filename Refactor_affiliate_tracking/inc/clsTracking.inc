@@ -10,7 +10,7 @@ interface affiliatesControllerInterface extends DrupalEntityControllerInterface
 
 //This is class for Tracking Function.
 
-class clsTracking extends affiliatesController implements affiliatesControllerInterface
+class clsTracking extends clsAffiliatesController implements affiliatesControllerInterface
 {
     private $intCompanyId;
     private $strDate;
