@@ -2,6 +2,43 @@
 //This is class for Reports functions.
 class ClsReports
 {
+
+
+
+
+    /**
+     * Getting  Email address
+     *
+     * @param string $strCompanyNid : Company Node Id
+     * @param int    $intMonth      : Flag to get result from particular table
+     *
+     * @return array
+     */
+    public function fnGetAutoReportEmail($strCompanyNid = "", $intMonth = 0)
+    {
+        $arrAutoReportEmail = array();
+        if ($strCompanyNid != "") {
+            if ($intMonth == 0) {
+
+                $objAutoReportEmail = $this->getMonthlyAutoReportEmail($strCompanyNid);
+
+            } else {
+
+                $objAutoReportEmail = $this->getWeeklyAutoReportEmail($strCompanyNid);
+            }
+
+            if (is_array($objAutoReportEmail) && count($objAutoReportEmail) > 0) {
+
+                foreach ($objAutoReportEmail as $arrRow) {
+
+                    $arrAutoReportEmail[$arrRow->nid][$arrRow->delta] = $arrRow->email;
+
+                }
+            }
+        }
+        return $arrAutoReportEmail;
+    }
+    
     /**
      * Function Create PDF and send email to respective company
      *
