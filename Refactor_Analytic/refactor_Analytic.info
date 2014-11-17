@@ -1,0 +1,5 @@
+; $Id$
+name = refactor_Analytic
+description = This is custom moduels of threebl_analytics (Analytic Views/Clicks).
+package = 3BL
+core = 7.x

@@ -4,7 +4,8 @@
  * Justmeans Social Media Admin wrapper
  **/
 //session_start();
-function threebl_analytics_page($strAction = 'home'){
+function threebl_analytics_page($strAction = 'home')
+{
 
   if(!isset($_SESSION['FORCOMPANYID']))
 	{

@@ -1,105 +1,74 @@
 <?php
+    module_load_include('inc', 'refactor_Analytic', 'inc/clsBaseClass');
 //This is class for Analytics functions.
 
-class clsAnalyticsViews
+class clsAnalyticsViews extends clsBaseClass
 {
-    /**
-     * Process view data for cron functionality and save analytics in to the view table.
-     *
-     * @param array        $arrFmrViews : Array of FMRs node ids
-     * @param string       $otherInfo   : Other information such as date
-     * @param string       $strChannel  : default channel value for save record into the database
-     */
-    public function fnViewsProcessing($arrFmrViews, $otherInfo, $strChannel = "3blmedia")
+    public function __construct()
     {
-        // Get out the IP addr and date
-        $strJustDate = $otherInfo['view_date'];
+        parent::__construct();
+    }
+    
+    /**
+     * Function fetch FMR views information
+     *
+     * @param string $strFMRIds : Comma separated FMR Ids
+     *
+     * @return array
+     */
+    public function fnGetViews($strFMRIds)
+    {
+        //Include all required files
+        module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
 
-        // fmrViews is a 2-D array with the first dimension being associative with FMR types and the second
-        // dimension being an array of FMR IDs (nids) for each FMR type.
-        // There can be multiple media's for inbound and we will process each of them.
-        if (count($arrFmrViews) && is_array($arrFmrViews)) {
-            foreach ($arrFmrViews as $strFMRType => $FMRids) {
-                if (count($FMRids) && is_array($FMRids)) {
-                    $this->fnAddViewsProcess($FMRids, $strFMRType, $strChannel, $strJustDate);
+        //Object of class
+        $objAnalytics = new clsAnalytic();
 
-                }
-            }
-        }
+        $strSQL = " SELECT SUM(v.totalcount) AS viewcount, v.nid
+                    FROM  threebl_analytic_views  AS v WHERE v.nid IN ($strFMRIds) GROUP BY v.nid";
+        $objFMRViewInfo = db_query($strSQL)->fetchAll();
+
+        //To get view count information
+        $arrFMRInfo = $objAnalytics->fnViewClickCountInfo($objFMRViewInfo, "view");
+        return $arrFMRInfo;
     }
 
-    public function fnAddViewsProcess($FMRids, $strFMRType, $strChannel, $strJustDate) {
+    /**
+     * Query for getting View Chart for First Level and Second Level
+     *
+     * @param int    $intCompanyOgId          : Company OG Id
+     * @param string $strFMRIds               : Comma separated FMR Ids
+     * @param int    $intCampaignId           : Campaign Id
+     *
+     * @return array
+     */
+    public function fnGetViewChartInfo($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
+    {
+        //Include all required files
+        module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
 
-        foreach ($FMRids as $FMRid) {
+        //Object of class
+        $objAnalytics = new clsAnalytic();
 
-            if ((int)$FMRid > 0) {
-                // for each FMR, we need to get the master ids, from the sync tables, for
-                // both the FMR and Company
-                $arrMedia = $this->fnGetCompanyOgIds($FMRid);
-
-
-                if (!empty($arrMedia['etid'])) {
-                    $intFMRNid = $arrMedia['etid'];
-                }
-                if (!empty($arrMedia['companyOgId'])) {
-                    $intCompanyOgId = $arrMedia['companyOgId'];
-                }
-
-
-                // Set $strMediaType  to the appropriate jm_mediawise_views column name, to be used in
-                // the update/insert queries, below.
-
-                list($strMediaType, $intFMRNid, $intCompanyOgId) = $this->fnSetMediaType($strFMRType, $intFMRNid, $intCompanyOgId);
-
-                // This is to insert count in views table as well as in the dummy views table, we took dummy table because it will have data for a month which will automatically gets deleted after that this will keep fast processing of data. We can grab all the historic data from main views table, also count   gets incremented as media is viewed.
-                if ($strMediaType && (int)$intFMRNid > 0 && (int)$intCompanyOgId > 0) {
-                    //Creating the object for ClickView Class
-                    $ObjClickView = new clsClickView();
-
-                    //Create array for view and click tables
-                    $arrAllView = array();
-                    $arrAllView['intCompanyId'] = $intCompanyOgId;
-                    $arrAllView['intMediaId'] = $intFMRNid;
-                    $arrAllView['strChannel'] = $strChannel;
-                    $arrAllView['strFMRType'] = $strMediaType;
-                    $arrAllView['strViewDate'] = $strJustDate;
-                    //Add View Table  Function
-                    $ObjClickView->fnAddAllViews($arrAllView);
-                }
-            }
-        }
-    }
-
-    public function fnSetMediaType($strFMRType, $intFMRNid, $intCompanyOgId) {
-
-        switch ($strFMRType) {
-                    case "pressrelease":
-                    case "press_release":
-                    case "press":
-                        $strMediaType = 'press_release'; // this is how it is stored in jm_..._views tables
-                        break;
-                    case "article":
-                    case "3bl_article":
-                        $strMediaType = 'article';
-                        break;
-                    case "newsletter":
-                    case "3bl_newsletter":
-                        $strMediaType = 'newsletter';
-                        break;
-                    case "multimedia":
-                        $strMediaType = 'multimedia';
-                        break;
-                    case "blog":
-                    case "blogs":
-                        $strMediaType = 'blog';
-                        break;
-                    default:
-                        $intFMRNid = 0;
-                        $strMediaType = "";
-                        $intCompanyOgId = 0;
-                        break;
+        $strCampaignFrom = ''; //change
+        if ((int)$intCampaignId != 0) {
+            $strCampaignFrom = "  JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = v.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
         }
 
-        return array($strMediaType, $intFMRNid, $intCompanyOgId);
+        $strSQL = "SELECT SUM(v.totalcount) as totalcount, v.datevisited AS datevisit
+                  FROM  threebl_analytic_views  AS v
+                  $strCampaignFrom
+                  WHERE v.company_ogid = $intCompanyOgId
+                  AND (v.datevisited BETWEEN '" . $this->strChartPrevDate . "' AND '" . $this->strCurrentDate . "')
+                  AND v.nid IN ($strFMRIds)
+                  GROUP BY datevisited
+                  ORDER by datevisited ASC";
+
+        $arrViewChartData = db_query($strSQL)->fetchAll();
+        $arrViewChart = array();
+
+        //To get Clicks chart information
+        $arrViewChart = $objAnalytics->fnViewClickChartInfo($arrViewChartData, "view");
+        return $arrViewChart;
     }
 }
