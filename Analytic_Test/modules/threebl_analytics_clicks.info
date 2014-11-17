@@ -1,0 +1,6 @@
+; $Id$
+name = Analytic Clicks Cron
+description = This is custom module for click cron for testing.
+package = 3BL
+core = 7.x
+ 

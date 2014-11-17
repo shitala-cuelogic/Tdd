@@ -1,0 +1,366 @@
+<?php
+/**
+ * Drupal hook_menu
+ *
+ * @return array
+ */
+function refactor_Analytic_menu()
+{
+    $items = array();
+
+    $items['Dashboard/Analytics/Views'] = array(
+        'title' => 'Analytics',
+        'description' => 'Analytics Views',
+        'page callback' => 'refactor_Analytic_viewAnalytics',
+        'access arguments' => array('dashboard analytics'),
+    );
+
+    $items['Dashboard/Analytics/Views/mediatype'] = array(
+        'title' => 'Media Type',
+        'description' => 'Media Type ',
+        'page callback' => 'refactor_Analytic_MediaType',
+        'page arguments' => array(4),
+        'access arguments' => array('dashboard analytics'),
+    );
+
+    $items['Dashboard/Analytics/Views/mediaid'] = array(
+        'title' => 'Media Id',
+        'description' => 'Media Id',
+        'page callback' => 'refactor_Analytic_MediaTypeId',
+        'page arguments' => array(4),
+        'access arguments' => array('dashboard analytics'),
+    );
+
+    $items['Dashboard/Analytics/Views/mediatype/ajax'] = array(
+        'title' => 'Media Type',
+        'description' => 'Media Id',
+        'page callback' => 'refactor_Analytic_MediaTypeAjax',
+        'access arguments' => array('dashboard analytics'),
+    );
+
+    $items['Dashboard/Analytics/Searching'] = array(
+        'title' => 'Media Searching',
+        'description' => 'Media Searching',
+        'page callback' => 'refactor_Analytic_searching',
+        'access arguments' => array('dashboard analytics'),
+    );
+
+    $items['Dashboard/Analytics/Reports'] = array(
+        'title' => 'Reports',
+        'description' => 'Reports',
+        'page callback' => 'refactor_Analytic_reports',
+        'access arguments' => array('dashboard analytics'),
+    );
+
+    $items['Dashboard/Analytics/Views/Excel'] = array(
+        'title' => ' Excel Views',
+        'description' => 'Excel Views',
+        'page callback' => 'refactor_Analytic_excel',
+        'page arguments' => array(),
+        'access arguments' => array('dashboard analytics'),
+    );
+    return $items;
+}
+
+/**
+ * view count of particular company and 3bl company
+ *
+ * @return string
+ */
+function refactor_Analytic_viewAnalytics()
+{
+	
+    //Include all required files
+    module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');    
+
+    $intCompanyOgId =  (int)$_SESSION['client_og']; // company og id
+    
+    //Object of class
+    $objAnalyticsController = new GatewayAnalyticController($intCompanyOgId);
+
+    //Check user in session or not
+    fnCheckSession();
+
+    //Get Analytic information for the company
+    $arrAnalyticInformation = $objAnalyticsController->fnViewAnalyticInformation();
+    
+    
+    
+    return theme('view-analytics', $arrAnalyticInformation);
+}
+
+/**
+ * Getting Clicks and Views for media type
+ *
+ * @param string $strMediaType : FMR media type
+ *
+ * @return string
+ */
+function refactor_Analytic_MediaType($strMediaType)
+{
+    
+
+    //Check user in session or not
+    fnCheckSession();
+    
+    $intCompanyOgId = (int)$_SESSION['client_og']; // company og id
+
+    //checking FMR Type is proper or not. if not then redirect to views page .
+    $arrFmrType = array('press_release', 'blog', 'article', 'newsletter', 'multimedia', 'all');
+
+    //Check the Media type get from the URL
+    $intTotalRecords = in_array($strMediaType, $arrFmrType);
+    
+    //Object of class
+    $objAnalyticsController = new GatewayAnalyticController($intCompanyOgId);
+
+    //Get Analytic information for the company
+    $arrAnalyticMediaType = $objAnalyticsController->fnViewAnalyticMediaType();
+ 
+
+    return theme('view-media-type', $arrAnalyticMediaType);
+}
+
+/**
+ * Getting views and clicks by media id
+ *
+ * @param int $intMediaId : Media Id
+ *
+ * @return string
+ */
+function refactor_Analytic_MediaTypeId($intMediaId)
+{
+   
+    //Check user in session or not
+    fnCheckSession();
+    $intCompanyOgId =  (int)$_SESSION['client_og']; // company id (sync id)
+    
+    //Object of class
+    $objAnalyticsController = new GatewayAnalyticController($intCompanyOgId);
+    //Get Analytic information for the company
+    $arrAnalyticMediaTypeId = $objAnalyticsController->fnViewAnalyticMediaTypeId($intMediaId);
+
+   
+    return theme('view-media-id', $arrAnalyticMediaTypeId);
+}
+
+/**
+ * Get Media type records by Ajax
+ */
+function refactor_Analytic_MediaTypeAjax()
+{
+    
+    //Check user in session or not
+    fnCheckSession();
+    $intCompanyOgId =  (int)$_SESSION['client_og']; // company id (sync id)
+    
+    //Object of class
+    $objAnalyticsController = new GatewayAnalyticController($intCompanyOgId);
+    //Get Analytic information for the company
+    $arrAnalyticMediaTypeAjax = $objAnalyticsController->fnProcessAnalyticMediaTypeAjax();
+    
+    echo theme('view-media-type-ajax', $arrAnalyticMediaTypeAjax);
+}
+
+/**
+ * Function for download excel file of all FMRs
+ *
+ * @param string $strSubType : Report type email or excel
+ *
+ * @return string
+ */
+function refactor_Analytic_excel($strSubType = '')
+{
+    
+
+    //Check user in session or not
+    fnCheckSession();
+    $intCompanyOgId =  (int)$_SESSION['client_og']; // Company id (sync id)
+    $intCompanyNid = (int)$_SESSION['client_og_nid']; // 3bl company id
+    
+    //Object of class
+    $objAnalyticsController = new GatewayAnalyticController($intCompanyOgId);
+    $objAnalyticsController->setCompanyNid($intCompanyNid);
+    //Get Analytic information for the company
+    $arrAnalyticMediaTypeAjax = $objAnalyticsController->fnProcessAnalyticMediaTypeAjax($strSubType);
+
+    $strHTMLTable = $objAnalyticsController->fnProcessAnalyticExcel($strSubType);
+    
+    return $strHTMLTable;
+}
+
+/**
+ * Media Searching
+ *
+ * @return string
+ */
+function refactor_Analytic_searching()
+{
+    
+
+    //Check user in session or not
+    fnCheckSession();
+
+    $intCompanyNid = (int)$_SESSION['client_og_nid']; // nod id
+    
+    $intCompanyOgId = "";
+    //Object of class
+    $objAnalyticsController = new GatewayAnalyticController($intCompanyOgId);
+    $objAnalyticsController->setCompanyNid($intCompanyNid);
+    //Get Analytic information for the company
+    $arrAnalyticSearching = $objAnalyticsController->fnProcessAnalyticSearching();
+   
+    return theme('media-searching', $arrAnalyticSearching);
+}
+
+/**
+ * Reports Functionality management
+ *
+ * @return string
+ */
+function refactor_Analytic_reports()
+{
+    
+    //Check user in session or not
+    fnCheckSession();
+
+    $intCompanyNid = $_SESSION['client_og_nid']; // node id
+    $intCompanyOGId = $_SESSION['client_og'];
+    
+    //Object of class
+    $objAnalyticsController = new GatewayAnalyticController($intCompanyOgId);
+    $objAnalyticsController->setCompanyNid($intCompanyNid);
+    //Get Analytic information for the company
+    $arrAnalyticReports = $objAnalyticsController->fnProcessAnalyticReports();
+
+   
+    return theme('reports', $arrAnalyticReports);
+}
+
+/**
+ * hook for theme
+ *
+ * @return array
+ */
+function refactor_Analytic_theme()
+{
+    $themes = array(
+        'view-analytics' => array(
+            'template' => 'templates/analytics',
+            'arguments' => array('name' => 'analytics')
+        ),
+
+        'view-media-type' => array(
+            'template' => 'templates/view-media-type',
+            'arguments' => array('name' => 'media-type')
+        ),
+
+        'view-media-id' => array(
+            'template' => 'templates/view-media-id',
+            'arguments' => array('name' => 'media-id')
+        ),
+
+        'view-media-type-ajax' => array(
+            'template' => 'templates/view-media-type-ajax',
+            'arguments' => array('name' => 'view-media-type-ajax')
+        ),
+
+        'media-searching' => array(
+            'template' => 'templates/searching',
+            'arguments' => array('name' => 'searching')
+        ),
+
+        'view-excel' => array(
+            'template' => 'templates/view-excel',
+            'arguments' => array('name' => 'excel')
+        ),
+
+        'reports' => array(
+            'template' => 'templates/reports',
+            'arguments' => array('name' => 'reports')
+        ),
+
+        'media3Report' => array(
+            'template' => 'templates/media3Report',
+            'arguments' => array('name' => 'media3Report')
+        ),
+    );
+    return $themes;
+}
+
+/**
+ * If this is a view that outputs FMR headlines, save the 'result' object to be
+ * processed later by refactor_Analytic_cron
+ **/
+function refactor_Analytic_views_post_render(&$view, &$output, &$cache)
+{
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // This is our array of views and displays within those views that return FMR headlines
+    // throughout the public site
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    $relevant_views_displays = array(
+        'homepage_content' => array('homepage_fmr' => 1),
+        'csr_news' => array('csr_news_page' => 1),
+        'fmr_related_content_blocks' => array('block_3' => 1, 'block_5' => 1),
+        'campaign_content' => array('page_1' => 1, 'block_1' => 1),
+        'client_content' => array('block_2' => 1)
+    );
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Check the current view and display against this array
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    if (!empty($relevant_views_displays[$view->name][$view->current_display])) {
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        // if we have a match,
+        // a) get the IP addr of the visitor and then
+        // b) save the $view->result object and the IP addr to be processed later.
+        ////////////////////////////////////////////////////////////////////////////////////
+        //watchdog('Analytics view','<pre>'.$view->name.'-'.$view->current_display.'</pre>');
+        $strIpAddress = $_SERVER['REMOTE_ADDR'];
+
+        // If this is the result of something from our server, e.g. apache solr search indexing,
+        // skip it.
+        if (substr($strIpAddress, 0, 3) == '10.') {
+            return;
+        }
+
+        // Get Date/time
+        $strDateTime = date("Y-m-d H:i:s");
+        $strJustDate = date("Y-m-d");
+        $results_str = serialize($view->result);
+        db_insert('threebl_tmp_fmr_headline_views')->fields(array(
+            "ip_addr" => $strIpAddress,
+            "view_datetime" => $strDateTime,
+            "view_date" => $strJustDate,
+            "fmr_result" => $results_str,
+        ))->execute();
+    }
+}
+
+/**
+ * check user browser for IE issue
+ *
+ * @return array
+ */
+function refactor_Check_user_browser()
+{
+    //Define variables
+    $strClickCss = "display:none";
+    $intClickFlag = 0;
+
+    //Checking User Browser is IE 8 OR not.
+    $strIEBrowser = (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE 8.') !== false);
+    if ($strIEBrowser == 1) {
+        //css for id = clicks li
+        $strClickCss = "visibility:hidden;height:0px";
+        $intClickFlag = 1;
+    }
+    return array($strClickCss, $intClickFlag);
+
+}//end_threebl_Check_user_browser
+
+function printVar($arr){
+    echo "<pre>";print_r($arr);echo "</pre>";
+    return true;
+}

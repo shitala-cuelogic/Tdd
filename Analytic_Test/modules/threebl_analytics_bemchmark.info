@@ -1,0 +1,6 @@
+; $Id$
+name = Analytic Benchmark Cron
+description = This is custom module for Analytic Benchmark Cron.
+package = 3BL
+core = 7.x
+ 
