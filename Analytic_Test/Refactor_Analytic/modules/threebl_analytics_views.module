@@ -1,0 +1,28 @@
+<?php
+function threebl_analytics_views_menu()
+{
+    $items = array();
+    $items['ViewsCron'] = array(
+        'title'=>' Analytics',
+        'description'=>'Analytics Views',
+        'page callback'=>'threebl_analytics_views_cron2',
+        'access arguments' => array('dashboard analytics'),
+    );
+    return $items;
+}//end threebl_dashboard_analytics_menu
+
+/**
+ * Get all of the views results that need to be processed and call
+ * fnViewsProcessing(..) which will add the views to the
+ * appropriate table from which they can be displayed in the portal.
+ **/
+function threebl_analytics_views_cron2()
+{
+    watchdog('Analytics cron - Views', 'Starting ...');
+    //Include all required files
+    module_load_include('inc', 'refactor_Analytic', 'inc/AnalyticCronController');
+    $objAnalyticCron = new AnalyticCronController();
+    $objAnalyticCron->fnProcessAnalyticViewCron();
+    
+    watchdog('Analytics cron - Views', 'Ending.');
+}

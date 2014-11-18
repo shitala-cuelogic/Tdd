@@ -1,0 +1,41 @@
+<?php
+function threebl_analytics_clicks_menu()
+{
+    $items = array();
+    $items['ClicksCron'] = array(
+        'title'=>' Analytics',
+        'description'=>'Analytics Views',
+        'page callback'=>'threebl_analytics_clicks_cron2',
+        'access arguments' => array('dashboard analytics'),
+
+    );
+    return $items;
+}//end threebl_analytics_clicks
+
+/**
+ * Analytic Click Cron.
+ */
+function threebl_analytics_clicks_cron2()
+{
+	//Include all required files
+	module_load_include('inc', 'refactor_Analytic', 'inc/AnalyticCronController');
+	$objAnalyticCron = new AnalyticCronController();
+	
+    //Creating the object for ClickView Class
+    $ObjClickView  = new clsClickView();
+
+    $strLimit = "";
+    $strLimit = " LIMIT 0, 2000";
+
+    //getting the aid value.
+    $intAid = variable_get("aid");
+    watchdog('Clicks Cron', 'Beginning AID: '.$intAid);
+    
+    //if not set to zero
+    if (!(int)$intAid) {
+        $intAid = 0;
+    }
+
+    $objAnalyticCron->fnProcessAnalyticClickCron($intAid, $strLimit);    
+    
+}

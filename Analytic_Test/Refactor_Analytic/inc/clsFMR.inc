@@ -301,24 +301,7 @@
                    AND field_dist_archive_value = 0
                    AND t.field_fmr_type_of_content_value IN ('press_release','blog','multimedia','article','newsletter')";
             $objFMRNidInfo = db_query($strQry)->fetchAll();
-
-            // Initialize variables
-            $arrFMRIds = array();
-            $arrBenchmarkFMRInfo = array();
-            $arrBenchMarkByMediaType = array();
-            $arrBenchmarkFMRIds = array();
-            $strFMRIds = '';
-
-            // Group FMR Ids by Media type and Primary category
-            if (!empty($objFMRNidInfo)) {
-
-                // To get Benchmark information
-                list($arrBenchmarkFMRInfo, $arrFMRIds, $arrBenchMarkByMediaType, $arrBenchmarkFMRIds) = $this->fnGetBenchmarkInfo($objFMRNidInfo);
-
-                //Implode FMR ids
-                $strFMRIds = implode(', ', $arrFMRIds);
-            }
-            return array($arrBenchmarkFMRInfo, $arrFMRIds, $strFMRIds, $arrBenchMarkByMediaType, $arrBenchmarkFMRIds);
+            return $objFMRNidInfo;            
         }
 
         /**

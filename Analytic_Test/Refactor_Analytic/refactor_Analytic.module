@@ -99,7 +99,9 @@ function refactor_Analytic_viewAnalytics()
 function refactor_Analytic_MediaType($strMediaType)
 {
     
-
+	//Include all required files
+	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+	
     //Check user in session or not
     fnCheckSession();
     
@@ -131,7 +133,10 @@ function refactor_Analytic_MediaType($strMediaType)
 function refactor_Analytic_MediaTypeId($intMediaId)
 {
    
-    //Check user in session or not
+	//Include all required files
+	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+	
+	//Check user in session or not
     fnCheckSession();
     $intCompanyOgId =  (int)$_SESSION['client_og']; // company id (sync id)
     
@@ -149,7 +154,9 @@ function refactor_Analytic_MediaTypeId($intMediaId)
  */
 function refactor_Analytic_MediaTypeAjax()
 {
-    
+	//Include all required files
+	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+	
     //Check user in session or not
     fnCheckSession();
     $intCompanyOgId =  (int)$_SESSION['client_og']; // company id (sync id)
@@ -172,7 +179,9 @@ function refactor_Analytic_MediaTypeAjax()
 function refactor_Analytic_excel($strSubType = '')
 {
     
-
+	//Include all required files
+	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+	
     //Check user in session or not
     fnCheckSession();
     $intCompanyOgId =  (int)$_SESSION['client_og']; // Company id (sync id)
@@ -197,7 +206,9 @@ function refactor_Analytic_excel($strSubType = '')
 function refactor_Analytic_searching()
 {
     
-
+	//Include all required files
+	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+	
     //Check user in session or not
     fnCheckSession();
 
@@ -221,7 +232,10 @@ function refactor_Analytic_searching()
 function refactor_Analytic_reports()
 {
     
-    //Check user in session or not
+	//Include all required files
+	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+	
+	//Check user in session or not
     fnCheckSession();
 
     $intCompanyNid = $_SESSION['client_og_nid']; // node id

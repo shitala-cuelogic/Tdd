@@ -276,6 +276,89 @@
             db_query($strUpdateViewUpdateQry);
             return true;
         }
+        
+        /**
+         * Function for getting 'threebl_tmp_fmr_headline_views' view
+         * @return array
+         */
+        public function fnGetFMRHeadlineViews()
+        {
+        	$strSelectQuery = "SELECT results_id, ip_addr, view_date, fmr_result FROM threebl_tmp_fmr_headline_views LIMIT 0, 5000";
+        	$arrResults = db_query($strSelectQuery)->fetchAllAssoc('results_id', PDO::FETCH_ASSOC);
+        	
+        	return $arrResults;
+        }
+        
+        /**
+         * Function for deleting 'threebl_tmp_fmr_headline_views' view
+         * @return bool
+         */
+        public function fnDeleteFMRHeadlineViews($key)
+        {
+        	db_delete('threebl_tmp_fmr_headline_views')->condition('results_id', $key)->execute();
+        	return true;
+        }
+        
+        /**
+         * Function for getting value from 'accesslog' table
+         * @return array
+         */
+        public function fnGetAccesslogValue($intAid, $strLimit)
+        {
+        	$strGetPathDataQ = "SELECT * FROM accesslog WHERE path != 'node/15' AND aid  > $intAid AND path like 'node%' ORDER BY aid ASC ".$strLimit;
+			$arrGetPathData = db_query($strGetPathDataQ)->fetchAll();
+        	 
+        	return $arrGetPathData;
+        }
+        
+        /**
+	 	* Function for checking media id exist or not for type FMR
+	 	* @return array
+	 	*/
+        public function fnCheckMediaExists($intMediaId)
+        {
+        	$strGetMediaNodePublishedQ = "SELECT count(*) FROM  node WHERE nid ='$intMediaId' AND type='fmr' AND status = '1' ";
+			$intMediaNodePublished = db_query($strGetMediaNodePublishedQ)->fetchField();
+			
+			return $intMediaNodePublished;
+        }
+        
+ 		/**
+	 	* Function for getting media details
+	 	* @return array
+	 	*/
+        public function fnGetMediaDetails($intMediaId)
+        {
+        	$strGetMediaDataQ = "select n.nid, ogm.gid companyOgId from node n join og_membership ogm on n.nid = ogm.etid where n.nid = '$intMediaId'";
+			$arrGetMediaData = db_query($strGetMediaDataQ)->fetchAll();
+        
+        	return $arrGetMediaData;
+        }
+        
+        /**
+	 	* Function for getting FMR Type of particular media-id.
+	 	* @return string
+	 	*/
+        public function fnGetFMRTypeForMedia($intMediaId)
+        {
+        	$strGetMediaTypeQ = "SELECT field_fmr_type_of_content_value	FROM field_data_field_fmr_type_of_content WHERE  bundle  = 'fmr' and entity_id  = '$intMediaId'";
+			$strFMRType = db_query($strGetMediaTypeQ)->fetchField();
+        
+        	return $strFMRType;
+        }
+        
+        /**
+         * Function for checking Clicks Records Exists.
+         * @return int
+         */
+        public function fnCheckClickExists($intMediaId, $intCompanyOgId, $strFMRType, $strDate)
+        {
+        	$strGet3BlClicksCnt = "SELECT COUNT(nid) FROM  threebl_analytic_clicks WHERE nid ='$intMediaId' AND company_ogid = '$intCompanyOgId'
+										AND fmr_type = '$strFMRType' AND click_date = '$strDate' ";
+			$intRecordExist = db_query($strGet3BlClicksCnt)->fetchField();
+			return $intRecordExist;
+        }
+        
 
         /**
          * Class destructor

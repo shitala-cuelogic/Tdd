@@ -237,6 +237,34 @@ class clsAnalyticDatabase
 		
 	}
 	
+	/**
+	 * Fetch FMR views information for Benchmark
+	 *
+	 * @param string $strFMRIds : Comma separated FMR Ids
+	 *
+	 * @return mixed
+	 */
+	public function fnGetBenchmarkViews($strFMRIds)
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsBenchmark');
+		$objBenchmark = new clsBenchmark();
+		$arrFMRClicks = $objBenchmark->fnGetBenchmarkClick($strFMRIds);
+		return $arrFMRClicks;
+	}
+	
+	
+	/**
+	 * Function return FMRs those have video attached with it for  Benchmark.
+	 *
+	 * @return array
+	 */
+	public function fnGetBenchmarkFMRWithVideo()
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsBenchmark');
+		$objBenchmark = new clsBenchmark();
+		$arrFMRWithVideos = $objAnalytics->fnGetBenchmarkFMRWithVideo();
+		return $arrFMRWithVideos;
+	}
 	
 	/**
 	 * Function return all FMRs that get published
@@ -287,10 +315,139 @@ class clsAnalyticDatabase
 		module_load_include('inc', 'refactor_Analytic', 'inc/clsCompanyData');
 		$objCompanyData = new clsCompanyData();
 		# To get all FMRs that get published from last 6 months
-		return list($arrMediaResult, $arrGetFMRIds, $strFMRIds) = $objCompanyData->fnGetCompanyFMRsExcel($intCompanyOgId, "all");
+		$arrResult = $objCompanyData->fnGetCompanyFMRsExcel($intCompanyOgId, "all");
+		return $arrResult;
 		
 	}
 	
+	/**
+	 * To get FMR Ids published in last month
+	 *
+	 * @return array
+	 */
+	public function fnGetLastMonthPublishedFMRIds()
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
+		$objFMR = new clsFMR();
+		$arrLastMonthPublishedFMRIds = array();
+		$objLastMonthPublishedFMRs = $objFMR->fnGetLastMonthPublishedFMRIds();
+		return $objLastMonthPublishedFMRs;
+		
+	}
+	
+	/**
+	 * Function for getting 'threebl_tmp_fmr_headline_views' view
+	 * @return array
+	 */
+	public function fnGetFMRHeadlineViews()
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$arrClickView = $objClickView->fnGetFMRHeadlineViews();
+		return $arrClickView;
+	}
+	
+	/**
+	 * Function for deleting 'threebl_tmp_fmr_headline_views' view
+	 * @return array
+	 */
+	public function fnDeleteFMRHeadlineViews($key)
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$objClickView->fnDeleteFMRHeadlineViews($key);
+		return true;
+	}
+	
+	/**
+	 * Function for getting value from 'accesslog' table
+	 * @return array
+	 */
+	public function fnGetAccesslogValue($intAid, $strLimit)
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$arrGetPathData = $objClickView->fnGetAccesslogValue($intAid, $strLimit);
+		return $arrGetPathData;
+	}
+	
+	
+	/**
+	 * Function for checking media id exist or not for type FMR
+	 * @return array
+	 */
+	public function fnCheckMediaExists($intMediaId)
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$intMediaNodePublished = $objClickView->fnCheckMediaExists($intMediaId);
+		return $intMediaNodePublished;
+	}
+	
+	
+	/**
+	 * Function for getting media details
+	 * @return array
+	 */
+	public function fnGetMediaDetails($intMediaId)
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$arrGetMediaData = $objClickView->fnGetMediaDetails($intMediaId);
+		return $arrGetMediaData;
+	}
+	
+	/**
+	 * Function for getting FMR Type of particular media-id.
+	 * @return string
+	 */
+	public function fnGetFMRTypeForMedia($intMediaId)
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$strFMRType = $objClickView->fnGetFMRTypeForMedia($intMediaId);
+		return $strFMRType;
+	}
+	
+	/**
+	 * Function for checking click record exists or not
+	 * @return int
+	 */
+	public function fnCheckClickExists($intMediaId, $intCompanyOgId, $strFMRType, $strDate)
+	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$intRecordExist = $objClickView->fnCheckClickExists($intMediaId, $intCompanyOgId, $strFMRType, $strDate);
+		return $intRecordExist;
+	}
+	
+	/**
+    * Add Click Count Function
+    *
+    * @param array $arrAllClick : array contain click related data
+    * @param int   $int3blCron  : flag indicate function called by cron functionality or not
+    * @return bool
+    */
+    public function fnAddAllClicks($arrAllClick, $int3blCron = 0)
+    {
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$strFlagValue = $objClickView->fnAddAllClicks($arrAllClick, $int3blCron);
+		return $strFlagValue;
+	}
+	
+	/**
+    * Add View Count Function
+    *
+    * @param array $arrAllView : array contain information about the all views
+    */
+    public function fnAddAllViews($arrAllView)
+    {
+		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+		$objClickView = new clsClickView();
+		$objClickView->fnAddAllViews($arrAllView);
+		return true;
+	}
 	
 	
 	

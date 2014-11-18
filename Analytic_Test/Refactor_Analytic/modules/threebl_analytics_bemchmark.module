@@ -1,0 +1,40 @@
+<?php
+
+function threebl_analytics_bemchmark_menu()
+{
+    $items = array();
+    $items['Analytic/Benchmark/Cron'] = array(
+        'title'=>'Analytics Benchmark',
+        'description'=>'Analytics Benchmark',
+        'page callback'=>'threebl_analytics_bemchmark_cron',
+        'access arguments' => array('dashboard analytics'),
+    );
+    return $items;
+}
+
+/**
+ * Function to calculate average of views and clicks count for Analytics Benchmark
+ */
+function threebl_analytics_bemchmark_cron()
+{
+    
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/sendEmail');
+    //Include all required files
+    module_load_include('inc', 'refactor_Analytic', 'inc/AnalyticCronController');
+	
+    $objAnalyticCron = new AnalyticCronController();
+    $objAnalyticCron->fnProcessAnalyticBenchmarkCron();
+    
+    //Set Subject for report cron email
+    $strSubject = "Benchmark Alert";
+
+    //Set the message for the email
+    $strMessage = "This report is sent automatically for Benchmarks Alert.<br/><br/>Thank you,<br/>The 3BL Media Team<br/>";
+
+    //$strRecipientMail = "dfulton@3blmedia.com,consult@3blmedia.com";
+    $strRecipientMail = "dfulton@3blmedia.com,tushar.mate@cuelogic.co.in";
+    // Send Monthly report
+    fnSendEmail("3BL Media", "no-reply@3blmedia.com", $strRecipientMail, $strSubject, $strMessage);
+    
+    exit;
+}
