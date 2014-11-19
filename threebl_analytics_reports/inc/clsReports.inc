@@ -1,6 +1,10 @@
 <?php
+
+module_load_include('inc', 'refactor_Analytic', 'inc/clsBaseClass');
+//This is class for Analytics functions.
+
 //This is class for Reports functions.
-class ClsReports
+class ClsReports extends clsBaseClass
 {
     /**
      * Function Create PDF and send email to respective company
@@ -95,7 +99,7 @@ class ClsReports
 
         $intInsertSuccess = false;
         if (count($arrReceivedReport) > 0) {
-            //If mail sent successfuly then insert these details in the table
+            //If mail sent successfully then insert these details in the table
             $strRecipients = implode(",", $arrReceivedReport);
             $intInsertSuccess = $this->fnInsertCompanyDetails((int)$intMonth,$intCompanyNid,$strRecipients,'email');
         }
@@ -138,6 +142,222 @@ class ClsReports
         $strMessage = ((int)$intMonth == 1) ? $strHeaderHTML."Attached you will find your up to date Analytics Summary Report from 3BL Media. This report is sent automatically once a month. You can review all of your 3BL Media analytics at any time at http://3blmedia.com/Dashboard/Analytics/Views".$strFooterHTML : $strHeaderHTML.'Attached you should find Flexible Media Release (FMR) Detail Reports for any content distributed between ' . date("F d, Y", mktime(0, 0, 0, date("m"), date("d") - 15, date("Y"))) . ' and ' . date("F d, Y", mktime(0, 0, 0, date("m"), date("d") - 9, date("Y"))) . '.  If you have any questions, please contact your media consultant at 866.508.0993 or reply to this message.<br/>Of course, you can review all of your 3BL Media Analytics and Tracking in your portal at any time at http://3blmedia.com/Dashboard/Analytics/Views<br/><br/>Thank you,<br/>The 3BL Media Team'.$strFooterHTML;
 
         return $strMessage;
+    }
+
+    /**
+     * Function gather data of 7 days and create array for the Graph.
+     *
+     * @param array $arrViewChart  : FMR Views Info
+     * @param array $arrClickChart : FMR Clicks Info
+     *
+     * @return array
+     */
+    public function fnSumWeekViewsClicks($arrViewChart, $arrClickChart = array())
+    {
+        module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
+
+        $intMaxChart = max($arrViewChart);
+        $intMaxChart1 = (count($arrClickChart) > 0) ? max($arrViewChart) : 0;
+
+        if ($intMaxChart <= 0 && $intMaxChart1 <= 0) {
+            return (count($arrClickChart) > 0) ? array("", "", "") : array("", "");
+        }
+
+        # getting previous date from today's date means we need the dates array having 7 days difference.(ex 1-11-2012, 7-11-2012)
+        $strTodayDate = $this->strCurrentDate;
+        $arrDts = fnGetPreviousDates($strTodayDate, 89, 1);
+        $arrDts = array_reverse($arrDts);
+
+        //Process views and clicks and prepare 7 days interval data for graph
+        $arrDates = array();
+        $arrViewChartSum = $arrClickChartSum = array();
+        $strDate = "";
+        $intCount = $intClickSum = $intViewSum = 0;
+        foreach ($arrDts as $key => $val) {
+
+            $intClickSum += (int)$arrViewChart[$val];
+            $intViewSum += (int)$arrClickChart[$val];
+            $intCount++;
+            if ($intCount == 7) {
+                $strDate = date("M d", strtotime($val));
+                $arrDates[] = $strDate;
+                $arrViewChartSum[$strDate] = (int)$intClickSum;
+                $arrClickChartSum[$strDate] = (int)$intViewSum;
+
+                $strDate = "";
+                $intCount = 0;
+                $intClickSum = 0;
+                $intViewSum = 0;
+            }
+        }
+        //Update Last date range data.
+        if ($intCount > 0) {
+            $strDate = date("M d", strtotime($val));
+            $arrDates[] = $strDate;
+            $arrViewChartSum[$strDate] = (int)$intClickSum;
+            $arrClickChartSum[$strDate] = (int)$intViewSum;
+        }
+
+        if (count($arrClickChart) > 0) {
+            return array($arrViewChartSum, $arrClickChartSum, $arrDates);
+        } else {
+            return array($arrViewChartSum, $arrDates);
+        }
+       
+        
+    }
+
+    /**
+     * Getting  Email address
+     *
+     * @param string $strCompanyNid : Company Node Id
+     * @param int    $intMonth      : Flag to get result from particular table
+     *
+     * @return array
+     */
+    public function fnGetAutoReportEmail($strCompanyNid = "", $intMonth = 0)
+    {
+        $arrAutoReportEmail = array();
+        if ($strCompanyNid != "") {
+            if ($intMonth == 0) {
+
+                $objAutoReportEmail = $this->getMonthlyAutoReportEmail($strCompanyNid);
+
+            } else {
+
+                $objAutoReportEmail = $this->getWeeklyAutoReportEmail($strCompanyNid);
+            }
+
+            if (is_array($objAutoReportEmail) && count($objAutoReportEmail) > 0) {
+
+                foreach ($objAutoReportEmail as $arrRow) {
+
+                    $arrAutoReportEmail[$arrRow->nid][$arrRow->delta] = $arrRow->email;
+
+                }
+            }
+        }
+        return $arrAutoReportEmail;
+    }
+
+
+    public function fnGetAnalyticViewData($objFMRViewInfo) {
+
+        $arrAnalyticData = array();
+        $arrAnalyticData['3blmedia']['view'] = '';
+        $arrAnalyticData['3bl_widgets']['view'] = '';
+        $arrAnalyticData['click_cron']['view'] = '';
+        if (count($objFMRViewInfo) > 0) {
+            //Weekly FMRs views
+            if ($strReportType == "weekly") {
+                foreach ($objFMRViewInfo as $arrFMRData) {
+                    if ($arrFMRData->channel == '3blmedia') {
+                        $arrAnalyticData[$arrFMRData->nid]['3blmedia']['view'] = $arrFMRData->viewcount;
+                    } elseif ($arrFMRData->channel == '3bl_widgets') {
+                        $arrAnalyticData[$arrFMRData->nid]['3bl_widgets']['view'] = $arrFMRData->viewcount;
+                    } elseif ($arrFMRData->channel == 'click_cron') {
+                        $arrAnalyticData[$arrFMRData->nid]['click_cron']['view'] = $arrFMRData->viewcount;
+                    }
+                }
+            } else {
+                //Individual FMR views
+                foreach ($objFMRViewInfo as $arrFMRData) {
+                    if ($arrFMRData->channel == '3blmedia') {
+                        $arrAnalyticData['3blmedia']['view'] = $arrFMRData->viewcount;
+                    } elseif ($arrFMRData->channel == '3bl_widgets') {
+                        $arrAnalyticData['3bl_widgets']['view'] = $arrFMRData->viewcount;
+                    } elseif ($arrFMRData->channel == 'click_cron') {
+                        $arrAnalyticData['click_cron']['view'] = $arrFMRData->viewcount;
+                    }
+                }
+
+                if ($arrAnalyticData['3blmedia']['view'] == '') {
+                    $arrAnalyticData['3blmedia']['view'] = 0;
+                } elseif ($arrAnalyticData['3bl_widgets']['view'] == '') {
+                    $arrAnalyticData['3bl_widgets']['view'] = 0;
+                } elseif ($arrAnalyticData['click_cron']['view'] == '') {
+                    $arrAnalyticData['click_cron']['view'] = 0;
+                }
+            }
+        }
+        return $arrAnalyticData;
+    }
+
+    public function fnGetAnalyticClickData($objFMRClickInfo) {
+
+        $arrAnalyticData = array();
+        $arrAnalyticData['3blmedia']['click'] = '';
+        $arrAnalyticData['3bl_widgets']['click'] = '';
+        $arrAnalyticData['click_cron']['click'] = '';
+        if (count($objFMRClickInfo) > 0) {
+            //Weekly FMRs clicks
+            if ($strReportType == "weekly") {
+                foreach ($objFMRClickInfo as $arrFMRData) {
+                    if ($arrFMRData->channel == '3bl') {
+                        $arrAnalyticData[$arrFMRData->nid]['3blmedia']['click'] = $arrFMRData->clickcount;
+                    } elseif ($arrFMRData->channel == '3bl_widgets') {
+                        $arrAnalyticData[$arrFMRData->nid]['3bl_widgets']['click'] = $arrFMRData->clickcount;
+                    } elseif ($arrFMRData->channel == 'click_cron') {
+                        $arrAnalyticData[$arrFMRData->nid]['click_cron']['click'] = $arrFMRData->clickcount;
+                    }
+                }
+
+            } else {
+                //Individual FMR clicks
+                foreach ($objFMRClickInfo as $arrFMRData) {
+                    if ($arrFMRData->channel == '3bl') {
+                        $arrAnalyticData['3blmedia']['click'] = $arrFMRData->clickcount;
+                    } elseif ($arrFMRData->channel == '3bl_widgets') {
+                        $arrAnalyticData['3bl_widgets']['click'] = $arrFMRData->clickcount;
+                    } elseif ($arrFMRData->channel == 'click_cron') {
+                        $arrAnalyticData['click_cron']['click'] = $arrFMRData->clickcount;
+                    }
+                }
+
+                if ($arrAnalyticData['3blmedia']['click'] == '') {
+                    $arrAnalyticData['3blmedia']['click'] = 0;
+                } elseif ($arrAnalyticData['3bl_widgets']['click'] == '') {
+                    $arrAnalyticData['3bl_widgets']['click'] = 0;
+                } elseif ($arrAnalyticData['click_cron']['click'] == '') {
+                    $arrAnalyticData['click_cron']['click'] = 0;
+                }
+            }
+        }
+        return $arrAnalyticData;
+    }
+
+
+    public function fnGetMicrolistDetails($arrViewCount) {
+
+        $arrMicroListDetails = array();
+        if (count($arrViewCount) > 0) {
+            foreach ($arrViewCount as $arrListInfo) {
+                if ($arrListInfo->typ == '3bl_micro_list') {
+                    $arrMicroListDetails['3bl_micro_list'][$arrListInfo->id]['title'] = $arrListInfo->title;
+                    $arrMicroListDetails['3bl_micro_list'][$arrListInfo->id][$arrListInfo->tracking_flag] = $arrListInfo->totalview;
+                } elseif ($arrListInfo->typ == 'client_micro_list') {
+                    $arrMicroListDetails['client_micro_list'][$arrListInfo->id]['title'] = $arrListInfo->title;
+                    $arrMicroListDetails['client_micro_list'][$arrListInfo->id][$arrListInfo->tracking_flag] = $arrListInfo->totalview;
+                }
+            }
+        }
+        return $arrMicroListDetails;
+    }
+
+    public function fnGetLatestFMRInfo($arrFMRDetails) {
+
+        foreach ($arrFMRDetails as $arrFMRValue) {
+                $arrFMRInfo[$arrFMRValue->fmrid]['fmrid'] = (int) $arrFMRValue->fmrid;
+                $arrFMRInfo[$arrFMRValue->fmrid]['title'] = stripslashes($arrFMRValue->title);
+                $arrFMRInfo[$arrFMRValue->fmrid]['publishdate'] = $arrFMRValue->publishdate;
+                $arrFMRInfo[$arrFMRValue->fmrid]['companyname'] = stripslashes($arrFMRValue->companyname);
+                $arrFMRInfo[$arrFMRValue->fmrid]['companyid'] = (int) $arrFMRValue->etid;
+                $arrFMRIds[] = (int) $arrFMRValue->fmrid;
+            }
+            //Implode FMR ids
+            $strFMRIds = implode(', ', $arrFMRIds);
+        
+        return array($arrFMRInfo, $strFMRIds);
     }
 
     /**

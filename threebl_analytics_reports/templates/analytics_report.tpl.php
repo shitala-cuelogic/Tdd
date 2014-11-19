@@ -41,7 +41,6 @@ $intTotalPressRelease = 0;
 $intPressReleaseFmr = 0;
 $intTotalNewsletter = 0;
 $intTotalMultiMedia = 0;
-
 // getting the views count by company id for each media type
 if (!empty($arrMediaTypeCount)) {
     $intTotalArticle = $arrMediaTypeCount['article']['viewcount'];
@@ -226,7 +225,7 @@ $strFileType = ''; //change
 <table width="100%" cellpadding="2" cellspacing="2">
 <tr>
     <td width="90%"><span class="mainTitleCls">3BL Media -
-        				<span class="clsBColor"> Analytics Summary Report</span><br/>
+                        <span class="clsBColor"> Analytics Summary Report</span><br/>
         <?php echo $strCompanyName;?><br/><?php echo date('F d, Y'); ?></span></td>
 </tr>
 

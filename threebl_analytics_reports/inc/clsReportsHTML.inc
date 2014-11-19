@@ -1,6 +1,6 @@
 <?php
 //This is class for Reports functions.
-class ClsReportsData
+class ClsReportHTML
 {
 
     public function __construct()

@@ -2,39 +2,7 @@
 //This is class for Reports functions.
 class ClsReportsSQL extends clsBaseClass
 {
-    /**
-     * Getting  Email address
-     *
-     * @param string $strCompanyNid : Company Node Id
-     * @param int    $intMonth      : Flag to get result from particular table
-     *
-     * @return array
-     */
-    public function fnGetAutoReportEmail($strCompanyNid = "", $intMonth = 0)
-    {
-        $arrAutoReportEmail = array();
-        if ($strCompanyNid != "") {
-            if ($intMonth == 0) {
-
-                $objAutoReportEmail = $this->getMonthlyAutoReportEmail($strCompanyNid);
-
-            } else {
-
-                $objAutoReportEmail = $this->getWeeklyAutoReportEmail($strCompanyNid);
-            }
-
-            if (is_array($objAutoReportEmail) && count($objAutoReportEmail) > 0) {
-
-                foreach ($objAutoReportEmail as $arrRow) {
-
-                    $arrAutoReportEmail[$arrRow->nid][$arrRow->delta] = $arrRow->email;
-
-                }
-            }
-        }
-        return $arrAutoReportEmail;
-    }
-
+    
     /**
      * Find emails for monthly report functionality
      *
@@ -42,7 +10,7 @@ class ClsReportsSQL extends clsBaseClass
      *
      * @return mixed
      */
-    function getMonthlyAutoReportEmail($strCompanyNid){
+    function getMonthlyAutoReportEmail($strCompanyNid) {
 
         $strSql = "SELECT field_email_for_automated_report_email AS email, entity_id AS nid, delta
                    FROM field_data_field_email_for_automated_report
@@ -58,7 +26,7 @@ class ClsReportsSQL extends clsBaseClass
      *
      * @return mixed
      */
-    function getWeeklyAutoReportEmail($strCompanyNid){
+    function getWeeklyAutoReportEmail($strCompanyNid) {
 
         $strSql = "SELECT field_email_for_automated_month_email AS email, entity_id AS nid, delta
                    FROM field_data_field_email_for_automated_month
@@ -76,9 +44,14 @@ class ClsReportsSQL extends clsBaseClass
      */
     public function fnGetCronLatestFMR($intCompanyId = 0)
     {
+        //Include all required files
+        module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
+
+        //Object of class
+        $objAnalytics = new clsAnalytic();
         $arrLatestFMR = array();
         if ((int)$intCompanyId > 0) {
-            $strSql = "SELECT DISTINCT n.nid
+            $strSql = "SELECT DISTINCT n.nid as fmrIds
              FROM  og
              JOIN og_membership ogm ON (og.gid = ogm.gid AND ogm.entity_type = 'node')
              JOIN node AS n ON n.nid = ogm.etid
@@ -88,12 +61,9 @@ class ClsReportsSQL extends clsBaseClass
              ORDER BY d.field_fmr_date_time_value DESC";
 
             $objLatestFMR = db_query($strSql)->fetchAll();
-            //fetch all FMRs
-            if (!empty($objLatestFMR)) {
-                foreach ($objLatestFMR as $arrRow) {
-                    $arrLatestFMR[] = $arrRow->nid;
-                }
-            }
+            
+            //To get FMR Ids
+            $arrLatestFMR = $objAnalytics->fnGetFMRIds($objLatestFMR);
         }
         return $arrLatestFMR;
     }
@@ -133,6 +103,12 @@ class ClsReportsSQL extends clsBaseClass
      */
     function fnGetFMRAnalyticView($intFMRIds, $strReportType = "")
     {
+        //Include all required files
+        module_load_include('inc', 'refactor_reports', 'inc/clsReports');
+
+        //Object of class
+        $objReports = new clsReports();
+        
         //Group By condition
         $strGroupBy = "GROUP BY v.channel";
         if ($strReportType == "weekly") {
@@ -141,44 +117,9 @@ class ClsReportsSQL extends clsBaseClass
         $strSQL = " SELECT SUM(v.totalcount) AS viewcount, v.nid, v.channel
                     FROM " . $this->strViewTableName . " AS v WHERE v.nid IN(" . $intFMRIds . ") $strGroupBy";
         $objFMRViewInfo = db_query($strSQL)->fetchAll();
-
-        $arrAnalyticData = array();
-        $arrAnalyticData['3blmedia']['view'] = '';
-        $arrAnalyticData['3bl_widgets']['view'] = '';
-        $arrAnalyticData['click_cron']['view'] = '';
-        if (count($objFMRViewInfo) > 0) {
-            //Weekly FMRs views
-            if ($strReportType == "weekly") {
-                foreach ($objFMRViewInfo as $arrFMRData) {
-                    if ($arrFMRData->channel == '3blmedia') {
-                        $arrAnalyticData[$arrFMRData->nid]['3blmedia']['view'] = $arrFMRData->viewcount;
-                    } elseif ($arrFMRData->channel == '3bl_widgets') {
-                        $arrAnalyticData[$arrFMRData->nid]['3bl_widgets']['view'] = $arrFMRData->viewcount;
-                    } elseif ($arrFMRData->channel == 'click_cron') {
-                        $arrAnalyticData[$arrFMRData->nid]['click_cron']['view'] = $arrFMRData->viewcount;
-                    }
-                }
-            } else {
-                //Individual FMR views
-                foreach ($objFMRViewInfo as $arrFMRData) {
-                    if ($arrFMRData->channel == '3blmedia') {
-                        $arrAnalyticData['3blmedia']['view'] = $arrFMRData->viewcount;
-                    } elseif ($arrFMRData->channel == '3bl_widgets') {
-                        $arrAnalyticData['3bl_widgets']['view'] = $arrFMRData->viewcount;
-                    } elseif ($arrFMRData->channel == 'click_cron') {
-                        $arrAnalyticData['click_cron']['view'] = $arrFMRData->viewcount;
-                    }
-                }
-
-                if ($arrAnalyticData['3blmedia']['view'] == '') {
-                    $arrAnalyticData['3blmedia']['view'] = 0;
-                } elseif ($arrAnalyticData['3bl_widgets']['view'] == '') {
-                    $arrAnalyticData['3bl_widgets']['view'] = 0;
-                } elseif ($arrAnalyticData['click_cron']['view'] == '') {
-                    $arrAnalyticData['click_cron']['view'] = 0;
-                }
-            }
-        }
+        
+        $arrAnalyticData = $objReports->fnGetAnalyticViewData($objFMRViewInfo);
+        
         return $arrAnalyticData;
     }
 
@@ -201,44 +142,14 @@ class ClsReportsSQL extends clsBaseClass
                     FROM " . $this->strClickTableName . " AS C WHERE C.nid IN(" . $intFMRIds . ") $strGroupBy";
         $objFMRClickInfo = db_query($strSQL)->fetchAll();
 
-        $arrAnalyticData = array();
-        $arrAnalyticData['3blmedia']['click'] = '';
-        $arrAnalyticData['3bl_widgets']['click'] = '';
-        $arrAnalyticData['click_cron']['click'] = '';
-        if (count($objFMRClickInfo) > 0) {
-            //Weekly FMRs clicks
-            if ($strReportType == "weekly") {
-                foreach ($objFMRClickInfo as $arrFMRData) {
-                    if ($arrFMRData->channel == '3bl') {
-                        $arrAnalyticData[$arrFMRData->nid]['3blmedia']['click'] = $arrFMRData->clickcount;
-                    } elseif ($arrFMRData->channel == '3bl_widgets') {
-                        $arrAnalyticData[$arrFMRData->nid]['3bl_widgets']['click'] = $arrFMRData->clickcount;
-                    } elseif ($arrFMRData->channel == 'click_cron') {
-                        $arrAnalyticData[$arrFMRData->nid]['click_cron']['click'] = $arrFMRData->clickcount;
-                    }
-                }
+        //Include all required files
+        module_load_include('inc', 'refactor_reports', 'inc/clsReports');
 
-            } else {
-                //Individual FMR clicks
-                foreach ($objFMRClickInfo as $arrFMRData) {
-                    if ($arrFMRData->channel == '3bl') {
-                        $arrAnalyticData['3blmedia']['click'] = $arrFMRData->clickcount;
-                    } elseif ($arrFMRData->channel == '3bl_widgets') {
-                        $arrAnalyticData['3bl_widgets']['click'] = $arrFMRData->clickcount;
-                    } elseif ($arrFMRData->channel == 'click_cron') {
-                        $arrAnalyticData['click_cron']['click'] = $arrFMRData->clickcount;
-                    }
-                }
+        //Object of class
+        $objReports = new clsReports();
 
-                if ($arrAnalyticData['3blmedia']['click'] == '') {
-                    $arrAnalyticData['3blmedia']['click'] = 0;
-                } elseif ($arrAnalyticData['3bl_widgets']['click'] == '') {
-                    $arrAnalyticData['3bl_widgets']['click'] = 0;
-                } elseif ($arrAnalyticData['click_cron']['click'] == '') {
-                    $arrAnalyticData['click_cron']['click'] = 0;
-                }
-            }
-        }
+        $arrAnalyticData = $objReports->fnGetAnalyticClickData($objFMRClickInfo);
+
         return $arrAnalyticData;
     }
 
@@ -309,18 +220,13 @@ class ClsReportsSQL extends clsBaseClass
                     GROUP BY tr.list_id
                     ) ORDER BY typ";
         $arrViewCount = db_query($strSql)->fetchAll();
-        $arrMicroListDetails = array();
-        if (count($arrViewCount) > 0) {
-            foreach ($arrViewCount as $arrListInfo) {
-                if ($arrListInfo->typ == '3bl_micro_list') {
-                    $arrMicroListDetails['3bl_micro_list'][$arrListInfo->id]['title'] = $arrListInfo->title;
-                    $arrMicroListDetails['3bl_micro_list'][$arrListInfo->id][$arrListInfo->tracking_flag] = $arrListInfo->totalview;
-                } elseif ($arrListInfo->typ == 'client_micro_list') {
-                    $arrMicroListDetails['client_micro_list'][$arrListInfo->id]['title'] = $arrListInfo->title;
-                    $arrMicroListDetails['client_micro_list'][$arrListInfo->id][$arrListInfo->tracking_flag] = $arrListInfo->totalview;
-                }
-            }
-        }
+        //Include all required files
+        module_load_include('inc', 'refactor_reports', 'inc/clsReports');
+
+        //Object of class
+        $objReports = new clsReports();
+
+        $arrMicroListDetails  = $objReports->fnGetMicrolistDetails($arrViewCount);
         return $arrMicroListDetails;
     }
 
@@ -394,17 +300,16 @@ class ClsReportsSQL extends clsBaseClass
         $arrFMRInfo = array();
         if (is_array($arrFMRDetails) && count($arrFMRDetails) > 0) {
 
-            foreach ($arrFMRDetails as $arrFMRValue) {
-                $arrFMRInfo[$arrFMRValue->fmrid]['fmrid'] = (int) $arrFMRValue->fmrid;
-                $arrFMRInfo[$arrFMRValue->fmrid]['title'] = stripslashes($arrFMRValue->title);
-                $arrFMRInfo[$arrFMRValue->fmrid]['publishdate'] = $arrFMRValue->publishdate;
-                $arrFMRInfo[$arrFMRValue->fmrid]['companyname'] = stripslashes($arrFMRValue->companyname);
-                $arrFMRInfo[$arrFMRValue->fmrid]['companyid'] = (int) $arrFMRValue->etid;
-                $arrFMRIds[] = (int) $arrFMRValue->fmrid;
-            }
-            //Implode FMR ids
-            $strFMRIds = implode(', ', $arrFMRIds);
+            //Include all required files
+            module_load_include('inc', 'refactor_reports', 'inc/clsReports');
+
+            //Object of class
+            $objReports = new clsReports();
+
+            list($arrFMRInfo, $strFMRIds) = $objReports->fnGetLatestFMRInfo($arrFMRDetails);
+
         }
+
         return array($arrFMRInfo, $strFMRIds, $strCurrentDate, $intPrevMonthDate);
     }
 
