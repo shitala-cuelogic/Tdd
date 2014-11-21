@@ -1,0 +1,449 @@
+<?php
+/**
+ * @return array
+ */
+function refactor_reports_menu()
+{
+    $items = array();
+    $items['Dashboard/Report/Views'] = array(
+        'title' => ' Analytics',
+        'description' => 'Analytics Views',
+        'page callback' => 'refactor_reports_view_analytics',
+        'page arguments' => array(3, 4),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Views/MediaType'] = array(
+        'title' => 'Media Type ',
+        'description' => 'Media Type ',
+        'page callback' => 'refactor_reports_MediaTypeViews',
+        'page arguments' => array(4, 5),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/viewGrp'] = array(
+        'title' => ' Analytics',
+        'description' => 'Analytics Views',
+        'page callback' => 'refactor_reports_Grp',
+        'page arguments' => array(3, 4, 5, 6, 7),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/clickGrp'] = array(
+        'title' => ' Analytics',
+        'description' => 'Analytics Views',
+        'page callback' => 'refactor_reports_Grp',
+        'page arguments' => array(3, 4, 5, 6, 7),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/PDF'] = array(
+        'title' => ' Tracking PDF List ',
+        'description' => 'Creating PDF',
+        'page callback' => 'refactor_reports_pdf',
+        'page arguments' => array(3, 4),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Excel'] = array(
+        'title' => ' Tracking Excel List ',
+        'description' => 'Creating Excel',
+        'page callback' => 'refactor_reports_excel',
+        'page arguments' => array(3, 4),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Views/MediaId'] = array(
+        'title' => 'Media Id ',
+        'description' => 'Media Id ',
+        'page callback' => 'refactor_reports_MediaTypeId',
+        'page arguments' => array(4, 5),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Views/CronMediaId'] = array(
+        'title' => 'Company Media Ids',
+        'description' => 'Company Media Ids information',
+        'page callback' => 'refactor_reports_MediaTypeId',
+        'page arguments' => array(4, 5),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Report/Views/pdfhtml'] = array(
+        'title' => 'Company Media Ids Report',
+        'description' => 'Company media ids report information',
+        'page callback' => 'refactor_reports_pdf_html',
+        'page arguments' => array(4),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_LOCAL_TASK
+    );
+
+    $items['admin/Fmr/Report'] = array(
+        'title' => 'FMR report',
+        'description' => 'Show clicks and view for FMR',
+        'page callback' => 'threebl_analytics_fmr_report',
+        'page arguments' => array(3),
+        'access arguments' => array('administer users'),
+        'access callback' => true,
+        'type' => MENU_CALLBACK
+    );
+
+    $items['admin/Fmr/Monthly/Report'] = array(
+        'title'            => 'FMR monthly report',
+        'description'      => 'Show clicks and view for FMR',
+        'page callback'    => 'threebl_analytics_fmr_monthly_report',
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+        'type'             => MENU_CALLBACK
+    );
+
+    $items['admin/reports/analytics/week-at-a-glance'] = array(
+        'title'            => 'Internal Analytics Report - Week at a glance',
+        'description'      => 'Show clicks and view for FMR',
+        'page callback'    => 'threebl_analytics_fmr_weekly_internal_report',
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+        'type'             => MENU_CALLBACK
+    );
+
+    $items['admin/reports/analytics/week-at-a-glance/excel'] = array(
+        'title'            => 'Internal Analytics Report - Week at a glance',
+        'description'      => 'Show clicks and view for FMR',
+        'page callback'    => 'threebl_analytics_fmr_weekly_internal_report',
+        'access arguments' => array('administer users'),
+        'page arguments'   => array(4),
+        'access callback'  => true,
+        'type'             => MENU_CALLBACK
+    );
+
+    return $items;
+}
+
+/**
+ * Function to generate Html for Analytics reports
+ * @param string $strTyp : Section type eg. header and body
+ */
+function refactor_reports_pdf_html($strTyp)
+{
+    global $base_url;
+    if ($strTyp == 'header') {
+        $strImg = $base_url . "/" . drupal_get_path('theme', 'threebl') . "/images/3BLReport_Header.jpg";
+        print '<style type="text/css">body{margin: 0; padding: 0; padding-bottom:10px}</style>
+		<img src="' . $strImg . '" width="700" height="40" />';
+    } else {
+        print '<style type="text/css">
+		body{margin: 0; padding: 0; text-align:center; padding-top:10px}
+		.copyright {font-family:Tahoma,Geneva,Arial,Helvetica,sans-serif;color: #000000;font-size: 8px; margin-top:10px}
+		</style>
+		<span class="copyright">&copy; ' . date('Y') . ' COPYRIGHT 3BL MEDIA, LLC.</span>';
+    }
+}
+
+/**
+ * view count of particular company by Media type
+ * @param string $strQry : Query string of Get parameter
+ */
+function refactor_reports_MediaTypeViews($strQry)
+{
+    global $conf;
+
+    parse_str(base64_decode($strQry), $arrParse);
+    $_GET = $arrParse;
+
+    $strMediaType = isset($_GET['strMediaType']) ? $_GET['strMediaType'] : 'all'; //Media types
+    $intCampaignId = isset($_GET['intCampaignId']) ? (int)$_GET['intCampaignId'] : 0; // Campaign ID    //change
+    $intCompanyOgId = $_GET['client_og']; // company og id
+    $strFileType = isset($_GET['fileTyp']) ? $_GET['fileTyp'] : ''; //change
+    $intCompanyNid = $_GET['client_og_nid']; // 3bl company id
+    
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/GatewayReportsController');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/justmeans/jmbackend-global.css');
+    $objGatewayReports = new GatewayReportsController();
+    $arrData = $objGatewayReports->fnMediaTypeViews($strMediaType, $intCampaignId, $intCompanyOgId, $strFileType, $intCompanyNid);
+
+    echo theme('view-media-type_report_excel', $arrData);
+}
+
+/**
+ * view count of particular company and 3bl company
+ *
+ * @param string $strQry : Query string of Get parameter
+ */
+function refactor_reports_view_analytics($strQry)
+{
+    global $conf;
+    parse_str(base64_decode($strQry), $arrParse);
+    $_GET = $arrParse;
+
+    $intCompanyOgId = $_GET['client_og']; // og id
+    $intCompanyNid = $_GET['client_og_nid'];
+
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/GatewayReportsController');
+    $objGatewayReports = new GatewayReportsController();
+    $arrData = $objGatewayReports->fnViewAnalytics($intCompanyOgId, $intCompanyNid);
+    
+    drupal_add_js(drupal_get_path('module', 'threebl_analytics') . '/js/jsapi.js');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/justmeans/jmbackend-global.css');
+    
+    $strHTML = theme('report-analytics', $arrData);
+
+    echo $strHTML;
+    die;
+}
+
+/**
+ * Function create Google image graph html for reports
+ *
+ * @param int    $intCompanyOgId : Company OG id
+ * @param string $strType        : Type views or clicks
+ * @param string $strFMRIds      : FMR Id
+ * @param string $strFileType    : File Type
+ * @param int    $intCampaignId  : Campaign Id
+ * @param string $strMediaType   : Media Type
+ *
+ * @return string
+ */
+function refactor_reports_Grp($intCompanyOgId, $strType = 'views', $strFMRIds = "", $strFileType = 'PDF', $intCampaignId = 0, $strMediaType = "")
+{
+	//Include required class files
+	module_load_include('inc', 'threebl_analytics_reports', 'inc/GatewayReportsController');
+	$objGatewayReports = new GatewayReportsController();
+	list($arrData, $arrChartSum) = $objGatewayReports->fnAnalyticsReportsGrp($intCompanyOgId, $strType, $strFMRIds, $strFileType, $intCampaignId, $strMediaType);
+	
+	if ($strType == 'clicks') {
+		$strHTML = theme('click_graph', $arrData);
+		return array($strHTML, $arrChartSum);
+	} else {
+		$strHTML = theme('view_graph', $arrData);
+		return array($strHTML, $arrChartSum);
+	}
+	
+}
+
+/**
+ * Getting views and clicks by media id
+ *
+ * @param string $strQry : Query string of Get parameter
+ */
+function refactor_reports_MediaTypeId($strQry)
+{
+    global $conf;
+    parse_str(base64_decode($strQry), $arrParse);
+    $_GET = $arrParse;
+
+    $strMediaTitle = "";
+    $strPublishDate = "";
+
+    $intMediaId = (int)$_GET['intMediaId']; // FMR Id
+    $strMediaIds = $_GET['strMediaIds']; //FMR Ids
+    $strFileType = $_GET['fileTyp']; //Get requested file type
+    $intCompanyNid = $_GET['client_og_nid']; //Company nid
+    $intCompanyOgId = $_GET['client_og']; //company og id
+
+    //Include required class files
+    module_load_include('inc', 'refactor_reports', 'inc/GatewayReportsController');
+    $objGatewayReports = new GatewayReportsController();
+    $arrData = $objGatewayReports->fnProcessReportsMediaTypeId($intMediaId, $strMediaIds, $strFileType, $intCompanyNid, $intCompanyOgId);
+
+    if ($strFileType == "Excel") {
+        print $strHTML = theme('view-media-id_report_excel', $arrData);
+        die;
+    } else {
+        print $strHTML = theme('view-media-id_report', $arrData);
+        die;
+    }
+}
+
+/**
+ * hook for theme
+ *
+ * @return array
+ */
+function refactor_reports_theme()
+{
+    $themes = array(
+        'report-analytics' => array(
+            'template' => 'templates/analytics_report',
+            'arguments' => array('name' => 'analytics_report')
+        ),
+        'report-analytics-excel' => array(
+            'template' => 'templates/analytics_report_excel',
+            'arguments' => array('name' => 'analytics_report_excel')
+        ),
+        'view_graph' => array(
+            'template' => 'templates/view_graph',
+            'arguments' => array('name' => 'view_graph')
+        ),
+        'click_graph' => array(
+            'template' => 'templates/click_graph',
+            'arguments' => array('name' => 'click_graph')
+        ),
+        'view-media-type_report' => array(
+            'template' => 'templates/view-media-type_report',
+            'arguments' => array('name' => 'view-media-type_report')
+        ),
+        'view-media-type_report_excel' => array(
+            'template' => 'templates/view-media-type_report_excel',
+            'arguments' => array('name' => 'view-media-type_report_excel')
+        ),
+        'view-media-id_report' => array(
+            'template' => 'templates/view-media-id_report',
+            'arguments' => array('name' => 'view-media-id_report')
+        ),
+        'view-media-id_report_excel' => array(
+            'template' => 'templates/view-media-id_report_excel',
+            'arguments' => array('name' => 'view-media-id_report_excel')
+        ),
+        'admin_fmr_report' => array(
+            'template' => 'templates/admin_fmr_report',
+            'arguments' => array()
+        ),
+
+        'fmr-weekly-report' => array(
+            'template'  => 'templates/fmr-weekly-report',
+            'arguments' => array(),
+        ),
+    );
+    return $themes;
+}
+
+/**
+ * Function to download PDF file
+ *
+ * @param string $strType : Type eg. MCSR, CSMT etc.
+ * @param string $strMediaType : Media Type
+ */
+function refactor_reports_pdf($strType, $strMediaType)
+{
+    $strTime = time();
+    $strServerName = $_SERVER['HTTP_HOST'];
+
+    #get the company id
+    $intCompanyNid = $_SESSION['client_og_nid']; // node id
+    $intCompanyOgId = $_SESSION['client_og']; //company og id
+
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/GatewayReportsController');
+    $objGatewayReports = new GatewayReportsController();
+    $boolResult = $objGatewayReports->fnProcessReportsPDF($intCompanyOgId, $intCompanyNid, $strType, $strMediaType, $strServerName, $strTime);
+    
+    exit;
+}
+
+/**
+ * Function to download xls file
+ *
+ * @param string $strType : Type eg. MCSR, CSMT etc.
+ * @param string $strMediaType : Media Type
+ */
+function refactor_reports_excel($strType, $strMediaType)
+{
+    #get the company id
+    $intCompanyNid = $_SESSION['client_og_nid']; // node id
+    $intCompanyOgId = $_SESSION['client_og']; //company og id
+    
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/GatewayReportsController');
+    $objGatewayReports = new GatewayReportsController();
+    $boolResult = $objGatewayReports->fnProcessReportsPDF($intCompanyOgId, $intCompanyNid, $strType, $strMediaType);
+    
+    exit;
+}
+
+/**
+ * Function to generate the analytic FMR report.
+ * @param int $intFmrId : FMR Id
+ *
+ * @return mixed
+ */
+function threebl_analytics_fmr_report($intFmrId)
+{
+    # Check whether we receive the FMR id or not. If no FMR id Found then redirect to base url.
+    if ((int)$intFmrId <= 0) {
+        drupal_goto($base_url);
+    }
+
+    $intCompanyOgId = (int)$_SESSION['client_og']; // company og id
+
+    if (!$intCompanyOgId) {
+        drupal_goto('client-multiple-login');
+    }
+
+
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/GatewayReportsController');
+    $objGatewayReports = new GatewayReportsController();
+    $strHtml = $objGatewayReports->fnProcessFMRReport($intCompanyOgId, $intFmrId);
+    
+    return $strHtml;    
+    
+}
+
+/**
+ * Function to download report for FMRs distributed in the previous 30 days, the number of views and clicks for each
+ */
+function threebl_analytics_fmr_monthly_report()
+{
+    //Include required class files
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/GatewayReportsController');
+    $objGatewayReports = new GatewayReportsController();
+    $strHtml = $objGatewayReports->fnProcessFMRMonthlyReport();
+    
+    exit;
+   
+}
+
+/**
+ * To generate the analytic FMR internal weekly report
+ *
+ * @param string $strActionType: Flag to download report in excel format
+ *
+ * @return mixed
+ */
+function threebl_analytics_fmr_weekly_internal_report($strActionType)
+{
+    global $base_url, $conf;
+
+    # Check whether the Admin session is set or not.
+    if ((int) $_SESSION["ADMIN_BLOCK"] <= 0) {
+        drupal_goto("user/login");
+    }
+
+    module_load_include('inc', 'threebl_analytics_reports', 'inc/GatewayReportsController');
+    $objGatewayReports = new GatewayReportsController();
+    
+    list($arrWeeklyFMRInfo, $strCurrentDate, $intPrevMonthDate) = $objGatewayReports->fnProcessFMRWeeklyInternalReport($strActionType);
+ 
+    // check condition to download excel file report or set variables to template
+    if ($strActionType == "excel") {
+        // Download report in excel file
+        header("Content-Type: application/vnd.ms-excel;");
+        header("Content-type: application/x-msexcel;");
+        header("Content-disposition: attachment; filename=Internal_Analytics_Weekly_Report_" . date("d-M", strtotime($intPrevMonthDate)) . "_to_" . date("d-M", strtotime($strCurrentDate)) . ".xls");
+
+        echo $strHTML = theme('fmr-weekly-report', $arrWeeklyFMRInfo);
+        exit;
+    } else {
+        return $strHTML = theme('fmr-weekly-report', $arrWeeklyFMRInfo);
+    }
+}
+

@@ -1,0 +1,7 @@
+; $Id$
+name = threebl analytics reports
+description = This is custom moduels for analytics reports.
+package = 3BL
+core = 7.x
+files[] = inc/sendEmail.inc
+ 
