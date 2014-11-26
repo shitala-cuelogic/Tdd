@@ -1,0 +1,253 @@
+<?php
+//create menus for widget form
+function threebl_affiliate_menu()
+{
+    $items = array();
+
+    $items['Dashboard/Analytics/Tracking'] = array(
+        'title'=>'Media Tracking',
+        'description'=>'Media Tracking',
+        'page callback'=>'threebl_affiliate_tracking',
+        'access arguments' => array('dashboard analytics'),
+    );
+
+    $items['Dashboard/Analytics/Tracking/Excel'] = array(
+        'title'=>' Tracking Excel List ',
+        'description'=>'Creating tracking affiliate excel list',
+        'page callback'=>'threebl_affiliate_tracking_affiliate_excel',
+        'access arguments' => array('dashboard analytics'),
+    );
+
+    $items['admin/threebl_affiliate_cron'] = array(
+        'title'=>'Update affiliates',
+        'description'=>'Affiliates Cron',
+        'page callback'=>'threebl_affiliate_cron',
+        'access callback' => true,
+        'access arguments' => array('administer users'),
+        'page arguments'=>array(),
+        'type'=>MENU_CALLBACK
+    );
+
+    $items['test/editnodescript'] = array(
+        'title'=>'Edit nodes cript',
+        'description'=>'Edit node script',
+        'page callback'=>'fnEditNodeScript',
+        'access callback' => true,
+        'access arguments' => array('administer users'),
+        'page arguments'=>array(),
+        'type'=>MENU_CALLBACK
+    );
+
+    $items['admin/fmrinternalreport'] = array(
+        'page callback'    => 'fnFMRInternalReport',
+        'page arguments' => array(2),
+        'access callback'  => true,
+        'access arguments' => array('administer users'),
+        'type'             => MENU_CALLBACK
+    );
+
+    $items['Dashboard/Analytics/Tracking/PDF'] = array(
+        'title'            => 'PDF version of Tracking',
+        'description'      => 'Creating PDF version of Tracking',
+        'page callback'    => 'threebl_download_affiliate_tracking_pdf',
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+        'type'             => MENU_LOCAL_TASK
+    );
+
+    $items['Dashboard/Analytics/Affiliate/PDF'] = array(
+        'title'            => 'PDF version of Tracking',
+        'description'      => 'Creating PDF version of Tracking',
+        'page callback'    => 'threebl_tracking_pdf',
+        'page arguments'   => array(4),
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+        'type'             => MENU_LOCAL_TASK
+    );
+    return $items;
+}
+
+/**
+ * hook for theme
+ * @return array
+ */
+function threebl_affiliate_theme()
+{
+    $themes = array(
+
+        'media-tracking' =>array(
+            'template' => 'templates/media-tracking',
+            'arguments' => array('name' => 'tracking')
+        ),
+
+        'justmeans_internal_report' => array(
+            'template'  => 'templates/justmeans_internal_report',
+            'arguments' => array(),
+        ),
+
+        'media-pdf-tracking' => array(
+            'template'  => 'templates/media-pdf-tracking_report',
+            'arguments' => array(),
+        )
+    );
+    return $themes;
+}
+
+/*
+ * Edit node script
+ */
+function fnEditNodeScript()
+{
+	//Include required class files
+	module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/GatewayAffiliateController');
+	$objGatewayAffiliate = new GatewayAffiliateController();
+	$objGatewayAffiliate->fnProcessEditNodeScript();
+}
+
+/**
+ *  Media Tracking Function
+ * @return string
+ */
+function threebl_affiliate_tracking()
+{
+    //global $conf, $base_url;
+
+	$intVC = (isset($_GET['vc']))?trim($_GET['vc']):'';    //change
+    $intFmr = (isset($_GET['fmr']))?trim($_GET['fmr']):''; //change
+
+    // To increment clicks/views and redirect
+    $intNid = (int)base64_decode($intFmr);  // Get the mid/nid(node id)
+    $intAffId = (int)base64_decode($intVC); // Get affiliate id to increment the clicks/views
+
+    //Creating the Object of Class
+    //$objClsTracking = new clsTracking($_SESSION['client_og_nid']);
+    
+    // Include files required for tracking.
+    drupal_add_js(drupal_get_path('module', 'threebl_analytics').'/js/tracking.js');
+    drupal_add_css(drupal_get_path('module', 'threebl_affiliate') . '/inc/affiliate.css');
+    drupal_add_css(drupal_get_path('theme', 'threebl').'/css/justmeans/jmbackend-global.css');
+    drupal_add_css(drupal_get_path('theme', 'threebl').'/css/justmeans/page-csr-news.css');
+
+    //Include required class files
+    module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/GatewayAffiliateController');
+    $objGatewayAffiliate = new GatewayAffiliateController();
+    $objGatewayAffiliate->setCompanyTrackingId($_SESSION['client_og_nid']);
+    $vars = $objGatewayAffiliate->fnProcessAffiliateTracking($intVC, $intFmr, $intNid, $intAffId);
+    
+    return theme('media-tracking', $vars);
+}
+
+
+function threebl_affiliate_js_alter(&$javascript)
+{
+    global $user;
+    if ($user->uid == 165 && 1==2) {
+        if (arg(0) == 'Dashboard' && arg(1) == 'Analytics') {
+            kprint_r($javascript);
+            unset($javascript['sites/all/modules/beautytips/js/jquery.bt.min.js']);
+            unset($javascript['sites/all/modules/beautytips/js/beautytips.min.js']);
+            unset($javascript['sites/all/libraries/chosen/chosen.jquery.min.js']);
+            unset($javascript['sites/all/modules/chosen/chosen.js']);
+            unset($javascript['sites/all/modules/views/js/base.js']);
+            unset($javascript['sites/all/modules/views/js/ajax_view.js']);
+            unset($javascript['sites/all/modules/ctools/js/jump-menu.js']);
+            unset($javascript['misc/autocomplete.js']);
+            unset($javascript['misc/collapse.js']);
+        }
+    }
+}
+
+
+/**
+ * Function create excel information of affiliate tracking
+ */
+function threebl_affiliate_tracking_affiliate_excel()
+{
+    if ((int) base64_decode($_GET['fmr']) > 0) {
+        $intFMRId = base64_decode($_GET['fmr']);
+    }
+    
+    //Include required class files
+    module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/GatewayAffiliateController');
+    $objGatewayAffiliate = new GatewayAffiliateController();
+    $strHTMLTable = $objGatewayAffiliate->fnProcessAffiliateExcel($intFMRId);
+    
+    echo $strHTMLTable;
+    exit;
+    
+}
+
+/**
+ * function to collect information for latest published fmr information from database
+ */
+function threebl_affiliate_cron()
+{
+	//Include required class files
+	module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/GatewayAffiliateController');
+	$objGatewayAffiliate = new GatewayAffiliateController();
+	$strHTMLTable = $objGatewayAffiliate->fnProcessAffiliateCron();
+	
+}
+
+/**
+ * Function to display FMR vews and clicks report from Justmeans.
+ */
+function fnFMRInternalReport($intFMRId)
+{
+
+	//Include required class files
+	module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/GatewayAffiliateController');
+	$objGatewayAffiliate = new GatewayAffiliateController();
+	list($arrFmrClicks, $arrFmrViews, $arrFMRInfo) = $objGatewayAffiliate->fnProcessFMRInternalReport($intFMRId);
+	
+	$arrData = array("arrFMRClicks" => $arrFmrClicks, "arrFmrViews" => $arrFmrViews, "arrFMRInfo" => $arrFMRInfo);
+
+    db_set_active();
+    return  theme('justmeans_internal_report', $arrData);
+}
+
+/**
+ * Function to create PDF version of tracking report
+ *
+ * @param string $strQry : Query string of Get parameter
+ */
+function threebl_tracking_pdf($strQry)
+{
+    // global variables
+    global $base_url, $conf;
+
+    //Parse input parameters
+    parse_str(base64_decode($strQry), $arrParse);
+    $_GET = $arrParse;
+
+    // Get FMR Id
+    $intFMRId = (int) $_GET['fmr'];
+    
+    //Include required class files
+    module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/GatewayAffiliateController');
+    $objGatewayAffiliate = new GatewayAffiliateController();
+    list($strTitle, $strPublishDate, $arrWidget, $arrAffiliates, $strPrimaryCategoryName, $strGetFMRMediaType) = $objGatewayAffiliate->fnProcessTrackingPDF($intFMRId);
+
+    $arrData = array("strTitle" => $strTitle, "strPublishDate" => $strPublishDate, "arrWidget" => $arrWidget, "arrAffiliates" => $arrAffiliates, "base_url" => $base_url, "strImagePath" => $conf['IMAGES_PATH_3BL'], "intFMRId" => $intFMRId, "strPrimaryCategoryName" => $strPrimaryCategoryName, "strGetFMRMediaType" => $strGetFMRMediaType);
+
+    echo theme('media-pdf-tracking', $arrData);
+    exit;
+}
+
+/**
+ *Function to download PDF file
+ */
+function threebl_download_affiliate_tracking_pdf()
+{
+    // Get FMR Id
+    if ((int) base64_decode($_GET['fmr']) > 0) {
+        $intFMRId = (int) base64_decode($_GET['fmr']);
+    }
+	
+    //Include required class files
+    module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/GatewayAffiliateController');
+    $objGatewayAffiliate = new GatewayAffiliateController();
+    $objGatewayAffiliate->fnProcessDownloadAffiliateTrackingPDF($intFMRId);
+    
+    exit;
+}

@@ -1,0 +1,6 @@
+; $Id$
+name = threebl tracking auto affiliates PDF reports
+description = This is custom module for tracking auto affiliates PDF reports.
+package = 3BL
+core = 7.x
+ 

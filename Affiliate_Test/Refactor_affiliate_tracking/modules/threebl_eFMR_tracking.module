@@ -1,0 +1,29 @@
+<?php
+
+function threebl_eFMR_tracking_menu()
+{
+    $items = array();
+    $items['efmr/tracking'] = array(
+        'title'=>'External FMRs Tracking',
+        'description'=>'eFMR tracking for only PRConnect affiliates',
+        'page callback'=>'threebl_eFMR_tracking_cron',
+        'access arguments' => array('administer users')
+    );
+    return $items;
+}//end threebl_analytics_clicks
+
+
+/**
+ * function to collect information for latest published efmr information from
+ * database and update the tracking information related PRConnect affiliates
+ */
+function threebl_eFMR_tracking_cron()
+{
+    watchdog('eFMR Tracking', 'Checking for eFMRs to track');
+    
+    //Include required class files
+    module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/AffiliateCronController');
+    $objAffiliateCron = new AffiliateCronController();
+    $objAffiliateCron->fnProcessEFMRTrackingCron();
+    
+}

@@ -1,0 +1,110 @@
+<?php
+/**
+ * Remove Un-wanted  prconnect affiliate  from database
+ */
+function threebl_remove_affiliate_test_cron()
+{
+    $arrFMRList = array();
+    //GET LATEST FMR
+    // Remove this join JOIN jm_3bl_media AS fmr ON (fmr.3bl_mediaid = n1.nid)
+    // JOIN field_data_field_prconnect_tracking as pt ON pt.entity_id = n1.nid
+
+    $sqlSelect  = " SELECT n1.nid, n1.title, d.field_fmr_date_time_value as date, t.tid,
+    pt.field_prconnect_tracking_value as prflag ";
+    $sqlFrom    = " FROM node n1
+							 JOIN field_data_field_fmr_date_time AS d ON d.entity_id = n1.nid
+                             JOIN field_data_field_prconnect_tracking as pt ON pt.entity_id = n1.nid
+							 LEFT JOIN field_data_field_dist_vertical as v ON n1.nid=v.entity_id
+							 LEFT JOIN taxonomy_term_data as t ON v.field_dist_vertical_target_id=t.tid";
+
+    $sqlWhere   = " WHERE n1.type = 'fmr' AND n1.status = 1 ";
+    $sqlOrderBy = " ORDER BY d.field_fmr_date_time_value DESC";
+    $sqlLimit = " LIMIT 0,2";
+
+    $sqlQuery 	 = $sqlSelect." ".$sqlFrom." ".$sqlWhere." ".$sqlOrderBy." ".$sqlLimit;
+    db_set_active("3bl_test1");
+    $arrFMRList  = db_query($sqlQuery)->fetchAll();
+
+    db_set_active();
+
+    //check count of array FMR List
+
+    if (count($arrFMRList) > 0) {
+
+        //Include all required files
+        module_load_include('inc', 'threebl_affiliate_test', 'inc/clsTracking');
+        //Creating the Object of Class
+        $objClsTracking = new clsTracking();
+
+        // get all affiliate from 3bl_affiliate tables by
+        $arrAffiliate = $objClsTracking->fnGetAllTitleOfAffiliate();
+
+        $arrComp = array();
+        //COLLECT prconnect information
+        foreach ($arrFMRList as $fmr) {
+            $intId = $fmr->nid;
+
+            //prconnect tracking link
+            $strURL = "http://tracking.prconnect.com/3blmedia?Module=clipping-all&SourceID=".$intId;
+            $fileContents = file_get_contents($strURL);
+            $fileContents = str_replace(array("\n", "\r", "\t"), '', $fileContents);
+            $fileContents = trim(str_replace('"', "'", $fileContents));
+            $simpleXml    = simplexml_load_string($fileContents, null, LIBXML_NOCDATA);
+
+            // To process the links from the parsed html
+            foreach ($simpleXml->channel->item as $objChannelItem) {
+                //store all the affiliate title in particular array
+                $arrComp[] =  (string) addslashes($objChannelItem->title[0]);
+            }//for-each
+            $arrComp = array_unique($arrComp);
+        }//foreach
+
+        $arrDiffer = array_diff($arrAffiliate, $arrComp);
+    }
+
+    //check is exits or not.
+    if (is_array($arrDiffer) && count($arrDiffer) > 0) {
+
+        $strRecipient = "tech@3blmedia.com, distribution@3blmedia.com";
+        $strSubject = "We found unwanted PRconnect affiliate(s)";
+        $strMessage = "Hi,<br><br>We have found PRconnect affiliate(s) that are no longer in the feed. Please check the following details:<br><br>";
+
+        //Sender details
+        $strSender = "noreply@3blmedia.com";
+        $strSenderName = "3blmedia Team";
+
+        //getting the entity details
+        $arrIds = array_keys($arrDiffer);
+        $arrEntity = entity_load('affiliates', $arrIds);
+        $arrDiffer1 = json_decode(json_encode($arrEntity), 1); //object to array
+
+        $i = 1;
+        $arrDelAffIds = array();
+        foreach ($arrDiffer1 as $key => $val) {
+
+            $strMessage .= $i.". ".stripslashes($val['field_affiliate_title']['und'][0]['value'])." <br>
+									Source link: ".stripslashes((string) $val['field_affiliate_source']['und'][0]['value'])."<br>";
+            if ($val['field_affiliate_news_url']['und'][0]['value']) {
+                $strMessage .= "News link: ".stripslashes((string) $val['field_affiliate_news_url']['und'][0]['value'])."<br><br>";
+            }
+            $arrDelAffIds[] = $val['id'];
+            $i++;
+        }//foreach
+
+
+        //delete affiliate
+        $objClsTracking->fnDeleteAffiliate($arrDelAffIds);
+        $strMessage .="<br>Thanks,<br>3BL Media.<br>";
+
+        //include the file for email function
+        include_once(drupal_get_path('module', 'threebl_analytics_reports_test')."/inc/sendEmail.inc");
+
+        //send email function.
+        $boolSent =  fnSendEmail($strSenderName, $strSender, $strRecipient, $strSubject, $strMessage);
+
+        if ($boolSent) {
+            echo "Remove affiliate cron email send.";
+        }
+
+    }//is_array
+}//end function

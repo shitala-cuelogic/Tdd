@@ -1,0 +1,28 @@
+<?php
+function threebl_remaning_fmr_affiliate_menu()
+{
+    $items = array();
+    $items['Dashboard/Tracking/RemaningAffiliate'] = array(
+        'title'=>' Tracking Remaning Affiliate ',
+        'description'=>'Tracking Remaning Affiliate',
+        'page callback'=>'threebl_remaning_fmr_affiliate_cron',
+        'access arguments' => array('administer users'),
+        'access callback'  => true,
+        'type'             => MENU_LOCAL_TASK
+    );
+    return $items;
+}//end threebl_analytics_reportste_menu
+
+/**
+ * Remove remaning fmr affiliate nid
+ */
+function threebl_remaning_fmr_affiliate_cron()
+{
+
+    //Include required class files
+    module_load_include('inc', 'Refactor_affiliate_tracking', 'inc/AffiliateCronController');
+    $objAffiliateCron = new AffiliateCronController();
+    $objAffiliateCron->fnProcessRemaningFMRAffiliateCron();
+    
+
+}//end function
