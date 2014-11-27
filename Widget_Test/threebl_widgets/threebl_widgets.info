@@ -1,0 +1,7 @@
+; $Id$
+ 
+name = threebl_widgets.
+description = Showing widget genration code.
+package = Reinholds modules
+core = 7.x
+ 
