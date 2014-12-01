@@ -1,8 +1,29 @@
 <?php
+module_load_include('inc', 'refactor_Analytic', 'inc/clsCompanyData');
+module_load_include('inc', 'refactor_Analytic', 'inc/clsBenchmark');
+module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
+module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticsViews');
+module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticsClicks');
+module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
+
 class clsAnalyticDatabase
 {
+	
+	private $objCompanyData;
+	private $objBenchmark;
+	private $objFMR;
+	private $objAnalyticsViews;
+	private $objAnalyticsClicks;
+	private $objClickView;
+	
 	public function __construct()
 	{
+		$this->objCompanyData = new clsCompanyData();
+		$this->objBenchmark = new clsBenchmark();
+		$this->objFMR = new clsFMR();
+		$this->objAnalyticsViews = new clsAnalyticsViews();
+		$this->objAnalyticsClicks = new clsAnalyticsClicks();
+		$this->objClickView = new clsClickView();
 		
 	}
 	
@@ -14,11 +35,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetTopFiveClicks($intCompanyOgId)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticsClicks');
-		$objClick = new clsAnalyticsClicks();
 		//Get Top five clicks count and their FMR information
-		$objTopClicksFMRInfo = $objClick->fnGetTopFiveClicksFMRs($intCompanyOgId);
-		
+		$objTopClicksFMRInfo = $this->objAnalyticsClicks->fnGetTopFiveClicksFMRs($intCompanyOgId);
 		return $objTopClicksFMRInfo;
 	}
 	
@@ -32,11 +50,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetClicks($strFMRIds)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticsClicks');
-		$objClick = new clsAnalyticsClicks();
 		# GET the Click Related data
-        $objFMRClickInfo = $objClick->fnGetClicksInfo($strFMRIds);
-		
+        $objFMRClickInfo = $this->objAnalyticsClicks->fnGetClicksInfo($strFMRIds);
 		return $objFMRClickInfo;
 	}
 	
@@ -51,8 +66,6 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetClickChart($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticsClicks');
-		$objClick = new clsAnalyticsClicks();
 		// Condition for Click chart between dates, default before 2 months with Company
         $$ObjClickChartData = $objClick->fnGetClickChartInfo($intCompanyOgId, $strFMRIds);
         
@@ -69,11 +82,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnFMRWithVideo($intCompanyOgId)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
-		$objFMR = new clsFMR();
 		 //GET all FMR with Videos
-        $arrFMRWithVideos = $objFMR->fnGetFMRWithVideoInfo($intCompanyOgId);
-        
+        $arrFMRWithVideos = $this->objFMR->fnGetFMRWithVideoInfo($intCompanyOgId);
         return $arrFMRWithVideos;
 	}
 	
@@ -90,11 +100,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetCompanyFMRs($intCompanyOgId, $strMediaType = "", $intCampaignId = "", $strIsArchiveFlag = "", $strFileType = "")
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
-		$objFMR = new clsFMR();
-		
 		//Fetch all company FMRs STEP 1
-		$objCompanyFMRInformation = $objFMR->fnGetCompanyFMRsInfo($intCompanyOgId, "", "", "non_archive");
+		$objCompanyFMRInformation = $this->objFMR->fnGetCompanyFMRsInfo($intCompanyOgId, $strMediaType, $intCampaignId, $strIsArchiveFlag, $strFileType);
 		return $objCompanyFMRInformation;
 	}
 	
@@ -109,11 +116,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
-		$objFMR = new clsFMR();
 		// Get country name and click count for google map.
-		$arrCountryName = $objFMR->fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId);
-		
+		$arrCountryName = $this->objFMR->fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId);
 		return $arrCountryName;
 	}
 	
@@ -127,10 +131,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
-		$objFMR = new clsFMR();
 		//Get referrer website by media type
-		$arrReferLink = $objFMR->fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId);
+		$arrReferLink = $this->objFMR->fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId);
 		return $arrReferLink;
 	}
 	
@@ -146,10 +148,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
-		$objFMR = new clsFMR();
 		// Query for View count of Particular FMR
-		$arrViewCount = $objFMR->fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId);
+		$arrViewCount = $this->objFMR->fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId);
 		return $arrViewCount;
 	}
 	
@@ -164,11 +164,22 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
-		$objFMR = new clsFMR();
 		// Query for Click count of Particular FMR
-		$arrClickCount = $objFMR->fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId);
+		$arrClickCount = $this->objFMR->fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId);
 		return $arrClickCount;
+	}
+	
+	/**
+	 * Function to get Primary Category Name
+	 *
+	 * @param int $intPrimaryCategoryId : Primary category id
+	 *
+	 * @return array
+	 */
+	public function fnPrimaryCategoryName($intPrimaryCategoryId)
+	{
+		$strPrimaryCategoryName = $this->objFMR->fnPrimaryCategoryName($intPrimaryCategoryId);
+		return $strPrimaryCategoryName;
 	}
 	
 	
@@ -181,11 +192,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetViews($strFMRIds)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticsViews');
-		$objView = new clsAnalyticsViews();
 		//Fetch all company FMRs Views STEP 2
-		// Query  which give result Count(FMRCount) ViewCount of each media.
-		$objFMRViewInfo = $objView->fnGetViewsInfo($strFMRIds);
+		$objFMRViewInfo = $this->objAnalyticsViews->fnGetViewsInfo($strFMRIds);
 		return $objFMRViewInfo;
 	}
 	
@@ -200,12 +208,9 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetViewChart($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticsViews');
-		$objView = new clsAnalyticsViews();
 		// Query for View Chart between dates, For last 2 months.
-		$ObjViewChartData = $objView->fnGetViewChartInfo($intCompanyOgId, $strFMRIds);
-		return $ObjViewChartData;
-		
+		$arrViewChart = $this->objAnalyticsViews->fnGetViewChartInfo($intCompanyOgId, $strFMRIds);
+		return $arrViewChart;
 	}
 	
 	/**
@@ -215,10 +220,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnBenchmarkClicksByMediaType($intCurrentMonthDate, $intNextMonthDate)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsBenchmark');
-		$objBenchmark = new clsBenchmark();
 		// Get Benchmarks clicks information
-		$ObjBenchmarkClicksFMRInfo = $objBenchmark->fnGetBenchmarkClicksByMediaType($intCurrentMonthDate, $intNextMonthDate);
+		$ObjBenchmarkClicksFMRInfo = $this->objBenchmark->fnGetBenchmarkClicksByMediaType($intCurrentMonthDate, $intNextMonthDate);
 		return $ObjBenchmarkClicksFMRInfo;
 	}
 	
@@ -229,10 +232,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnBenchmarkViewsByMediaType($intCurrentMonthDate, $intNextMonthDate)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsBenchmark');
-		$objBenchmark = new clsBenchmark();
 		// Get Benchmarks views information
-		$ObjBenchmarkViewsByMediaType = $objBenchmark->fnGetBenchmarkViewsByMediaType($intCurrentMonthDate, $intNextMonthDate);
+		$ObjBenchmarkViewsByMediaType = $this->objBenchmark->fnGetBenchmarkViewsByMediaType($intCurrentMonthDate, $intNextMonthDate);
 		return $ObjBenchmarkViewsByMediaType;
 	}
 	
@@ -245,9 +246,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetBenchmarkViews($strFMRIds)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsBenchmark');
-		$objBenchmark = new clsBenchmark();
-		$arrFMRClicks = $objBenchmark->fnGetBenchmarkClick($strFMRIds);
+		$arrFMRClicks = $this->objBenchmark->fnGetBenchmarkClick($strFMRIds);
 		return $arrFMRClicks;
 	}
 	
@@ -259,9 +258,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetBenchmarkFMRWithVideo()
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsBenchmark');
-		$objBenchmark = new clsBenchmark();
-		$arrFMRWithVideos = $objAnalytics->fnGetBenchmarkFMRWithVideo();
+		$arrFMRWithVideos = $this->objBenchmark->fnGetBenchmarkFMRWithVideo();
 		return $arrFMRWithVideos;
 	}
 	
@@ -275,12 +272,8 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetFMRViewClickByCompany($intCompanyOgId, $strMediaType = '')
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsCompanyData');
-		$objCompanyData = new clsCompanyData();
-		// Query for getting all FMRs that get published
-		
-		list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $objCompanyData->fnGetFMRViewClickByCompany($intCompanyOgId, $strMediaType);
-		
+		//for getting all FMRs that get published
+		list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $this->objCompanyData->fnGetFMRViewClickByCompany($intCompanyOgId, $strMediaType);
 		return array($arrFMRInfo, $arrFMRIds, $strFMRIds);
 	}
 	
@@ -293,10 +286,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetAllCampaign($intCompOgId)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsCompanyData');
-		$objCompanyData = new clsCompanyData();
-		$objGetCampaign = $objCompanyData->fnGetAllCampaign($intCompanyOGId);
-		
+		$objGetCampaign = $this->objCompanyData->fnGetAllCampaign($intCompanyOGId);
 		return $objGetCampaign;
 	}
 	
@@ -311,12 +301,51 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetCompanyFMRsExcel($intCompanyOgId, $strMediaType = "")
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsCompanyData');
-		$objCompanyData = new clsCompanyData();
 		# To get all FMRs that get published from last 6 months
-		$arrResult = $objCompanyData->fnGetCompanyFMRsExcel($intCompanyOgId, "all");
+		$arrResult = $this->objCompanyData->fnGetCompanyFMRsExcel($intCompanyOgId, $strMediaType);
 		return $arrResult;
-		
+	}
+	
+	/**
+	 * Function for Getting Campaign Name
+	 *
+	 * @param int $intCampaignId : Campaign Id
+	 *
+	 * @return string
+	 */
+	function fnGetCampaignName($intCampaignId = 0)
+	{
+		$strCampaignName = $this->objCompanyData->fnGetCampaignName($intCampaignId);
+		return $strCampaignName;
+	}
+	
+	/**
+	 * Function return name of requested company id
+	 *
+	 * @param int $intCompanyNid : Company Node Id
+	 *
+	 * @return string
+	 */
+	function fnGetCompanyName($intCompanyNid = 0)
+	{
+		$strCompanyName = $this->objCompanyData->fnGetCompanyName($intCompanyNid);
+		return $strCompanyName;
+	}
+	
+	/**
+	 * Function to insert 3BL report details
+	 *
+	 * @param int    $intCompanyId      : Company Id
+	 * @param string $strEmailIds       : Email Ids
+	 * @param string $strReportType     : Report type
+	 * @param string $strReportFileType : Report File type
+	 *
+	 * @return mixed
+	 */
+	function fnInsert3blReportDetails($intCompanyId, $strEmailIds, $strReportType, $strReportFileType)
+	{
+		$intInsertId = $this->objCompanyData->fnInsert3blReportDetails($intCompanyId, $strEmailIds, $strReportType, $strReportFileType);
+		return $intInsertId;
 	}
 	
 	/**
@@ -326,12 +355,9 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetLastMonthPublishedFMRIds()
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsFMR');
-		$objFMR = new clsFMR();
 		$arrLastMonthPublishedFMRIds = array();
-		$objLastMonthPublishedFMRs = $objFMR->fnGetLastMonthPublishedFMRIds();
+		$objLastMonthPublishedFMRs = $this->objFMR->fnGetLastMonthPublishedFMRIds();
 		return $objLastMonthPublishedFMRs;
-		
 	}
 	
 	/**
@@ -345,16 +371,14 @@ class clsAnalyticDatabase
 		$arrClickView = $objClickView->fnGetFMRHeadlineViews();
 		return $arrClickView;
 	}
-	
+		
 	/**
 	 * Function for deleting 'threebl_tmp_fmr_headline_views' view
 	 * @return array
 	 */
 	public function fnDeleteFMRHeadlineViews($key)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$objClickView->fnDeleteFMRHeadlineViews($key);
+		$this->objClickView->fnDeleteFMRHeadlineViews($key);
 		return true;
 	}
 	
@@ -364,9 +388,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetAccesslogValue($intAid, $strLimit)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$arrGetPathData = $objClickView->fnGetAccesslogValue($intAid, $strLimit);
+		$arrGetPathData = $this->objClickView->fnGetAccesslogValue($intAid, $strLimit);
 		return $arrGetPathData;
 	}
 	
@@ -377,9 +399,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnCheckMediaExists($intMediaId)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$intMediaNodePublished = $objClickView->fnCheckMediaExists($intMediaId);
+		$intMediaNodePublished = $this->objClickView->fnCheckMediaExists($intMediaId);
 		return $intMediaNodePublished;
 	}
 	
@@ -390,9 +410,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetMediaDetails($intMediaId)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$arrGetMediaData = $objClickView->fnGetMediaDetails($intMediaId);
+		$arrGetMediaData = $this->objClickView->fnGetMediaDetails($intMediaId);
 		return $arrGetMediaData;
 	}
 	
@@ -402,9 +420,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetFMRTypeForMedia($intMediaId)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$strFMRType = $objClickView->fnGetFMRTypeForMedia($intMediaId);
+		$strFMRType = $this->objClickView->fnGetFMRTypeForMedia($intMediaId);
 		return $strFMRType;
 	}
 	
@@ -414,9 +430,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnCheckClickExists($intMediaId, $intCompanyOgId, $strFMRType, $strDate)
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$intRecordExist = $objClickView->fnCheckClickExists($intMediaId, $intCompanyOgId, $strFMRType, $strDate);
+		$intRecordExist = $this->objClickView->fnCheckClickExists($intMediaId, $intCompanyOgId, $strFMRType, $strDate);
 		return $intRecordExist;
 	}
 	
@@ -429,9 +443,8 @@ class clsAnalyticDatabase
     */
     public function fnAddAllClicks($arrAllClick, $int3blCron = 0)
     {
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$strFlagValue = $objClickView->fnAddAllClicks($arrAllClick, $int3blCron);
+
+		$strFlagValue = $this->objClickView->fnAddAllClicks($arrAllClick, $int3blCron);
 		return $strFlagValue;
 	}
 	
@@ -442,12 +455,8 @@ class clsAnalyticDatabase
     */
     public function fnAddAllViews($arrAllView)
     {
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$objClickView->fnAddAllViews($arrAllView);
+		$this->objClickView->fnAddAllViews($arrAllView);
 		return true;
 	}
-	
-	
 	
 }

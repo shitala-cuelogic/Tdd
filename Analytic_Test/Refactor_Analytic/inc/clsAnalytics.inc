@@ -23,6 +23,16 @@ class clsAnalytic
 
 		$this->analyticDB = new clsAnalyticDatabase();
 	}
+	
+	public function fnGetAllMediaTypes()
+	{
+		return $this->arrShowMediaType;
+	}
+	
+	public function fnGetBenchmarkNAMonth()
+	{
+		return $this->strBenchmarkNAMonth;
+	}
 
 	/**
 	 * Function manage current selected tab css.
