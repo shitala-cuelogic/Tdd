@@ -11,7 +11,7 @@ class clsReportsDatabase
 	
 	public function __construct()
 	{
-		$this->objReportsSQL = new ClsReportsSQL;
+		$this->objReportsSQL = new ClsReportsSQL();
 		$this->objJmClicksViews = new JmClicksViews();
 		$this->objAnalyticDB = new clsAnalyticDatabase();
 	}
