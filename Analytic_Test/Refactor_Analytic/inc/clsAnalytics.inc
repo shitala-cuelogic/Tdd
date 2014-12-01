@@ -6,7 +6,7 @@ class clsAnalytic
 {
 	private $arrShowMediaType = array();
 	public $strBenchmarkNAMonth;
-	private $analyticDB;
+	public $analyticDB;
 
 	public function __construct()
 	{
@@ -287,7 +287,7 @@ class clsAnalytic
 		return array($arrMediaViewsClicks);
 	}
 	
-	public fnGroupFMRByMediaType($arrBenchMarkByMediaType)
+	public function fnGroupFMRByMediaType($arrBenchMarkByMediaType)
 	{
 		foreach ($arrBenchMarkByMediaType as $strMediaType => $arrGetFMRIdsByMediaType) {
 			#Get Media type wise FMRs total count
@@ -646,7 +646,7 @@ class clsAnalytic
 	 *
 	 * @return array
 	 */
-	public function fnAnalyticFMRInfo($objFMRNidInfo, $strMediaType, $intCampaignId)
+	public function fnAnalyticFMRInfo($objFMRNidInfo, $strMediaType = "", $intCampaignId = "")
 	{
 		if ((int)$intCampaignId == 0 && $strMediaType == "") {
 			foreach ($objFMRNidInfo as $arrFMRNidInfo) {
@@ -681,9 +681,12 @@ class clsAnalytic
 				$arrFMRInfo[$arrFMRNidInfo->nid]['is_archive'] = $arrFMRNidInfo->is_archive;
 			}
 			$arrFMRIds = array_keys($arrFMRInfo);
+
+			//Implode FMR ids
+            $strFMRIds = implode(', ', $arrFMRIds);
 		}
 
-		return array($arrFMRInfo, $arrFMRIds);
+		return array($arrFMRInfo, $arrFMRIds, $strFMRIds);
 	}
 
 	public function fnCreateAnalyticExcelNotForEmail($strCompanyName, $arrViewClick, $arrShowMediaType)

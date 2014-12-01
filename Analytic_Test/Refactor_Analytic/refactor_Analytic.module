@@ -70,8 +70,11 @@ function refactor_Analytic_menu()
 function refactor_Analytic_viewAnalytics()
 {
 	
+    ini_set(error_reporting,E_ALL);
+    ini_set("display_errors",1); 
     //Include all required files
-    module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');    
+    module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+    module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');    
 
     $intCompanyOgId =  (int)$_SESSION['client_og']; // company og id
     

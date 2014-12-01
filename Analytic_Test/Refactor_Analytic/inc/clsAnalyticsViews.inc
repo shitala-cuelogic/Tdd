@@ -17,21 +17,12 @@ class clsAnalyticsViews extends clsBaseClass
      *
      * @return array
      */
-    public function fnGetViews($strFMRIds)
+    public function fnGetViewsInfo($strFMRIds)
     {
-        //Include all required files
-        module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
-
-        //Object of class
-        $objAnalytics = new clsAnalytic();
-
         $strSQL = " SELECT SUM(v.totalcount) AS viewcount, v.nid
                     FROM  threebl_analytic_views  AS v WHERE v.nid IN ($strFMRIds) GROUP BY v.nid";
         $objFMRViewInfo = db_query($strSQL)->fetchAll();
-
-        //To get view count information
-        $arrFMRInfo = $objAnalytics->fnViewClickCountInfo($objFMRViewInfo, "view");
-        return $arrFMRInfo;
+        return $objFMRViewInfo;  
     }
 
     /**
@@ -45,12 +36,6 @@ class clsAnalyticsViews extends clsBaseClass
      */
     public function fnGetViewChartInfo($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
     {
-        //Include all required files
-        module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
-
-        //Object of class
-        $objAnalytics = new clsAnalytic();
-
         $strCampaignFrom = ''; //change
         if ((int)$intCampaignId != 0) {
             $strCampaignFrom = "  JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = v.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
@@ -65,11 +50,8 @@ class clsAnalyticsViews extends clsBaseClass
                   GROUP BY datevisited
                   ORDER by datevisited ASC";
 
-        $arrViewChartData = db_query($strSQL)->fetchAll();
-        $arrViewChart = array();
+        $ObjViewChartData = db_query($strSQL)->fetchAll();
 
-        //To get Clicks chart information
-        $arrViewChart = $objAnalytics->fnViewClickChartInfo($arrViewChartData, "view");
-        return $arrViewChart;
+        return $ObjViewChartData;
     }
 }

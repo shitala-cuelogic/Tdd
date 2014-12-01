@@ -19,14 +19,8 @@
          *
          * @return array
          */
-        public function fnGetFMRWithVideo($intCompanyOgId)
+        public function fnGetFMRWithVideoInfo($intCompanyOgId)
         {
-            //Include all required files
-            module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
-
-            //Object of class
-            $objAnalytics = new clsAnalytic();
-
             //Collect all FMRs With Videos
             $strFMRWithVideos = "SELECT DISTINCT(ga.entity_id) AS fmrIds
                     FROM field_data_group_audience AS ga
@@ -35,11 +29,9 @@
                     WHERE ga.group_audience_gid  =  $intCompanyOgId AND ga.bundle = 'fmr'
                     AND pubdt.field_fmr_date_time_value >= DATE_SUB('" . $this->strCurrentDate . "', INTERVAL 180 DAY )";
 
-            $arrFMRRecords = db_query($strFMRWithVideos)->fetchAll();
+            $ObjFMRRecords = db_query($strFMRWithVideos)->fetchAll();
 
-            //To get FMR Ids
-            $arrFMRIds = $objAnalytics->fnGetFMRIds($arrFMRRecords);
-            return $arrFMRIds;
+            return $ObjFMRRecords;
         }
 
         /**
@@ -53,7 +45,7 @@
          *
          * @return array
          */
-        public function fnGetCompanyFMRs($intCompanyOgId, $strMediaType = "", $intCampaignId = "", $strIsArchiveFlag = "", $strFileType = "")
+        public function fnGetCompanyFMRsInfo($intCompanyOgId, $strMediaType = "", $intCampaignId = "", $strIsArchiveFlag = "", $strFileType = "")
         {
             //Include all required files
             module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
@@ -115,22 +107,9 @@
 
             #Final SQL
             $strQry = $strSelect.$strFrom.$strCampaignFrom.$strArchiveFlag.$strWhere.$strCondition.$strOrderBy;
-            $objFMRNidInfo = db_query($strQry)->fetchAll();
+            $objCompanyFMRInformation = db_query($strQry)->fetchAll();
 
-            $arrFMRIds = array();
-            $arrFMRInfo = array();
-            $strFMRIds = '';
-
-            if (!empty($objFMRNidInfo)) {
-
-                // To get FMR information
-                list($arrFMRInfo, $arrFMRIds) = $objAnalytics->fnAnalyticFMRInfo($objFMRNidInfo, $strMediaType, $intCampaignId);
-
-                //Implode FMR ids
-                $strFMRIds = implode(', ', $arrFMRIds);
-
-            }
-            return array($arrFMRInfo, $arrFMRIds, $strFMRIds);            
+            return $objCompanyFMRInformation;
         }
 
         /**
