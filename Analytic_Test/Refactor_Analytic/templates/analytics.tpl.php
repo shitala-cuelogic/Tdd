@@ -251,7 +251,7 @@ $intClickCompanyArticleAvgWithoutVideos = ($intClickTotalArticleWithoutVideos !=
 $intAllClickAvg = ($intClickTotalCount!=0 && $intTotalCompanyFMR!=0)?round( $intClickTotalCount/$intTotalCompanyFMR):0;
 
 // function for checking user browser is IE8 or not.
-//list($strClickCss,$intClickFlag) = threebl_Check_user_browser();
+list($strClickCss,$intClickFlag) = refactor_Check_user_browser();
 
 ?>
 <ul class="analyticsTrigger">

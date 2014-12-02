@@ -46,7 +46,7 @@ class clsAnalyticsClicks extends clsBaseClass
      *
      * @return array
      */
-    public function fnGetViewsInfo($strFMRIds)
+    public function fnGetClicksInfo($strFMRIds)
     {
         $strSQL = " SELECT COUNT(C.nid) AS clickcount, C.nid
                     FROM  threebl_analytic_clicks  AS C WHERE C.nid IN ($strFMRIds) GROUP BY C.nid";
@@ -66,6 +66,7 @@ class clsAnalyticsClicks extends clsBaseClass
      */
     public function fnGetClickChartInfo($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
     {
+        //".$this->strChartPrevDate."
         $strCampaignFrom = '';
         if ((int)$intCampaignId > 0) {
             $strCampaignFrom = " JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = C.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
@@ -75,7 +76,7 @@ class clsAnalyticsClicks extends clsBaseClass
                   FROM  threebl_analytic_clicks  as C
                   $strCampaignFrom
                   WHERE C.company_ogid = $intCompanyOgId
-                  AND (DATE_FORMAT(C.click_date, '%Y-%m-%d') BETWEEN '".$this->strChartPrevDate."' AND '".$this->strCurrentDate."')
+                  AND (DATE_FORMAT(C.click_date, '%Y-%m-%d') BETWEEN '2014-06-02' AND '".$this->strCurrentDate."')
                   AND C.nid IN ($strFMRIds)
                   GROUP BY  DATE_FORMAT(C.click_date, '%Y/%m/%d')
                   ORDER by C.click_date asc";

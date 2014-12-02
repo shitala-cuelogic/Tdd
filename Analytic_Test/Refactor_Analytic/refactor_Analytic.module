@@ -69,9 +69,6 @@ function refactor_Analytic_menu()
  */
 function refactor_Analytic_viewAnalytics()
 {
-	
-    ini_set(error_reporting,E_ALL);
-    ini_set("display_errors",1); 
     //Include all required files
     module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
     module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');    
@@ -87,8 +84,13 @@ function refactor_Analytic_viewAnalytics()
     //Get Analytic information for the company
     $arrAnalyticInformation = $objAnalyticsController->fnViewAnalyticInformation();
     
-    
-    
+    //Include JS and CSS files
+    drupal_add_js(drupal_get_path('module', 'refactor_Analytic') . '/js/analytics.js');
+    drupal_add_js(drupal_get_path('module', 'refactor_Analytic') . '/js/jsapi.js');
+
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/justmeans/jmbackend-global.css');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/dashboard.css');
+
     return theme('view-analytics', $arrAnalyticInformation);
 }
 
@@ -101,9 +103,12 @@ function refactor_Analytic_viewAnalytics()
  */
 function refactor_Analytic_MediaType($strMediaType)
 {
-    
+    ini_set(error_reporting,E_ALL);
+    ini_set("display_errors",1); 
+ 
 	//Include all required files
 	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+    module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');    
 	
     //Check user in session or not
     fnCheckSession();
@@ -120,7 +125,7 @@ function refactor_Analytic_MediaType($strMediaType)
     $objAnalyticsController = new GatewayAnalyticController($intCompanyOgId);
 
     //Get Analytic information for the company
-    $arrAnalyticMediaType = $objAnalyticsController->fnViewAnalyticMediaType();
+    $arrAnalyticMediaType = $objAnalyticsController->fnViewAnalyticMediaType($strMediaType);
  
 
     return theme('view-media-type', $arrAnalyticMediaType);
@@ -135,9 +140,12 @@ function refactor_Analytic_MediaType($strMediaType)
  */
 function refactor_Analytic_MediaTypeId($intMediaId)
 {
-   
-	//Include all required files
+    ini_set(error_reporting,E_ALL);
+    ini_set("display_errors",1); 
+	
+    //Include all required files
 	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+    module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
 	
 	//Check user in session or not
     fnCheckSession();
@@ -148,7 +156,6 @@ function refactor_Analytic_MediaTypeId($intMediaId)
     //Get Analytic information for the company
     $arrAnalyticMediaTypeId = $objAnalyticsController->fnViewAnalyticMediaTypeId($intMediaId);
 
-   
     return theme('view-media-id', $arrAnalyticMediaTypeId);
 }
 
@@ -157,8 +164,12 @@ function refactor_Analytic_MediaTypeId($intMediaId)
  */
 function refactor_Analytic_MediaTypeAjax()
 {
-	//Include all required files
+	ini_set(error_reporting,E_ALL);
+    ini_set("display_errors",1);
+
+    //Include all required files
 	module_load_include('inc', 'refactor_Analytic', 'inc/gatewayAnalyticController');
+    module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');    
 	
     //Check user in session or not
     fnCheckSession();

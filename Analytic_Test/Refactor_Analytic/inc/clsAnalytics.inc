@@ -1,8 +1,9 @@
 <?php
 module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticDatabase');
+module_load_include('inc', 'refactor_Analytic', 'inc/clsBaseClass');
 //This is class for Analytics functions.
 
-class clsAnalytic
+class clsAnalytic extends clsBaseClass
 {
 	private $arrShowMediaType = array();
 	public $strBenchmarkNAMonth;
@@ -10,6 +11,8 @@ class clsAnalytic
 
 	public function __construct()
 	{
+		parent::__construct();
+
 		$this->arrShowMediaType = array(
 				'press_release' => 'Press Release',
 				'blog' => 'Blog',
@@ -105,6 +108,8 @@ class clsAnalytic
 	 */
 	public function fnSumWeekViewsClicks($arrViewChart, $arrClickChart = array())
 	{
+		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');    
+
 		$intMaxChart = max($arrViewChart);
 		$intMaxChart1 = (count($arrClickChart) > 0) ? max($arrViewChart) : 0;
 
@@ -114,12 +119,12 @@ class clsAnalytic
 
 		# getting previous date from today's date means we need the dates array having 7 days difference.(ex 1-11-2012, 7-11-2012)
 		$strTodayDate = $this->strCurrentDate;
-		$arrDts = $this->fnGetPreviousDates($strTodayDate, 59, 1);
+		$arrDts = fnGetPreviousDates($strTodayDate, 180, 1);
 		$arrDts = array_reverse($arrDts);
 
 		//Process views and clicks and prepare 7 days interval data for graph
 		$arrDates = array();
-		$arrChartSum = $arrChartSum1 = array();
+		$arrViewChartSum = $arrClickChartSum = array();
 		$strDate = "";
 		$intCount = $intClickSum = $intViewSum = 0;
 		foreach ($arrDts as $key => $val) {
@@ -130,8 +135,8 @@ class clsAnalytic
 			if ($intCount == 7) {
 				$strDate = date("M d", strtotime($val));
 				$arrDates[] = $strDate;
-				$arrChartSum[$strDate] = (int)$intClickSum;
-				$arrChartSum1[$strDate] = (int)$intViewSum;
+				$arrViewChartSum[$strDate] = (int)$intClickSum;
+				$arrClickChartSum[$strDate] = (int)$intViewSum;
 
 				$strDate = "";
 				$intCount = 0;
@@ -179,6 +184,10 @@ class clsAnalytic
 	 */
 	public function fnGetFMRInfo($objFMRNidInfo, $strMediaType)
 	{
+		$strFMRIds = '';
+        $arrFMRIds = array();
+        $arrFMRInfo = array();
+
 		if ($strMediaType == "") {
 			foreach ($objFMRNidInfo as $arrFMRNidInfo) {
 				$arrFMRInfo[$arrFMRNidInfo->fmr_type][] = $arrFMRNidInfo->nid;
@@ -213,7 +222,10 @@ class clsAnalytic
 				$arrFMRIds[] = $arrFMRNidInfo->nid;
 			}
 		}
-		return array($arrFMRInfo, $arrFMRIds);
+		//Implode FMR ids
+        $strFMRIds = implode(', ', $arrFMRIds);
+
+		return array($arrFMRInfo, $arrFMRIds, $strFMRIds);
 	}
 
 	/**
@@ -691,10 +703,9 @@ class clsAnalytic
 				$arrFMRInfo[$arrFMRNidInfo->nid]['is_archive'] = $arrFMRNidInfo->is_archive;
 			}
 			$arrFMRIds = array_keys($arrFMRInfo);
-
-			//Implode FMR ids
-            $strFMRIds = implode(', ', $arrFMRIds);
 		}
+		//Implode FMR ids
+        $strFMRIds = implode(', ', $arrFMRIds);
 
 		return array($arrFMRInfo, $arrFMRIds, $strFMRIds);
 	}
@@ -804,7 +815,20 @@ class clsAnalytic
 		return $strHTMLTable;
 	}
 
-
+	public function fnFMRNIdInfo($objFMRNidInfo)
+	{
+		$arrFMRInfo = array();
+		$arrFMRIds = array();
+		$strFMRIds = "";
+		if (!empty($objFMRNidInfo)) {
+            foreach ($objFMRNidInfo as $row) {
+                $arrFMRInfo[$row->nid]['nid'] = $row->nid;
+                $arrFMRIds[] = $row->nid;
+            }
+            $strFMRIds = implode(', ', $arrFMRIds);
+        }
+        return array($arrFMRInfo, $arrFMRIds, $strFMRIds);
+	}
 	
 
 

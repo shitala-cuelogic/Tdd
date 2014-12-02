@@ -77,7 +77,7 @@
                     JOIN field_data_field_fmr_type_of_content AS t ON n.nid = t.entity_id ";
 
             $strWhere = " WHERE n.status = 1 AND ga.group_audience_gid = $intCompanyOgId
-                    AND pubdt.field_fmr_date_time_value >= DATE_SUB('" . $this->strCurrentDate . "', INTERVAL 180 DAY ) ";
+                    AND pubdt.field_fmr_date_time_value >= DATE_SUB('" . $this->strCurrentDate . "', INTERVAL 240 DAY ) ";
 
             $strOrderBy = ($strMediaType == "") ? " ORDER BY t.field_fmr_type_of_content_value " : " ORDER BY pubdt.field_fmr_date_time_value DESC ";
 
@@ -120,7 +120,7 @@
          *
          * @return mixed
          */
-        public function fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId)
+        public function fnGetFMRClicksByCountryGoogleMapInfo($intCompanyOgId, $strMediaTypeORId)
         {
             // To get Media type condition
             $strMediaCondition = $this->fnMediaTypeCondition($strMediaTypeORId);
@@ -166,7 +166,7 @@
          *
          * @return mixed
          */
-        public function fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId)
+        public function fnGetFMRReferrerClicksByMediaTypeInfo($intCompanyOgId, $strMediaTypeORId)
         {
             // To get Media type condition
             $strMediaCondition = $this->fnMediaTypeCondition($strMediaTypeORId);
@@ -196,7 +196,7 @@
          *
          * @return mixed
          */
-        public function fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
+        public function fnGetFMRViewCountByMediaIdInfo($intCompanyOgId, $intMediaId, $boolReport = 0)
         {
             $strSql = "SELECT  SUM(v.totalcount) as totalcount
               FROM threebl_analytic_views as v
@@ -214,7 +214,7 @@
          *
          * @return mixed
          */
-        public function fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
+        public function fnGetFMRClickCountByMediaIdInfo($intCompanyOgId, $intMediaId, $boolReport = 0)
         {
             $strSql = "SELECT C.nid, C.click_date, count(C.nid) as totalcount, C.fmr_type AS type
                    FROM threebl_analytic_clicks as C
@@ -290,7 +290,7 @@
          *
          * @return array
          */
-        public function fnPrimaryCategoryName($intPrimaryCategoryId)
+        public function fnGetPrimaryCategoryName($intPrimaryCategoryId)
         {
             $strPrimaryCategoryName = "";
             if ($intPrimaryCategoryId >0) {
