@@ -1,0 +1,6 @@
+; $Id$
+name = Client Micro List Internal Report Cron
+description = This is custom module Micro List Internal Report.
+package = 3BL
+core = 7.x
+ 

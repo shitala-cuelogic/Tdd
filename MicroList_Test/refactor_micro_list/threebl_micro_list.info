@@ -1,0 +1,7 @@
+; $Id$
+
+name = threebl_micro_list
+description = This is custom module for micro list.
+package = 3BL
+core = 7.x
+version = 7.x-1.x

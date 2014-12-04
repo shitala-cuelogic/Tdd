@@ -1,0 +1,24 @@
+<?php
+function threebl_micro_list_report_menu()
+{
+    $items = array();
+    $items['admin/microlist-report-cron'] = array(
+        'title' => '3BL Micro List',
+        'description' => '3BL Micro List Internal Report',
+        'page callback' => 'threebl_micro_list_report_cron',
+        'access arguments' => array('administer users'),
+    );
+    return $items;
+}
+
+/**
+ * Analytic Click Cron.
+ */
+function threebl_micro_list_report_cron()
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/MicroListCronController');
+	$objMicroListCron = new MicroListCronController();
+	$objMicroListCron->fnProcessMicroListReportCron();
+}
+
+

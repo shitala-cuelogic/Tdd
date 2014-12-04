@@ -1,0 +1,744 @@
+<?php
+function threebl_micro_list_menu()
+{
+    $items = array();
+
+    $items['admin/list-form'] = array(
+        'title'            => 'Add Custom Email Lists',
+        'description'      => 'Add Custom Email Lists from',
+        'page callback'    => 'fnManageListForm',
+        'access callback'  => true,
+        'access arguments' => array('administer users'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['admin/3bl_micro_list'] = array(
+        'title'            => '3BL Micro Lists',
+        'description'      => '3BL Micro Lists',
+        'page callback'    => 'fnViewEmailList',
+        'page arguments'   => array(2, 3),
+        'access callback'  => true,
+        'access arguments' => array('administer users'),
+        'type'             => MENU_CALLBACK,
+
+    );
+
+    $items['admin/client_micro_list'] = array(
+        'title'            => 'Client Micro Lists',
+        'description'      => 'Client Micro Lists',
+        'page callback'    => 'fnViewEmailList',
+        'page arguments'   => array(2, 3),
+        'access callback'  => true,
+        'access arguments' => array('administer users'),
+        'type'             => MENU_CALLBACK,
+
+    );
+
+    $items['admin/delete/email'] = array(
+        'title'            => 'Remove Subscribers',
+        'description'      => 'Remove  Subscribers',
+        'page callback'    => 'fnDeleteEmail',
+        'page arguments'   => array(3, 4),
+        'access callback'  => true,
+        'access arguments' => array('administer users'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['admin/add/email'] = array(
+        'title'            => 'Add Subscribers',
+        'description'      => 'Add Subscribers',
+        'page callback'    => 'fnAddEmailByAdmin',
+        'page arguments'   => array(3),
+        'access callback'  => true,
+        'access arguments' => array('administer users'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['Dashboard/ClientMicroList'] = array(
+        'title'            => 'Custom Email Lists',
+        'description'      => 'Custom Email Lists',
+        'page callback'    => 'fnClientMicroList',
+        'page arguments'   => array(),
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    //custom-list-form
+    $items['Dashboard/ClientMicroList/Form'] = array(
+        'title'            => 'Add Subscribers',
+        'description'      => 'Add Subscribers',
+        'page callback'    => 'fnManageClientListForm',
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    //custom-delete-list
+    $items['Dashboard/ClientMicroList/delete'] = array(
+        'title'            => 'Remove Custom Email Lists',
+        'description'      => 'Remove Custom Email Lists',
+        'page callback'    => 'fnDeleteClientList',
+        'page arguments'   => array(3),
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    //custom-add-email
+    $items['Dashboard/SubscriberList/add'] = array(
+        'title'            => 'Add Subscribers',
+        'description'      => 'Add Subscribers',
+        'page callback'    => 'fnAddEmailByClient',
+        'page arguments'   => array(3),
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    //custom-email-list
+    $items['Dashboard/SubscriberList'] = array(
+        'title'            => 'Subscribers List',
+        'description'      => 'Subscribers List',
+        'page callback'    => 'fnClientEmailList',
+        'page arguments'   => array(2),
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['Dashboard/ClientMicroList/edit'] = array(
+        'title'            => 'Edit Custom Email Lists',
+        'description'      => 'Edit Custom Email Lists',
+        'page callback'    => 'fnManageClientListForm',
+        'page arguments'   => array(3),
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['Dashboard/custom-email-send'] = array(
+        'title'            => 'Cron For Sending FMR Emails',
+        'description'      => 'Cron For Sending FMR Emails',
+        'page callback'    => 'fnDistributeFMRToCustomList',
+        'page arguments'   => array(1),
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['sample-excel-download'] = array(
+        'title'            => 'Download excel or CSV file',
+        'description'      => 'Download excel or CSV file',
+        'page callback'    => 'fnDownloadSampleEmailList',
+        'page arguments'   => array(1),
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['Dashboard/3blMicroList'] = array(
+        'title'            => '3BL micro list for custom email list',
+        'description'      => '3BL micro list for custom email list',
+        'page callback'    => 'fn3BLMicroList',
+        'page arguments'   => array(1),
+        'access arguments' => array('administer users'),
+        'type'             => MENU_CALLBACK,
+    );
+    $items['Dashboard/custom-list-ajax'] = array(
+        'title'            => 'Ajax pagination for client micro list',
+        'description'      => 'Ajax pagination for client micro list',
+        'page callback'    => 'fnCustomListAjax',
+        'page arguments'   => array(1),
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['Dashboard/micro-list-admin-ajax'] = array(
+        'title'            => 'Getting All Active Client',
+        'description'      => 'Getting All Active Client',
+        'page callback'    => 'fnActiveClientAjax',
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['Dashboard/get-client-micro-lists-ajax'] = array(
+        'title'            => 'Getting All Active Client',
+        'description'      => 'Getting All Active Client',
+        'page callback'    => 'fnGetClientMicroListsAjax',
+        'access arguments' => array('dashboard analytics'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['Dashboard/Tracking-FMR-Updates'] = array(
+        'title'            => 'Track for fmr',
+        'description'      => 'Track for fmr',
+        'page callback'    => 'fnTrackFmr',
+        'access arguments' => array('access content'),
+        'type'             => MENU_CALLBACK,
+    );
+    $items['Tracking-FMR-Updates'] = array(
+        'title'            => 'Track for fmr',
+        'description'      => 'Track for fmr',
+        'page callback'    => 'fnTrackFmr',
+        'access arguments' => array('access content'),
+        'type'             => MENU_CALLBACK,
+    );
+
+    $items['Dashboard/Tracking-FMR-clicks'] = array(
+        'title'            => 'Track FMR clicks',
+        'description'      => 'Track FMR Clicks',
+        'page callback'    => 'fnTrackFmrClicks',
+        'access arguments' => array('access content'),
+        'type'             => MENU_CALLBACK,
+    );
+    $items['Tracking-FMR-clicks'] = array(
+        'title'            => 'Track FMR clicks',
+        'description'      => 'Track FMR Clicks',
+        'page callback'    => 'fnTrackFmrClicks',
+        'access arguments' => array('access content'),
+        'type'             => MENU_CALLBACK,
+    );
+    $items['admin/3BL-Micro-List-Report'] = array(
+        'title' => '3BL Micro List Report',
+        'description' => 'Track 3BL Micro list report',
+        'page callback' => 'fnGetMicroListReport',
+        'page arguments'   => array(1),
+        'access arguments' => array('administer users'),
+        'type' => MENU_CALLBACK,
+    );
+
+    $items['admin/Client-Micro-List-Report'] = array(
+        'title'            => 'Client Micro List Report',
+        'description'      => 'Track Client Micro list report',
+        'page callback'    => 'fnGetMicroListReport',
+        'page arguments'   => array(1),
+        'access arguments' => array('administer users'),
+        'type'             => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+/**
+ * Hook for theme
+ */
+function threebl_micro_list_theme()
+{
+    $themes = array(
+        'listing-form'                => array(
+            'template'  => 'templates/list_form',
+            'arguments' => array(),
+        ),
+
+        'email-list'                  => array(
+            'template'  => 'templates/email_list',
+            'arguments' => array(),
+        ),
+
+        'email-form'                  => array(
+            'template'  => 'templates/email_form',
+            'arguments' => array(),
+        ),
+
+        'client-listing-form'         => array(
+            'template'  => 'templates/client_list_form',
+            'arguments' => array(),
+        ),
+
+        'client-list'                 => array(
+            'template'  => 'templates/client_list',
+            'arguments' => array(),
+        ),
+
+        'client-email-list'           => array(
+            'template'  => 'templates/client_email_list',
+            'arguments' => array(),
+        ),
+
+        'client-email-list-form'      => array(
+            'template'  => 'templates/client_email_list_form',
+            'arguments' => array(),
+        ),
+
+        '3bl-micro-list'              => array(
+            'template'  => 'templates/3bl_micro_list',
+            'arguments' => array(),
+        ),
+        'view-client-micro-list-ajax' => array(
+            'template'  => 'templates/view_client_micro_list_ajax',
+            'arguments' => array(),
+        ),
+        'view-micro-list-report' => array(
+            'template' => 'templates/view-micro-list-report',
+            'arguments' => array(),
+        ),
+
+    );
+    return $themes;
+}
+
+/**
+ * Function for getting the client list form
+ *
+ * @return string
+ */
+function fnManageListForm()
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+
+    #Include Required JS and css files
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/jquery-latest.js');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/validator/jquery.validationEngine.js');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/validator/jquery.validationEngine-en.js');
+    drupal_add_js(drupal_get_path('module', 'threebl_micro_list') . '/js/micro_list.js');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/validator/validationEngine.jquery.css');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/glowtabs.css');
+    
+    $arrListData = $objGatewayMicroList->fnProcessManageListForm();
+    return theme('listing-form', $arrListData);
+}
+
+/**
+ * Delete Email from particular list
+ *
+ * @param int $intListId  : List Id
+ * @param int $intEmailId : Micro List entity Id
+ */
+function fnDeleteEmail($intListId, $intEmailId)
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$objGatewayMicroList->fnProcessDeleteEmail($intListId, $intEmailId);
+
+    // set flag in  session 1 for success message.
+    $_SESSION['microList']['flag'] = 1;
+
+    drupal_goto('admin/list/' . $intListId . '/');
+}
+
+/**
+ * Add user email details using form
+ *
+ * @param int $intListId : List Id
+ *
+ * @return string
+ */
+function fnAddEmailByAdmin($intListId)
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$arrListData = $objGatewayMicroList->fnProcessAddEmailByAdmin($intListId);
+	
+    #Include Required JS and css files
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/jquery-latest.js');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/validator/jquery.validationEngine.js');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/validator/jquery.validationEngine-en.js');
+    drupal_add_js(drupal_get_path('module', 'threebl_micro_list') . '/js/micro_list.js');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/validator/validationEngine.jquery.css');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/glowtabs.css');
+
+    return theme('email-form', $arrListData);
+}
+
+/**
+ * Function for getting Client side list
+ *
+ * @return string
+ */
+function fnClientMicroList()
+{
+	
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$arrListData = $objGatewayMicroList->fnProcessClientMicroList();
+	
+	#Include necessary JS and CSS files
+	drupal_add_js(drupal_get_path('module', 'threebl_micro_list') . '/js/micro_list.js');
+	drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/microlist.css');
+	
+	return theme('client-list', $arrListData);
+}
+
+/**
+ * Client add and edit list form
+ *
+ * @param string $strListId : Base64 encode List Id
+ *
+ * @return mixed
+ */
+function fnManageClientListForm($strListId = "")
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$arrListData = $objGatewayMicroList->fnProcessManageClientListForm($strListId);
+	
+	# Include necessary JS and CSS
+	drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/validator/validationEngine.jquery.css');
+	drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/glowtabs.css');
+	drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/microlist.css');
+	drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/jquery-latest.js');
+	drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/validator/jquery.validationEngine.js');
+	drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/validator/jquery.validationEngine-en.js');
+	drupal_add_js(drupal_get_path('module', 'threebl_micro_list') . '/js/micro_list.js');
+	
+	return theme('client-listing-form', $arrListData);
+	
+}
+
+/**
+ * Function for crating the view of Email list using particular list-id
+ *
+ * @param int $intListId : List Id
+ *
+ * @return string
+ */
+function fnViewEmailList($intListId = 0)
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+
+    #Include Required JS and css files
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/microlist.css');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/jquery-latest.js');
+    drupal_add_js(drupal_get_path('module', 'threebl_micro_list') . '/js/micro_list.js');
+
+    $arrEmailList = $objGatewayMicroList->fnProcessViewEmailList($intListId);
+
+    return theme('email-list', $arrEmailList);
+}
+
+/**
+ *  Delete client list
+ *
+ * @param string $strListId :  Base64 encoded List Id
+ */
+function fnDeleteClientList($strListId = "")
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$objGatewayMicroList->fnProcessDeleteClientList($strListId);
+	
+    // set flag in  session 1 for success message.
+    $_SESSION['microList']['flag'] = 1;
+
+    drupal_goto('Dashboard/ClientMicroList/');
+}
+
+/**
+ * Getting all the email of particular list of particular client
+ *
+ * @param int $intListId : List Id
+ *
+ * @return string
+ */
+function fnClientEmailList($intListId)
+{
+    
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$arrListData = $objGatewayMicroList->fnProcessClientEmailList($intListId);
+
+    #Include Required JS and css files
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/microlist.css');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/jquery-latest.js');
+    drupal_add_js(drupal_get_path('module', 'threebl_micro_list') . '/js/micro_list.js');
+    
+    return theme('client-email-list', $arrListData);
+
+}
+
+/**
+ * delete email from list by client
+ *
+ * @param int $intListId  : List Id
+ * @param int $intEmailId : Micro List entity Id
+ */
+function fnDeleteClientEmail($intListId, $intEmailId)
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$objGatewayMicroList->fnProcessDeleteClientEmail($intListId, $intEmailId);
+	
+	drupal_goto('Dashboard/SubscriberList/' . (int) $intListId);
+}
+
+/**
+ * Add user email details using form
+ *
+ * @param int $intListId :  List Id
+ *
+ * @return string
+ */
+function fnAddEmailByClient($intListId)
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$arrListData = $objGatewayMicroList->fnProcessAddEmailByClient($intListId);
+
+    #Include Required JS and css files
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/microlist.css');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/jquery-latest.js');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/validator/jquery.validationEngine.js');
+    drupal_add_js(drupal_get_path('theme', 'threebl') . '/js/validator/jquery.validationEngine-en.js');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/validator/validationEngine.jquery.css');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/glowtabs.css');
+    drupal_add_js(drupal_get_path('module', 'threebl_micro_list') . '/js/micro_list.js');
+
+    return theme('client-email-list-form', $arrListData);
+}
+
+/**
+ * Change destination form after submit list.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ *
+ * @return array|string
+ */
+function threebl_micro_list_form_alter(&$form, &$form_state, $form_id)
+{
+
+    if (!empty($form['entity'])) {
+
+        $strListType = $form['entity']['#value']->type;
+
+        if ($form_id == 'eck_entity_form_edit_micro_list_3bl_micro_list' || $strListType == '3bl_micro_list') {
+            $form['#action'] .= '?destination=admin/3bl-micro-list';
+        }
+
+        if ($form_id == 'eck_entity_form_edit_micro_list_client_micro_list' || $strListType == 'client_micro_list') {
+            $form['#action'] .= '?destination=admin/client-micro-list';
+        }
+
+    }
+    if ($form_id == 'fmr_node_form') {
+        $path = drupal_get_path('module', 'threebl_micro_list');
+        $form['#attached']['js'][] = $path . '/js/admin_micro_list.js';
+    }
+
+    if ($form_id == 'eck__entity__form_edit_micro_list_3bl_micro_list' || $form_id == 'eck__entity__form_edit_micro_list_client_micro_list') {
+
+        $form['group-audience-und-other-groups-input'] = array(
+            '#type'          => 'checkbox',
+            '#title'         => t('<b>Other Groups audience</b>'),
+            '#description'   => t('Checked checkbox for selecting Other Group audience '),
+            '#weight'        => 35,
+            '#required'      => false,
+            '#default_value' => 0,
+        );
+
+        $form['group-audience-und-my-groups-input'] = array(
+            '#type'          => 'checkbox',
+            '#title'         => t('<b>My Groups audience</b>'),
+            '#description'   => t('Checked checkbox for selecting My Group audience'),
+            '#weight'        => 35,
+            '#required'      => false,
+            '#default_value' => 0,
+        );
+        $arrOtherGroup = array_map(ucfirst, $form['group_audience']['und']['other_groups']["#options"]);
+        $arrMyGroup = array_map(ucfirst, $form['group_audience']['und']['my_groups']["#options"]);
+
+        $form['group_audience']['und']['my_groups']["#options"] = $arrMyGroup;
+        $form['group_audience']['und']['other_groups']["#options"] = $arrOtherGroup;
+
+        asort($form['group_audience']['und']['my_groups']["#options"]);
+        asort($form['group_audience']['und']['other_groups']["#options"]);
+
+        $path = drupal_get_path('module', 'threebl_micro_list');
+        $form['#attached']['js'][] = $path . '/js/admin_micro_list.js';
+    }
+    return $form;
+}
+
+/**
+ * This is entity delete hook. Delete entry of synchronize table.
+ *
+ * @param object $entity : Entity Object
+ */
+function threebl_micro_list_entity_delete($entity)
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$objGatewayMicroList->fnProcessEntityDelete($entity);
+}
+
+/**
+ * Function for sending FMR details (HTML) to particular custom list when publish.
+ */
+function fnDistributeFMRToCustomList()
+{
+    module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$objGatewayMicroList->fnProcessDistributeFMRToCustomList();
+}
+
+/**
+ * Function download samples format files for micro list.
+ *
+ * @param string $strArg : File Type xls or csv
+ */
+function fnDownloadSampleEmailList($strArg)
+{
+    global $base_url;
+    //Contain the argument from url and assign the value
+    // Value either be xls  or csv
+    $strDownloadFileType = $strArg;
+    //Download request for excel or csv.
+    $strFileSourcePath = $base_url . "/sites/all/modules/custom_modules/threebl_micro_list/inc/FMRList." . $strDownloadFileType;
+
+    header('Content-Description: File Transfer');
+    header("Content-type: text/csv");
+    header("Content-Disposition: attachment; filename=FMRList" . time() . "." . $strDownloadFileType);
+    header('Content-Transfer-Encoding: binary');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Pragma: public');
+    header('Content-Length: ' . filesize("$strFileSourcePath"));
+    ob_clean();
+    flush();
+    readfile("$strFileSourcePath");
+    exit;
+}
+
+/**
+ * Function list-out all micro list assigned by admin and whose owner is other than login client.
+ *
+ * @return mixed
+ */
+function fn3BLMicroList()
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/microlist.css');
+	
+	$arrListData = $objGatewayMicroList->fnProcess3BLMicroList();
+	
+    return theme('3bl-micro-list', $arrListData);
+}
+
+/**
+ * Function to use the ajax pagination for client micro list
+ */
+function fnCustomListAjax()
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+    #Add CSS related files
+	drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/microlist.css');
+   
+    $arrData = $objGatewayMicroList->fnProcessCustomListAjax();
+    echo theme('view-client-micro-list-ajax', $arrData);
+}
+
+/**
+ * function return list of all active client for Ajax [used at admin functionality]
+ */
+function fnActiveClientAjax()
+{
+    module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$arrActiveCompany = $objGatewayMicroList->fnProcessActiveClientAjax();
+
+	echo $arrActiveCompany;
+}
+
+/**
+ * Function to get client Micro List by ajax
+ */
+function fnGetClientMicroListsAjax()
+{
+	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+	$objGatewayMicroList = new GatewayMicroListController();
+	
+	$arrClientList	 = $objGatewayMicroList->fnProcessGetClientMicroListsAjax();
+    
+    echo $arrClientList;
+}
+
+/**
+ * Function to track the fmr view and clicks.
+ */
+function fnTrackFmr()
+{
+    if (!empty($_GET)) {
+        #Prepare array to insert data into the database.
+        $arrFMRView = array();
+
+        //Getting token having encode array value
+        $strToken = base64_decode($_GET['token']);
+
+        if ($strToken != '') {
+        	
+        	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+        	$objGatewayMicroList = new GatewayMicroListController();
+        	
+        	$objGatewayMicroList->fnProcessTrackFmr($strToken, $arrFMRView);
+
+        }
+    }
+}
+
+/**
+ * Function for tracking click of FMR Updates
+ */
+function fnTrackFmrClicks()
+{
+    #Prepare array to insert data into the database.
+    $arrFMRClick = array();
+    //Getting token having encode array value
+    $strToken = base64_decode($_GET['token']);
+
+    if ($strToken != '') {
+    	
+    	module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+    	$objGatewayMicroList = new GatewayMicroListController();
+    	 
+    	$objGatewayMicroList->fnProcessTrackFmrClicks($strToken, $arrFMRClick);
+    	
+    }
+    drupal_goto($_GET['url']);
+}
+
+/**
+ * Function to list out FMRs which were using 3BL Micro List between specific period of duration.
+ * @param string $strPageAction : Page Action
+ * @return mixed
+ */
+function fnGetMicroListReport($strPageAction)
+{
+    global $base_url, $conf;
+
+    #Include necessary JS file
+    drupal_add_js(drupal_get_path('module', 'threebl_micro_list') . '/js/micro_list.js');
+
+    #Include Required JS and css files
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/microlist.css');
+    drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/glowtabs.css');
+
+    // Template variables
+    module_load_include('inc', 'refactor_micro_list', 'inc/GatewayMicroListController');
+    $objGatewayMicroList = new GatewayMicroListController();
+    
+    $arrData = $objGatewayMicroList->fnProcessGetMicroListReport($strPageAction);
+
+    // check condition to download excel file report or set variables to template
+    if ($strDownloadExcel == "excel") {
+        // Download report in excel file
+        header("Content-Type: application/vnd.ms-excel;");
+        header("Content-type: application/x-msexcel;");
+        header("Content-disposition: attachment; filename=$strPageAction" . time() . ".xls");
+
+        echo theme('view-micro-list-report', $arrData);
+        exit;
+    } else {
+        return theme('view-micro-list-report', $arrData);
+    }
+}
+
