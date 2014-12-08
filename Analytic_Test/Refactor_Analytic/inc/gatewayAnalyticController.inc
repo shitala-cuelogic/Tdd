@@ -301,20 +301,8 @@ class GatewayAnalyticController
 	
 	public function fnProcessAnalyticMediaTypeAjax()
 	{
-		//Include all required files
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsCompanyData');
 		
-		
-		
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalyticsViews');
 		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
-		
-		//Object of class
-		
-		
-		
-		
-		
 		
 		$strMediaType = '';
 		
@@ -329,7 +317,20 @@ class GatewayAnalyticController
 		$intPrev = 0;
 		
 		# To get all FMRs information that get published
-		list($arrMediaResult, $arrGetFMRIds, $strFMRIds, $intTotalRecords) = $this->analyticDB->fnGetCompanyPublishedFMRs($this->companyOgId, $strMediaType, $intStart, $intLimit);
+		//list($arrMediaResult, $arrGetFMRIds, $strFMRIds, $intTotalRecords) = $this->analyticDB->fnGetCompanyPublishedFMRs($this->companyOgId, $strMediaType, $intStart, $intLimit);
+
+		list($objFMRNidInfo, $intTotalRecords) = $this->analyticDB->fnGetCompanyPublishedFMRs($this->companyOgId, $strMediaType, $intStart, $intLimit);
+		
+		//Checking if array is not empty
+		if (!empty($objFMRNidInfo)) {
+		
+			// To get FMR information
+			list($arrMediaResult, $arrGetFMRIds) = $this->analyticProcessing->fnGetFMRInfo($objFMRNidInfo, $strMediaType);
+		
+			//Implode FMR ids
+			$strFMRIds = implode(', ', $arrGetFMRIds);
+		}
+		
 		
 		# To fetch FMR views information
 		$arrViewFMRInfo = $this->analyticDB->fnGetViews($strFMRIds); //clsAnalyticsViews
@@ -460,20 +461,13 @@ class GatewayAnalyticController
 	public function fnProcessAnalyticSearching()
 	{
 		//Include required files
-		
-		module_load_include('inc', 'threebl_affiliate', 'inc/clsTracking');
-		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
-		
-		
+		module_load_include('inc', 'threebl_affiliate', 'inc/clsTrackingData');
+	
 		//Creating the Object of Class
-		
-		
-		
-		//Creating the Object of Class
-		$objClsTracking = new clsTracking($this->companyNid);
+		$objClsTrackingData = new clsTrackingData();
 		
 		// get latest fmr
-		$arrLatestFmr = $objClsTracking->fnGetLatestFMR(0, $this->companyNid);
+		$arrLatestFmr = $objClsTrackingData->fnGetLatestFMR(0, $this->companyNid);
 		
 		//Main tab of (Analytics, Tracking ,Searching Engines, Reports);
 		$strTabHtml = $this->analyticProcessing->fnAnalyticsMaintab('Search');
@@ -493,16 +487,10 @@ class GatewayAnalyticController
 	public function fnProcessAnalyticReports()
 	{
 		//Include required class files
-		
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsCompanyData');
-		
 		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
 		module_load_include('inc', 'threebl_affiliate', 'inc/clsTracking');
 		module_load_include('inc', 'refactor_reports', 'inc/sendEmail');
-		//Object of Analytic class
-		
-		
-		
+
 		//Define variables
 		global $base_url, $conf;
 		
@@ -627,12 +615,11 @@ class GatewayAnalyticController
 		//Get Company Campaign List
 		$objGetCampaign = $this->analyticDB->fnGetAllCampaign($this->companyOgId); //clsCompanyData
 		//Creating the Object of Class
-		$objClsTracking = new clsTracking($this->companyNid);
+		$objClsTrackingData = new clsTrackingData();
 		
 		//Get Latest FMRs.
-		$arrLatestFMR = $objClsTracking->fnGetLatestFMR(0, $this->companyNid);
+		$arrLatestFMR = $objClsTrackingData->fnGetLatestFMR(0, $this->companyNid);
 		
-		$objFMR = new clsFMR;
 		//Get Company All FMRs [last 6 Months]
 		$vars = array(
 				'strTabHtml' => $strTabHtml,

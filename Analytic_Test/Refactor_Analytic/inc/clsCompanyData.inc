@@ -197,9 +197,11 @@
 
             //Get count of all Records
             $intViewClickCntResult = $this->fnGetRecordsCount();
+            
+            return array($objFMRNidInfo, $intViewClickCntResult);
 
             //Checking if array is not empty
-            if (!empty($objFMRNidInfo)) {
+           /* if (!empty($objFMRNidInfo)) {
 
                 // To get FMR information
                 list($arrFMRInfo, $arrFMRIds) = $objAnalytic->fnGetFMRInfo($objFMRNidInfo, $strMediaType);
@@ -207,7 +209,7 @@
                 //Implode FMR ids
                 $strFMRIds = implode(', ', $arrFMRIds);
             }
-            return array($arrFMRInfo, $arrFMRIds, $strFMRIds, $intViewClickCntResult);
+            return array($arrFMRInfo, $arrFMRIds, $strFMRIds, $intViewClickCntResult);*/
         }
 
         /**

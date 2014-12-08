@@ -455,4 +455,20 @@ class clsAnalyticDatabase
 		return true;
 	}
 	
+	/**
+	 * Function return all FMRs that get published for analytic second level ajax
+	 *
+	 * @param int       $intCompanyOgId  : Company OG id
+	 * @param string    $strMediaType    : FMR media type
+	 * @param int       $intStart        : Starting record for pagination
+	 * @param int       $intLimit        : number of records per page
+	 *
+	 * @return array
+	 */
+	public function fnGetCompanyPublishedFMRs($intCompanyOgId, $strMediaType = "", $intStart = 0, $intLimit = 0)
+	{
+		list($objFMRNidInfo, $intViewClickCntResult) = $this->objCompanyData->fnGetCompanyPublishedFMRs($intCompanyOgId, $strMediaType, $intStart, $intLimit);
+		return array($objFMRNidInfo, $intViewClickCntResult);
+	}
+	
 }
