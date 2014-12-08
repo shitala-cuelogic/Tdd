@@ -41,9 +41,6 @@ class AffiliateCronController
 	
 	public function fnProcessRemaningFMRAffiliateCron()
 	{
-		//Include all required files
-		module_load_include('inc', 'threebl_affiliate', 'inc/clsTracking');
-		
 		//Include required class files
 		module_load_include('inc', 'threebl_script', 'inc/clsScript');
 		

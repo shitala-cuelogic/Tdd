@@ -20,7 +20,7 @@ class clsTrackingData {
 
         if ($intFMRId == 0) {
             //For searching checking company id
-            $strCondition = ($intCompanyId > 0)? "  AND og.etid = $this->intCompanyId ORDER BY d.field_fmr_date_time_value DESC LIMIT 0, 60 " :" AND og.etid = $this->intCompanyId  AND (d.field_fmr_date_time_value >= '2012-12-18' AND d.field_fmr_date_time_value <= DATE_SUB (NOW(), INTERVAL 48 hour) ) ORDER BY d.field_fmr_date_time_value DESC";
+            $strCondition = ($intCompanyId > 0)? "  AND og.etid = $intCompanyId ORDER BY d.field_fmr_date_time_value DESC LIMIT 0, 60 " :" AND og.etid = $this->intCompanyId  AND (d.field_fmr_date_time_value >= '2012-12-18' AND d.field_fmr_date_time_value <= DATE_SUB (NOW(), INTERVAL 48 hour) ) ORDER BY d.field_fmr_date_time_value DESC";
             $strSql.= $strCondition;
             return  db_query($strSql)->fetchAll();
 
