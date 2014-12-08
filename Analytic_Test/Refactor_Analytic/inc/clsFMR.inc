@@ -19,8 +19,14 @@
          *
          * @return array
          */
-        public function fnGetFMRWithVideoInfo($intCompanyOgId)
+        public function fnGetFMRWithVideo($intCompanyOgId)
         {
+            //Include all required files
+            module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
+
+            //Object of class
+            $objAnalytics = new clsAnalytic();
+
             //Collect all FMRs With Videos
             $strFMRWithVideos = "SELECT DISTINCT(ga.entity_id) AS fmrIds
                     FROM field_data_group_audience AS ga
@@ -29,9 +35,11 @@
                     WHERE ga.group_audience_gid  =  $intCompanyOgId AND ga.bundle = 'fmr'
                     AND pubdt.field_fmr_date_time_value >= DATE_SUB('" . $this->strCurrentDate . "', INTERVAL 180 DAY )";
 
-            $ObjFMRRecords = db_query($strFMRWithVideos)->fetchAll();
+            $arrFMRRecords = db_query($strFMRWithVideos)->fetchAll();
 
-            return $ObjFMRRecords;
+            //To get FMR Ids
+            $arrFMRIds = $objAnalytics->fnGetFMRIds($arrFMRRecords);
+            return $arrFMRIds;
         }
 
         /**
@@ -45,7 +53,7 @@
          *
          * @return array
          */
-        public function fnGetCompanyFMRsInfo($intCompanyOgId, $strMediaType = "", $intCampaignId = "", $strIsArchiveFlag = "", $strFileType = "")
+        public function fnGetCompanyFMRs($intCompanyOgId, $strMediaType = "", $intCampaignId = "", $strIsArchiveFlag = "", $strFileType = "")
         {
             //Include all required files
             module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
@@ -77,7 +85,7 @@
                     JOIN field_data_field_fmr_type_of_content AS t ON n.nid = t.entity_id ";
 
             $strWhere = " WHERE n.status = 1 AND ga.group_audience_gid = $intCompanyOgId
-                    AND pubdt.field_fmr_date_time_value >= DATE_SUB('" . $this->strCurrentDate . "', INTERVAL 240 DAY ) ";
+                    AND pubdt.field_fmr_date_time_value >= DATE_SUB('" . $this->strCurrentDate . "', INTERVAL 180 DAY ) ";
 
             $strOrderBy = ($strMediaType == "") ? " ORDER BY t.field_fmr_type_of_content_value " : " ORDER BY pubdt.field_fmr_date_time_value DESC ";
 
@@ -107,9 +115,22 @@
 
             #Final SQL
             $strQry = $strSelect.$strFrom.$strCampaignFrom.$strArchiveFlag.$strWhere.$strCondition.$strOrderBy;
-            $objCompanyFMRInformation = db_query($strQry)->fetchAll();
+            $objFMRNidInfo = db_query($strQry)->fetchAll();
 
-            return $objCompanyFMRInformation;
+            $arrFMRIds = array();
+            $arrFMRInfo = array();
+            $strFMRIds = '';
+
+            if (!empty($objFMRNidInfo)) {
+
+                // To get FMR information
+                list($arrFMRInfo, $arrFMRIds) = $objAnalytics->fnAnalyticFMRInfo($objFMRNidInfo, $strMediaType, $intCampaignId);
+
+                //Implode FMR ids
+                $strFMRIds = implode(', ', $arrFMRIds);
+
+            }
+            return array($arrFMRInfo, $arrFMRIds, $strFMRIds);            
         }
 
         /**
@@ -120,7 +141,7 @@
          *
          * @return mixed
          */
-        public function fnGetFMRClicksByCountryGoogleMapInfo($intCompanyOgId, $strMediaTypeORId)
+        public function fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId)
         {
             // To get Media type condition
             $strMediaCondition = $this->fnMediaTypeCondition($strMediaTypeORId);
@@ -166,7 +187,7 @@
          *
          * @return mixed
          */
-        public function fnGetFMRReferrerClicksByMediaTypeInfo($intCompanyOgId, $strMediaTypeORId)
+        public function fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId)
         {
             // To get Media type condition
             $strMediaCondition = $this->fnMediaTypeCondition($strMediaTypeORId);
@@ -196,7 +217,7 @@
          *
          * @return mixed
          */
-        public function fnGetFMRViewCountByMediaIdInfo($intCompanyOgId, $intMediaId, $boolReport = 0)
+        public function fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
         {
             $strSql = "SELECT  SUM(v.totalcount) as totalcount
               FROM threebl_analytic_views as v
@@ -214,7 +235,7 @@
          *
          * @return mixed
          */
-        public function fnGetFMRClickCountByMediaIdInfo($intCompanyOgId, $intMediaId, $boolReport = 0)
+        public function fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
         {
             $strSql = "SELECT C.nid, C.click_date, count(C.nid) as totalcount, C.fmr_type AS type
                    FROM threebl_analytic_clicks as C
@@ -290,7 +311,7 @@
          *
          * @return array
          */
-        public function fnGetPrimaryCategoryName($intPrimaryCategoryId)
+        public function fnPrimaryCategoryName($intPrimaryCategoryId)
         {
             $strPrimaryCategoryName = "";
             if ($intPrimaryCategoryId >0) {

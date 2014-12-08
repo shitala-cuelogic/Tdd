@@ -33,11 +33,11 @@ class clsAnalyticDatabase
 	 *
 	 * @return array
 	 */
-	public function fnGetTopFiveClicks($intCompanyOgId)
+	public function fnGetTopFiveClicksFMRs($intCompanyOgId)
 	{
 		//Get Top five clicks count and their FMR information
-		$objTopClicksFMRInfo = $this->objAnalyticsClicks->fnGetTopFiveClicksFMRs($intCompanyOgId);
-		return $objTopClicksFMRInfo;
+		$arrTopClicksFMRInfo = $this->objAnalyticsClicks->fnGetTopFiveClicksFMRs($intCompanyOgId);
+		return $arrTopClicksFMRInfo;
 	}
 	
 	
@@ -51,8 +51,8 @@ class clsAnalyticDatabase
 	public function fnGetClicks($strFMRIds)
 	{
 		# GET the Click Related data
-        $objFMRClickInfo = $this->objAnalyticsClicks->fnGetClicksInfo($strFMRIds);
-		return $objFMRClickInfo;
+        $arrFMRClicks = $this->objAnalyticsClicks->fnGetClicks($strFMRIds);
+		return $arrFMRClicks;
 	}
 	
 	/**
@@ -64,12 +64,11 @@ class clsAnalyticDatabase
 	 *
 	 * @return array
 	 */
-	public function fnGetClickChart($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
+	public function fnGetClickChartInfo($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
 	{
 		// Condition for Click chart between dates, default before 2 months with Company
-        $$ObjClickChartData = $this->objAnalyticsClicks->fnGetClickChartInfo($intCompanyOgId, $strFMRIds);
-        
-		return $$ObjClickChartData;
+        $arrClickChart = $this->objAnalyticsClicks->fnGetClickChartInfo($intCompanyOgId, $strFMRIds);
+		return $arrClickChart;
 	}
 	
 	
@@ -80,10 +79,10 @@ class clsAnalyticDatabase
 	 *
 	 * @return array
 	 */
-	public function fnFMRWithVideo($intCompanyOgId)
+	public function fnGetFMRWithVideo($intCompanyOgId)
 	{
 		 //GET all FMR with Videos
-        $arrFMRWithVideos = $this->objFMR->fnGetFMRWithVideoInfo($intCompanyOgId);
+        $arrFMRWithVideos = $this->objFMR->fnGetFMRWithVideo($intCompanyOgId);
         return $arrFMRWithVideos;
 	}
 	
@@ -101,8 +100,8 @@ class clsAnalyticDatabase
 	public function fnGetCompanyFMRs($intCompanyOgId, $strMediaType = "", $intCampaignId = "", $strIsArchiveFlag = "", $strFileType = "")
 	{
 		//Fetch all company FMRs STEP 1
-		$objCompanyFMRInformation = $this->objFMR->fnGetCompanyFMRsInfo($intCompanyOgId, $strMediaType, $intCampaignId, $strIsArchiveFlag, $strFileType);
-		return $objCompanyFMRInformation;
+		$arrCompanyFMRInformation = $this->objFMR->fnGetCompanyFMRs($intCompanyOgId, $strMediaType, $intCampaignId, $strIsArchiveFlag, $strFileType);
+		return $arrCompanyFMRInformation;
 	}
 	
 	
@@ -114,10 +113,10 @@ class clsAnalyticDatabase
 	 *
 	 * @return mixed
 	 */
-	public function fnFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId)
+	public function fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId)
 	{
 		// Get country name and click count for google map.
-		$arrCountryName = $this->objFMR->fnGetFMRClicksByCountryGoogleMapInfo($intCompanyOgId, $strMediaTypeORId);
+		$arrCountryName = $this->objFMR->fnGetFMRClicksByCountryGoogleMap($intCompanyOgId, $strMediaTypeORId);
 		return $arrCountryName;
 	}
 	
@@ -129,10 +128,10 @@ class clsAnalyticDatabase
 	 *
 	 * @return mixed
 	 */
-	public function fnFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId)
+	public function fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId)
 	{
 		//Get referrer website by media type
-		$arrReferLink = $this->objFMR->fnGetFMRReferrerClicksByMediaTypeInfo($intCompanyOgId, $strMediaTypeORId);
+		$arrReferLink = $this->objFMR->fnGetFMRReferrerClicksByMediaType($intCompanyOgId, $strMediaTypeORId);
 		return $arrReferLink;
 	}
 	
@@ -146,10 +145,10 @@ class clsAnalyticDatabase
 	 *
 	 * @return mixed
 	 */
-	public function fnFMRViewCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
+	public function fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
 	{
 		// Query for View count of Particular FMR
-		$arrViewCount = $this->objFMR->fnGetFMRViewCountByMediaIdInfo($intCompanyOgId, $intMediaId);
+		$arrViewCount = $this->objFMR->fnGetFMRViewCountByMediaId($intCompanyOgId, $intMediaId);
 		return $arrViewCount;
 	}
 	
@@ -162,10 +161,10 @@ class clsAnalyticDatabase
 	 *
 	 * @return mixed
 	 */
-	public function fnFMRClickCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
+	public function fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId, $boolReport = 0)
 	{
 		// Query for Click count of Particular FMR
-		$arrClickCount = $this->objFMR->fnGetFMRClickCountByMediaIdInfo($intCompanyOgId, $intMediaId);
+		$arrClickCount = $this->objFMR->fnGetFMRClickCountByMediaId($intCompanyOgId, $intMediaId);
 		return $arrClickCount;
 	}
 	
@@ -178,7 +177,7 @@ class clsAnalyticDatabase
 	 */
 	public function fnPrimaryCategoryName($intPrimaryCategoryId)
 	{
-		$strPrimaryCategoryName = $this->objFMR->fnGetPrimaryCategoryName($intPrimaryCategoryId);
+		$strPrimaryCategoryName = $this->objFMR->fnPrimaryCategoryName($intPrimaryCategoryId);
 		return $strPrimaryCategoryName;
 	}
 	
@@ -193,8 +192,8 @@ class clsAnalyticDatabase
 	public function fnGetViews($strFMRIds)
 	{
 		//Fetch all company FMRs Views STEP 2
-		$objFMRViewInfo = $this->objAnalyticsViews->fnGetViewsInfo($strFMRIds);
-		return $objFMRViewInfo;
+		$arrFMRViews = $this->objAnalyticsViews->fnGetViews($strFMRIds);
+		return $arrFMRViews;
 	}
 	
 	/**
@@ -206,7 +205,7 @@ class clsAnalyticDatabase
 	 *
 	 * @return array
 	 */
-	public function fnGetViewChart($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
+	public function fnGetViewChartInfo($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
 	{
 		// Query for View Chart between dates, For last 2 months.
 		$arrViewChart = $this->objAnalyticsViews->fnGetViewChartInfo($intCompanyOgId, $strFMRIds);
@@ -218,11 +217,11 @@ class clsAnalyticDatabase
 	 *
 	 * @return array
 	 */
-	public function fnBenchmarkClicksByMediaType($intCurrentMonthDate, $intNextMonthDate)
+	public function fnGetBenchmarkClicksByMediaType()
 	{
 		// Get Benchmarks clicks information
-		$ObjBenchmarkClicksFMRInfo = $this->objBenchmark->fnGetBenchmarkClicksByMediaType($intCurrentMonthDate, $intNextMonthDate);
-		return $ObjBenchmarkClicksFMRInfo;
+		$arrBenchmarkClicksFMRInfo = $this->objBenchmark->fnGetBenchmarkClicksByMediaType();
+		return $arrBenchmarkClicksFMRInfo;
 	}
 	
 	/**
@@ -230,11 +229,11 @@ class clsAnalyticDatabase
 	 *
 	 * @return array
 	 */
-	public function fnBenchmarkViewsByMediaType($intCurrentMonthDate, $intNextMonthDate)
+	public function fnGetBenchmarkViewsByMediaType()
 	{
 		// Get Benchmarks views information
-		$ObjBenchmarkViewsByMediaType = $this->objBenchmark->fnGetBenchmarkViewsByMediaType($intCurrentMonthDate, $intNextMonthDate);
-		return $ObjBenchmarkViewsByMediaType;
+		$arrBenchmarkViewsFMRInfo = $this->objBenchmark->fnGetBenchmarkViewsByMediaType();
+		return $arrBenchmarkViewsFMRInfo;
 	}
 	
 	/**
@@ -270,11 +269,11 @@ class clsAnalyticDatabase
 	 *
 	 * @return array
 	 */
-	public function fnFMRViewClickByCompany($intCompanyOgId, $strMediaType = '')
+	public function fnGetFMRViewClickByCompany($intCompanyOgId, $strMediaType = '')
 	{
 		//for getting all FMRs that get published
-		$objFMRNidInfo = $this->objCompanyData->fnGetFMRViewClickByCompanyInfo($intCompanyOgId, $strMediaType);
-		return $objFMRNidInfo;
+		list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $this->objCompanyData->fnGetFMRViewClickByCompany($intCompanyOgId, $strMediaType);
+		return array($arrFMRInfo, $arrFMRIds, $strFMRIds);
 	}
 	
 	/**
@@ -366,12 +365,10 @@ class clsAnalyticDatabase
 	 */
 	public function fnGetFMRHeadlineViews()
 	{
-		module_load_include('inc', 'refactor_Analytic', 'inc/clsClickView');
-		$objClickView = new clsClickView();
-		$arrClickView = $objClickView->fnGetFMRHeadlineViews();
+		$arrClickView = $this->objClickView->fnGetFMRHeadlineViews();
 		return $arrClickView;
 	}
-		
+	
 	/**
 	 * Function for deleting 'threebl_tmp_fmr_headline_views' view
 	 * @return array
@@ -443,7 +440,6 @@ class clsAnalyticDatabase
     */
     public function fnAddAllClicks($arrAllClick, $int3blCron = 0)
     {
-
 		$strFlagValue = $this->objClickView->fnAddAllClicks($arrAllClick, $int3blCron);
 		return $strFlagValue;
 	}
@@ -458,24 +454,6 @@ class clsAnalyticDatabase
 		$this->objClickView->fnAddAllViews($arrAllView);
 		return true;
 	}
-
-	/**
-     * Function return all FMRs that get published for analytic second level ajax
-     *
-     * @param int       $intCompanyOgId  : Company OG id
-     * @param string    $strMediaType    : FMR media type
-     * @param int       $intStart        : Starting record for pagination
-     * @param int       $intLimit        : number of records per page
-     *
-     * @return array
-    */
-	function fnCompanyPublishedFMRs($intCompanyOgId, $strMediaType, $intStart, $intLimit)
-	{
-		list($objFMRNidInfo, $intViewClickCntResult) = $this->objCompanyData->fnGetCompanyPublishedFMRsInfo($intCompanyOgId, $strMediaType, $intStart, $intLimit);
-		
-		return array($objFMRNidInfo, $intViewClickCntResult);
-	}
-<<<<<<< HEAD
 	
 	/**
 	 * Function return all FMRs that get published for analytic second level ajax
@@ -493,6 +471,4 @@ class clsAnalyticDatabase
 		return array($objFMRNidInfo, $intViewClickCntResult);
 	}
 	
-=======
->>>>>>> 84e5e163b158b53cca80a4a4c5c446d997091655
 }

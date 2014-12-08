@@ -119,7 +119,7 @@
          *
          * @return array
          */
-        public function fnGetFMRViewClickByCompanyInfo($intCompanyOgId, $strMediaType = '')
+        public function fnGetFMRViewClickByCompany($intCompanyOgId, $strMediaType = '')
         {
             $strSelect = " SELECT N.nid";
 
@@ -128,13 +128,20 @@
                       JOIN field_data_field_fmr_type_of_content t ON N.nid = t.entity_id
                       JOIN field_data_group_audience AS ga ON (N.nid = ga.entity_id AND ga.bundle = 'fmr' AND ga.entity_type = 'node') ";
 
-            $strWhere = " WHERE ga.group_audience_gid = $intCompanyOgId and N.status = 1 AND pubdt.field_fmr_date_time_value >= DATE_SUB( '" . $this->strCurrentDate . "' , INTERVAL 240 DAY ) ";
+            $strWhere = " WHERE ga.group_audience_gid = $intCompanyOgId and N.status = 1 AND pubdt.field_fmr_date_time_value >= DATE_SUB( '" . $this->strCurrentDate . "' , INTERVAL 180 DAY ) ";
 
             $strCondition = ($strMediaType != 'all') ? " AND t.field_fmr_type_of_content_value ='" . $strMediaType . "'" : " AND t.field_fmr_type_of_content_value IN ('press_release','blog','multimedia','article','newsletter') ";
             $strSQL = $strSelect . $strFrom . $strWhere . $strCondition;
             $objFMRNidInfo = db_query($strSQL)->fetchAll();
 
-            return $objFMRNidInfo;
+            if (!empty($objFMRNidInfo)) {
+                foreach ($objFMRNidInfo as $row) {
+                    $arrFMRInfo[$row->nid]['nid'] = $row->nid;
+                    $arrFMRIds[] = $row->nid;
+                }
+                $strFMRIds = implode(', ', $arrFMRIds);
+            }
+            return array($arrFMRInfo, $arrFMRIds, $strFMRIds);
         }
 
         /**
@@ -147,8 +154,14 @@
          *
          * @return array
          */
-        public function fnGetCompanyPublishedFMRsInfo($intCompanyOgId, $strMediaType = "", $intStart = 0, $intLimit = 0)
+        public function fnGetCompanyPublishedFMRs($intCompanyOgId, $strMediaType = "", $intStart = 0, $intLimit = 0)
         {
+            //Include all required files
+            module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
+
+            //Object of class
+            $objAnalytic = new clsAnalytic();
+
             $strSelect = "SELECT sql_calc_found_rows n.nid, t.field_fmr_type_of_content_value AS fmr_type, av.field_fmr_average_views_value as benchmark_view, ac.field_fmr_average_clicks_value as benchmark_click, td.name AS primarycategory, field_dist_archive_value as is_archive ";
 
             $strSelect .= ($strMediaType != "") ? ", n.title as title, pubdt.field_fmr_date_time_value " : "";
@@ -173,16 +186,20 @@
                 $strLimitSql .= " LIMIT $intStart, $intLimit ";
             }
 
+            $arrFMRIds = array();
+            $arrFMRInfo = array();
+
             #Final SQL
             $strQry = $strSelect.$strFrom.$strWhere.$strCondition.$strOrderBy.$strLimitSql;
             $objFMRNidInfo = db_query($strQry)->fetchAll();
+
+            $strFMRIds = '';
 
             //Get count of all Records
             $intViewClickCntResult = $this->fnGetRecordsCount();
             
             return array($objFMRNidInfo, $intViewClickCntResult);
 
-<<<<<<< HEAD
             //Checking if array is not empty
            /* if (!empty($objFMRNidInfo)) {
 
@@ -193,9 +210,6 @@
                 $strFMRIds = implode(', ', $arrFMRIds);
             }
             return array($arrFMRInfo, $arrFMRIds, $strFMRIds, $intViewClickCntResult);*/
-=======
-            return array($objFMRNidInfo, $intViewClickCntResult);
->>>>>>> 84e5e163b158b53cca80a4a4c5c446d997091655
         }
 
         /**

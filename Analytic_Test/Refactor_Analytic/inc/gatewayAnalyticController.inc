@@ -23,61 +23,41 @@ class GatewayAnalyticController
 		$this->companyNid = $intCompanyNid;
 	}
 	
-	public function fnViewAnalyticInformation()
-	{
+	public function fnViewAnalyticInformation(){
 		
 		$arrViewChartSum = array();
 		$arrClickChartSum = array();
 		$arrDates = array();
-		$arrFMRIds = array();
-        $arrFMRInfo = array();
-        $strFMRIds = '';
 		
 		//Include all required files
 	    module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
-
-	    //Fetch all company FMRs STEP 1
-		$objCompanyFMRInformation = $this->analyticDB->fnGetCompanyFMRs($this->companyOgId, "", "", "non_archive");
-
-        if (!empty($objCompanyFMRInformation)) {
-
-            // To get FMR information
-            list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $this->analyticProcessing->fnAnalyticFMRInfo($objCompanyFMRInformation);
-        }
-
+		
+		//Object of class
+		$this->analyticProcessing = new clsAnalytic();
+		
 		//Get Top five clicks count and their FMR information
-		$objFMRNidInfo = $this->analyticDB->fnGetTopFiveClicks($this->companyOgId); //clsAnalyticsClicks
-		$arrTopClicksFMRInfo = $this->analyticProcessing->fnGetTopClicksInformation($objFMRNidInfo);
+		$arrTopClicksFMRInfo = $this->analyticDB->fnGetTopFiveClicksFMRs($this->companyOgId); //clsAnalyticsClicks
 		
 		// Get Benchmarks clicks information
-		$arrStartEndDate = $this->analyticProcessing->fnGetDateForBenchmarkByMedia();
-		$ObjBenchmarkClicksFMRInfo = $this->analyticDB->fnBenchmarkClicksByMediaType($arrStartEndDate["Current_month_date"], $arrStartEndDate["next_month_date"]); //clsBenchmark
-		//To get Benchmark view count information
-        $arrBenchmarkClicksFMRInfo = $this->analyticProcessing->fnGetBenchMarkClickInfo($ObjBenchmarkClicksFMRInfo);
+		$arrBenchmarkClicksFMRInfo = $this->analyticDB->fnGetBenchmarkClicksByMediaType(); //clsBenchmark
 		
 		// Get Benchmarks views information
-		$ObjBenchmarkViewsFMRInfo = $this->analyticDB->fnBenchmarkViewsByMediaType($arrStartEndDate["Current_month_date"], $arrStartEndDate["next_month_date"]); //clsBenchmark
-		//To get Benchmark view count information
-        $arrBenchmarkViewsFMRInfo = $this->analyticProcessing->fnGetBenchMarkViewInfo($ObjBenchmarkViewsFMRInfo);
+		$arrBenchmarkViewsFMRInfo = $this->analyticDB->fnGetBenchmarkViewsByMediaType(); //clsBenchmark
 		
 		//checking FMR exist or not
 		if ($strFMRIds != '') {
 			//Fetch all company FMRs Views STEP 2
 			// Query  which give result Count(FMRCount) ViewCount of each media.
-			$objFMRViewInfo = $this->analyticDB->fnGetViews($strFMRIds); //clsAnalyticsViews
-			//To get view count information
-        	$arrFMRViews = $this->analyticProcessing->fnViewClickCountInfo($objFMRViewInfo, "view");
+			$arrFMRViews = $this->analyticDB->fnGetViews($strFMRIds); //clsAnalyticsViews
 		
 			# GET the Click Related data
-			$objFMRClickInfo = $this->analyticDB->fnGetClicks($strFMRIds); //clsAnalyticsClicks
-			//To get Clicks count information
-        	$arrFMRClicks = $this->analyticProcessing->fnViewClickCountInfo($objFMRClickInfo, "click");
+			$arrFMRClicks = $this->analyticDB->fnGetClicks($strFMRIds); //clsAnalyticsClicks
 		
 			//GET all FMR with Videos
-			$ObjFMRRecords = $this->analyticDB->fnFMRWithVideo($this->companyOgId); //clsFMR
-			$arrFMRWithVideos = $this->analyticProcessing->fnGetFMRIds($ObjFMRRecords);
+			$arrFMRWithVideos = $this->analyticDB->fnGetFMRWithVideo($this->companyOgId); //clsFMR
 			
-			
+			//Fetch all company FMRs STEP 1
+			list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $this->analyticDB->fnGetCompanyFMRs($this->companyOgId, "", "", "non_archive"); //clsFMR
 		
 			if (count($arrFMRIds) > 0) {
 				#Get Information for all FMR types
@@ -117,50 +97,51 @@ class GatewayAnalyticController
 				$arrMediaTypeCount[$strFMRType]["withoutvideo"]['clickcount'] = (int)($arrMediaTypeCount[$strFMRType]['clickcount'] - $arrMediaTypeCount[$strFMRType]["withvideo"]['clickcount']);
 				#FMR Count
 				$arrMediaTypeCount[$strFMRType]["withoutvideo"]['fmrcount'] = (int)($arrMediaTypeCount[$strFMRType]['fmrcount'] - $arrMediaTypeCount[$strFMRType]["withvideo"]['fmrcount']);
-				}
+			}
 			}
 		
 			// Query for View Chart between dates, For last 2 months.
-			$ObjViewChartData = $this->analyticDB->fnGetViewChart($this->companyOgId, $strFMRIds);
-			//To get Clicks chart information
-        	$arrViewChart = $this->analyticProcessing->fnViewClickChartInfo($ObjViewChartData, "view");
+			$arrViewChart = $this->analyticDB->fnGetViewChartInfo($this->companyOgId, $strFMRIds); //condition on
 		
 			// Condition for Click chart between dates, default before 2 months with Company
-			$ObjClickChartData = $this->analyticDB->fnGetClickChart($this->companyOgId, $strFMRIds); 
-			//To get Clicks chart information
-        	$arrClickChart = $this->analyticProcessing->fnViewClickChartInfo($ObjClickChartData, "click");
-
-			//Process views and clicks and prepare 7 days interval data for graph
-			list($arrViewChartSum, $arrClickChartSum, $arrDates) = $this->analyticProcessing->fnSumWeekViewsClicks($arrViewChart, $arrClickChart);
+				$arrClickChart = $this->analyticDB->fnGetClickChartInfo($this->companyOgId, $strFMRIds); //clsAnalyticsClicks
+		
+				//Process views and clicks and prepare 7 days interval data for graph
+				list($arrViewChartSum, $arrClickChartSum, $arrDates) = $this->analyticProcessing->fnSumWeekViewsClicks($arrViewChart, $arrClickChart);
 		}
 		//Main tab of (Analytics, Tracking ,Searching Engines, Reports);
 		$strTabHtml = $this->analyticProcessing->fnAnalyticsMaintab('View');
 		
-		$arrAnalyticInformation = array(
-		'arrViewChart' => $arrViewChartSum,
-		'arrMediaTypeCount' => $arrMediaTypeCount,
-		'arrBenchmarkViewsFMRInfo' => $arrBenchmarkViewsFMRInfo,
-		'arrBenchmarkClicksFMRInfo' => $arrBenchmarkClicksFMRInfo,
-		'arrClickChart' => $arrClickChartSum,
-		"arrTopClicksFMRInfo" => $arrTopClicksFMRInfo,
-		'strTabHtml' => $strTabHtml,
-		"arrDts" => $arrDates,
-		);
-		return $arrAnalyticInformation;
+				//Include JS and CSS files
+				drupal_add_js(drupal_get_path('module', 'refactor_Analytic') . '/js/analytics.js');
+				drupal_add_js(drupal_get_path('module', 'refactor_Analytic') . '/js/jsapi.js');
+		
+				drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/justmeans/jmbackend-global.css');
+				drupal_add_css(drupal_get_path('theme', 'threebl') . '/css/dashboard.css');
+		
+				$arrAnalyticInformation = array(
+				'arrViewChart' => $arrViewChartSum,
+				'arrMediaTypeCount' => $arrMediaTypeCount,
+				'arrBenchmarkViewsFMRInfo' => $arrBenchmarkViewsFMRInfo,
+				'arrBenchmarkClicksFMRInfo' => $arrBenchmarkClicksFMRInfo,
+				'arrClickChart' => $arrClickChartSum,
+				"arrTopClicksFMRInfo" => $arrTopClicksFMRInfo,
+				'strTabHtml' => $strTabHtml,
+				"arrDts" => $arrDates,
+				);
+				//echo "<pre>";print_r($arrData);echo "</pre>";exit;
+				
+				return $arrAnalyticInformation;
 	}
 	
-	public function fnViewAnalyticMediaType($strMediaType)
+	public function fnViewAnalyticMediaType()
 	{
-		//Include all required files	
+		
+		//Include all required files
+		
 		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
 		// Query for getting all FMRs that get published
-		$objFMRNidInfo = $this->analyticDB->fnFMRViewClickByCompany($this->companyOgId, $strMediaType);
-
-		if (!empty($objFMRNidInfo)) {
-
-            // To get FMR information
-            list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $this->analyticProcessing->fnFMRNIdInfo($objFMRNidInfo);
-        }
+		list($arrFMRInfo, $arrFMRIds, $strFMRIds) = $this->analyticDB->fnGetFMRViewClickByCompany($this->companyOgId, $strMediaType);
 		
 		//Initialize variable
 		$arrReferLink = array();
@@ -174,14 +155,10 @@ class GatewayAnalyticController
 		if ($strFMRIds != '') {
 		
 			// Query  which give result Count(FMRCount) ViewCount of each media.
-			$objFMRViewInfo = $this->analyticDB->fnGetViews($strFMRIds); 
-			//To get view count information
-        	$arrFMRViews = $this->analyticProcessing->fnViewClickCountInfo($objFMRViewInfo, "view");
+			$arrFMRViews = $this->analyticDB->fnGetViews($strFMRIds); //clsAnalyticsViews
 		
 			# GET the Click Related data
-			$objFMRClickInfo = $this->analyticDB->fnGetClicks($strFMRIds);
-			//To get Clicks count information
-        	$arrFMRClicks = $this->analyticProcessing->fnViewClickCountInfo($objFMRClickInfo, "click"); 
+			$arrFMRClicks = $this->analyticDB->fnGetClicks($strFMRIds); //clsAnalyticsClicks
 		
 			$arrFMRInformation = array();
 		
@@ -200,22 +177,18 @@ class GatewayAnalyticController
 		
 		
 			//Get Views for the specific media type for chart
-			$ObjViewChartData = $this->analyticDB->fnGetViewChart($this->companyOgId, $strFMRIds);
-			//To get Clicks chart information
-        	$arrViewChart = $this->analyticProcessing->fnViewClickChartInfo($ObjViewChartData, "view"); 
+			$arrViewChart = $this->analyticDB->fnGetViewChartInfo($this->companyOgId, $strFMRIds); //clsAnalyticsViews
 		
 			// Condition for Click chart between dates, default before 2 months of particular media type
-			$ObjClickChartData = $this->analyticDB->fnGetClickChart($this->companyOgId, $strFMRIds);
-			//To get Clicks chart information
-        	$arrClickChart = $this->analyticProcessing->fnViewClickChartInfo($ObjClickChartData, "click"); 
+			$arrClickChart = $this->analyticDB->fnGetClickChartInfo($this->companyOgId, $strFMRIds); // clsAnalyticsClicks
 		
 			//Process views and clicks and prepare 7 days interval data for graph
 			list($arrViewChartSum, $arrClickChartSum, $arrDates) = $this->analyticProcessing->fnSumWeekViewsClicks($arrViewChart, $arrClickChart);
-
+		
 			// Get country name and click count for google map.
-			$arrCountryName = $this->analyticDB->fnFMRClicksByCountryGoogleMap($this->companyOgId, $strMediaType); 
+			$arrCountryName = $this->analyticDB->fnGetFMRClicksByCountryGoogleMap($this->companyOgId, $strMediaType); //clsFMR
 			//Get referrer website by media type
-			$arrReferLink = $this->analyticDB->fnFMRReferrerClicksByMediaType($this->companyOgId, $strMediaType); 
+			$arrReferLink = $this->analyticDB->fnGetFMRReferrerClicksByMediaType($this->companyOgId, $strMediaType); //clsFMR
 		}
 		
 			//Main tab of (Analytics, Tracking ,Searching Engines, Reports);
@@ -235,7 +208,13 @@ class GatewayAnalyticController
 	public function fnViewAnalyticMediaTypeId($intMediaId)
 	{
 		//Include all required files
+		
+		
 		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
+		
+		
+		
+		
 		
 		//Getting FMR Title by media id.
 		$objNode = node_load($intMediaId);
@@ -263,7 +242,7 @@ class GatewayAnalyticController
 		// Primary Category
 		$strPrimaryCategoryName = "";
 		$intPrimaryCategoryId = (int) $objNode->field_fmr_primary_category['und'][0]['target_id'];
-		$strPrimaryCategory = $this->analyticDB->fnPrimaryCategoryName($intPrimaryCategoryId);
+		$strPrimaryCategory = $this->analyticProcessing->fnPrimaryCategoryName($intPrimaryCategoryId);
 		if ($strPrimaryCategory != "") {
 			$strPrimaryCategoryName = $strPrimaryCategory;
 		}
@@ -281,16 +260,16 @@ class GatewayAnalyticController
 		}
 		
 		// Query for View count of Particular FMR
-		$arrViewCount = $this->analyticDB->fnFMRViewCountByMediaId($this->companyOgId, $intMediaId); //clsFMR
+		$arrViewCount = $this->analyticDB->fnGetFMRViewCountByMediaId($this->companyOgId, $intMediaId); //clsFMR
 		
 		// Query for Click count of Particular FMR
-		$arrClickCount = $this->analyticDB->fnFMRClickCountByMediaId($this->companyOgId, $intMediaId); //clsFMR
+		$arrClickCount = $this->analyticDB->fnGetFMRClickCountByMediaId($this->companyOgId, $intMediaId); //clsFMR
 		
 		// Get country name and click count for google map by media id
-		$arrCountryName = $this->analyticDB->fnFMRClicksByCountryGoogleMap($this->companyOgId, $intMediaId); //clsFMR
+		$arrCountryName = $this->analyticDB->fnGetFMRClicksByCountryGoogleMap($this->companyOgId, $intMediaId); //clsFMR
 		
 		// get referrer website by media id
-		$arrReferLink = $this->analyticDB->fnFMRReferrerClicksByMediaType($this->companyOgId, $intMediaId); //clsFMR
+		$arrReferLink = $this->analyticDB->fnGetFMRReferrerClicksByMediaType($this->companyOgId, $intMediaId); //clsFMR
 		
 		//Main tab of (Analytics, Tracking ,Searching Engines, Reports);
 		$strTabHtml = $this->analyticProcessing->fnAnalyticsMaintab('View');
@@ -315,7 +294,6 @@ class GatewayAnalyticController
 				'intBenchmarkClick' => $intBenchmarkClick,
 				'strIsArchive' => $strIsArchive,
 				'strPrimaryCategoryName' => $strPrimaryCategoryName
-<<<<<<< HEAD
 		);
 		
 		return $arrData;
@@ -324,16 +302,6 @@ class GatewayAnalyticController
 	public function fnProcessAnalyticMediaTypeAjax()
 	{
 		
-=======
-		);
-		
-		return $arrData;
-	}
-	
-	public function fnProcessAnalyticMediaTypeAjax()
-	{
-		//Include all required files
->>>>>>> 84e5e163b158b53cca80a4a4c5c446d997091655
 		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
 		
 		$strMediaType = '';
@@ -349,7 +317,6 @@ class GatewayAnalyticController
 		$intPrev = 0;
 		
 		# To get all FMRs information that get published
-<<<<<<< HEAD
 		//list($arrMediaResult, $arrGetFMRIds, $strFMRIds, $intTotalRecords) = $this->analyticDB->fnGetCompanyPublishedFMRs($this->companyOgId, $strMediaType, $intStart, $intLimit);
 
 		list($objFMRNidInfo, $intTotalRecords) = $this->analyticDB->fnGetCompanyPublishedFMRs($this->companyOgId, $strMediaType, $intStart, $intLimit);
@@ -364,25 +331,12 @@ class GatewayAnalyticController
 			$strFMRIds = implode(', ', $arrGetFMRIds);
 		}
 		
-=======
-		list($objFMRNidInfo, $intTotalRecords) = $this->analyticDB->fnCompanyPublishedFMRs($this->companyOgId, $strMediaType, $intStart, $intLimit);
-
-        //Checking if array is not empty
-        if (!empty($objFMRNidInfo)) {
-            // To get FMR information
-            list($arrMediaResult, $arrGetFMRIds, $strFMRIds) = $this->analyticProcessing->fnGetFMRInfo($objFMRNidInfo, $strMediaType);
-        }
->>>>>>> 84e5e163b158b53cca80a4a4c5c446d997091655
 		
 		# To fetch FMR views information
-		$objFMRViewInfo = $this->analyticDB->fnGetViews($strFMRIds); 
-		//To get view count information
-        $arrViewFMRInfo = $this->analyticProcessing->fnViewClickCountInfo($objFMRViewInfo, "view");
+		$arrViewFMRInfo = $this->analyticDB->fnGetViews($strFMRIds); //clsAnalyticsViews
 		
 		# To fetch FMR Clicks information
-		$objFMRClickInfo = $this->analyticDB->fnGetClicks($strFMRIds);
-		//To get Clicks count information
-        $arrClickFMRInfo = $this->analyticProcessing->fnViewClickCountInfo($objFMRClickInfo, "click");  
+		$arrClickFMRInfo = $this->analyticDB->fnGetClicks($strFMRIds); // clsAnalyticsClicks
 		
 		if (!empty($arrMediaResult)) {
 			foreach ($arrMediaResult as $intFMRId => $arrMediaResultData) {
@@ -507,20 +461,8 @@ class GatewayAnalyticController
 	public function fnProcessAnalyticSearching()
 	{
 		//Include required files
-<<<<<<< HEAD
 		module_load_include('inc', 'threebl_affiliate', 'inc/clsTrackingData');
 	
-=======
-		
-		module_load_include('inc', 'threebl_affiliate', 'inc/clsTracking');
-		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
-		
-		
-		//Creating the Object of Class
-		
-		
-		
->>>>>>> 84e5e163b158b53cca80a4a4c5c446d997091655
 		//Creating the Object of Class
 		$objClsTrackingData = new clsTrackingData();
 		
@@ -548,14 +490,7 @@ class GatewayAnalyticController
 		module_load_include('inc', 'refactor_Analytic', 'inc/commonFunction');
 		module_load_include('inc', 'threebl_affiliate', 'inc/clsTracking');
 		module_load_include('inc', 'refactor_reports', 'inc/sendEmail');
-<<<<<<< HEAD
 
-=======
-		//Object of Analytic class
-		
-		
-		
->>>>>>> 84e5e163b158b53cca80a4a4c5c446d997091655
 		//Define variables
 		global $base_url, $conf;
 		

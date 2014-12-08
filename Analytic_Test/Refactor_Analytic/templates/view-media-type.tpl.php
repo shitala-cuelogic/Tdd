@@ -134,7 +134,7 @@ if (!empty($arrCountryName)) {
 
 <?php
 // function for checking user browser is IE8 or not.
-list($strClickCss, $intClickFlag) = refactor_Check_user_browser();
+list($strClickCss, $intClickFlag) = threebl_Check_user_browser();
 ?>
 <ul class="analyticsTrigger">
 <li class="clr"> &nbsp; </li>
