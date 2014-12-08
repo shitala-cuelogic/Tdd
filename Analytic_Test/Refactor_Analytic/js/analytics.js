@@ -146,19 +146,19 @@ jQuery(document).ready(function () {
     } ;
 
     // Ride the carousel...
-        jQuery("#mycarousel").jcarousel({
-            scroll: 1,
-            initCallback: mycarousel_initCallback,
-            // This tells jCarousel NOT to autobuild prev/next buttons
-            buttonNextHTML: null,
-            buttonPrevHTML: null
-        });
+    jQuery("#mycarousel").jcarousel({
+        scroll: 1,
+        initCallback: mycarousel_initCallback,
+        // This tells jCarousel NOT to autobuild prev/next buttons
+        buttonNextHTML: null,
+        buttonPrevHTML: null
+    });
 
-        jQuery("#mylink").jcarousel({
-            scroll: 1,
-            initCallback: mylink_initCallback,
-            // This tells jCarousel NOT to autobuild prev/next buttons
-            buttonNextHTML: null,
-            buttonPrevHTML: null
-        });
+    jQuery("#mylink").jcarousel({
+        scroll: 1,
+        initCallback: mylink_initCallback,
+        // This tells jCarousel NOT to autobuild prev/next buttons
+        buttonNextHTML: null,
+        buttonPrevHTML: null
+    });
 });

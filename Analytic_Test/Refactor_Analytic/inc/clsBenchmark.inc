@@ -37,27 +37,15 @@
          *
          * @return array
          */
-        public function fnGetBenchmarkViewsByMediaType()
+        public function fnGetBenchmarkViewsByMediaType($intCurrentMonthDate, $intNextMonthDate)
         {
-            //Include all required files
-            module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
-
-            //Object of class
-            $objAnalytics = new clsAnalytic();
-
-            $arrStartEndDate = $this->fnGetDateForBenchmarkByMedia();
-            $intCurrentMonthDate = $arrStartEndDate["Current_month_date"];
-            $intNextMonthDate = $arrStartEndDate["next_month_date"];
-
             $strBenchmarkViewsByMediaTypeQuery = "SELECT benchmark_views, benchmark_views_withvideo, benchmark_views_withoutvideo, media_type
                                               FROM threebl_benchmark_views_avg_by_mediatype
                                               WHERE DATE_FORMAT(benchmark_views_month, '%Y-%m') >= '$intCurrentMonthDate'
                                               AND DATE_FORMAT(benchmark_views_month, '%Y-%m') <= '$intNextMonthDate'";
-            $arrBenchmarkViewsByMediaType = db_query($strBenchmarkViewsByMediaTypeQuery)->fetchAll();
+            $ObjBenchmarkViewsByMediaType = db_query($strBenchmarkViewsByMediaTypeQuery)->fetchAll();
 
-            //To get Benchmark view count information
-            $arrBenchmarkViewsFMRInfo = $objAnalytics->fnGetBenchMarkViewInfo($arrBenchmarkViewsByMediaType);
-            return $arrBenchmarkViewsFMRInfo;
+            return $ObjBenchmarkViewsByMediaType;
         }
 
         /**
@@ -93,28 +81,15 @@
          *
          * @return array
          */
-        public function fnGetBenchmarkClicksByMediaType()
+        public function fnGetBenchmarkClicksByMediaType($intCurrentMonthDate, $intNextMonthDate)
         {
-            //Include all required files
-            module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
-
-            //Object of class
-            $objAnalytics = new clsAnalytic();
-
-            $arrStartEndDate = $this->fnGetDateForBenchmarkByMedia();
-            $intCurrentMonthDate = $arrStartEndDate["Current_month_date"];
-            $intNextMonthDate = $arrStartEndDate["next_month_date"];
-
             $strBenchmarkClicksByMediaTypeQuery = "SELECT benchmark_clicks, benchmark_clicks_withvideo, benchmark_clicks_withoutvideo, media_type
                                                FROM threebl_benchmark_clicks_avg_by_mediatype
                                                WHERE DATE_FORMAT(benchmark_clicks_month, '%Y-%m') >= '$intCurrentMonthDate'
                                                AND DATE_FORMAT(benchmark_clicks_month, '%Y-%m') <= '$intNextMonthDate'";
             $arrBenchmarkClicksByMediaType = db_query($strBenchmarkClicksByMediaTypeQuery)->fetchAll();
 
-
-            //To get Benchmark view count information
-            $arrBenchmarkClicksFMRInfo = $objAnalytics->fnGetBenchMarkViewInfo($arrBenchmarkClicksByMediaType);
-            return $arrBenchmarkClicksFMRInfo;
+            return $arrBenchmarkClicksByMediaType;
         }
 
         /**

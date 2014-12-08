@@ -17,12 +17,6 @@ class clsAnalyticsClicks extends clsBaseClass
      */
     public function fnGetTopFiveClicksFMRs($intCompanyOgId)
     {
-        //Include all required files
-        module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
-
-        //Object of class
-        $objAnalytics = new clsAnalytic();
-
         $strQry = "SELECT n.nid, t.field_fmr_type_of_content_value AS fmr_type, td.name AS primarycategory, COUNT(C.nid) AS clickcount, n.title, pubdt.field_fmr_date_time_value
                    FROM node AS n
                    JOIN field_data_group_audience AS ga ON (n.nid = ga.entity_id AND ga.bundle = 'fmr' AND ga.entity_type = 'node')
@@ -40,12 +34,9 @@ class clsAnalyticsClicks extends clsBaseClass
                    ORDER BY clickcount DESC
                    LIMIT 0,5";
         #Final SQL
-        $objFMRNidInfo = db_query($strQry)->fetchAll();
+        $objTopClicksFMRInfo = db_query($strQry)->fetchAll();
 
-        //Get Top Clicks FMR information
-        $arrTopClicksFMRInfo = $objAnalytics->fnGetTopClicksInformation($objFMRNidInfo);
-
-        return $arrTopClicksFMRInfo;
+        return $objTopClicksFMRInfo;
     }
 
     /**
@@ -55,21 +46,13 @@ class clsAnalyticsClicks extends clsBaseClass
      *
      * @return array
      */
-    public function fnGetClicks($strFMRIds)
+    public function fnGetClicksInfo($strFMRIds)
     {
-        //Include all required files
-        module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
-
-        //Object of class
-        $objAnalytics = new clsAnalytic();
-
         $strSQL = " SELECT COUNT(C.nid) AS clickcount, C.nid
                     FROM  threebl_analytic_clicks  AS C WHERE C.nid IN ($strFMRIds) GROUP BY C.nid";
         $objFMRClickInfo = db_query($strSQL)->fetchAll();
 
-        //To get Clicks count information
-        $arrFMRInfo = $objAnalytics->fnViewClickCountInfo($objFMRClickInfo, "click");
-        return $arrFMRInfo;
+        return $objFMRClickInfo;
     }
 
     /**
@@ -83,12 +66,7 @@ class clsAnalyticsClicks extends clsBaseClass
      */
     public function fnGetClickChartInfo($intCompanyOgId, $strFMRIds = "", $intCampaignId = 0)
     {
-        //Include all required files
-        module_load_include('inc', 'refactor_Analytic', 'inc/clsAnalytics');
-
-        //Object of class
-        $objAnalytics = new clsAnalytic();
-
+        //".$this->strChartPrevDate."
         $strCampaignFrom = '';
         if ((int)$intCampaignId > 0) {
             $strCampaignFrom = " JOIN field_data_field_fmr_campaign as COM ON COM.entity_id = C.nid AND COM.field_fmr_campaign_nid = '" . $intCampaignId . "' ";
@@ -98,16 +76,13 @@ class clsAnalyticsClicks extends clsBaseClass
                   FROM  threebl_analytic_clicks  as C
                   $strCampaignFrom
                   WHERE C.company_ogid = $intCompanyOgId
-                  AND (DATE_FORMAT(C.click_date, '%Y-%m-%d') BETWEEN '".$this->strChartPrevDate."' AND '".$this->strCurrentDate."')
+                  AND (DATE_FORMAT(C.click_date, '%Y-%m-%d') BETWEEN '2014-06-02' AND '".$this->strCurrentDate."')
                   AND C.nid IN ($strFMRIds)
                   GROUP BY  DATE_FORMAT(C.click_date, '%Y/%m/%d')
                   ORDER by C.click_date asc";
 
-        $arrayClickChartData = db_query($strSQL)->fetchAll();
+        $ObjClickChartData = db_query($strSQL)->fetchAll();
 
-        //To get Clicks chart information
-        $arrClickChart = $objAnalytics->fnViewClickChartInfo($arrayClickChartData, "click");
-        
-        return $arrClickChart;
+        return $ObjClickChartData;
     }
 }
